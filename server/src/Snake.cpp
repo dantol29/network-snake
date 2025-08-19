@@ -11,6 +11,7 @@ Snake::Snake(int height, int width, Game *game) : gameHeight(height), gameWidth(
     this->tail->y = 3;
     this->tail->next = NULL;
     this->tail->prev = NULL;
+    this->direction = UP;
 }
 
 Snake::~Snake()
@@ -52,48 +53,6 @@ void Snake::moveSnake()
     }
 }
 
-void Snake::drawSnake()
-{
-    if (!this->tail)
-        return;
-
-    struct rgb rgb;
-
-    struct snake *currentPart = this->tail;
-    while (currentPart)
-    {
-        // magic numbers? seriously?
-        float x = -1.0f + (float)currentPart->x / SCALE;
-        float y = 0.9f - (float)currentPart->y / SCALE;
-
-        currentPart = currentPart->prev;
-
-        if (currentPart)
-            rgb = {0.0f, 0.6f, 0.2f}; // dark green
-        else
-            rgb = {0.9f, 0.3f, 0.0f}; // bright orange
-
-        this->game->draw(x, y, TILE_SIZE, rgb);
-    }
-}
-
-void Snake::setDirection(enum direction newDirection)
-{
-    this->direction = newDirection;
-}
-
-void Snake::growSnake(int oldX, int oldY)
-{
-    struct snake *newTail = (struct snake *)malloc(sizeof(struct snake));
-    newTail->next = NULL;
-    newTail->x = oldX;
-    newTail->y = oldY;
-    newTail->prev = this->tail;
-    this->tail->next = newTail;
-
-    this->tail = newTail;
-}
-
 void Snake::moveHead(struct snake *head, int oldX, int oldY)
 {
     switch (this->direction)
@@ -133,7 +92,24 @@ void Snake::moveHead(struct snake *head, int oldX, int oldY)
         this->game->field[oldY][oldX] = 'B';
     }
     else
-        this->game->field[oldY][oldX] = '0';
+        this->game->field[oldY][oldX] = FLOOR_SYMBOL;
 
     this->game->field[head->y][head->x] = 'H';
+}
+
+void Snake::setDirection(enum direction newDirection)
+{
+    this->direction = newDirection;
+}
+
+void Snake::growSnake(int oldX, int oldY)
+{
+    struct snake *newTail = (struct snake *)malloc(sizeof(struct snake));
+    newTail->next = NULL;
+    newTail->x = oldX;
+    newTail->y = oldY;
+    newTail->prev = this->tail;
+    this->tail->next = newTail;
+
+    this->tail = newTail;
 }

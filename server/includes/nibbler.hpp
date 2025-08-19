@@ -6,9 +6,18 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <poll.h>
+#include <fcntl.h>
+#include <vector>
+#include <iostream>
+#include <thread>
 
 #define TILE_SIZE 0.05f
 #define SCALE 20.0f
+#define FLOOR_SYMBOL '.'
 
 class Game;
 

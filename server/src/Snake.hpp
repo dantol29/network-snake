@@ -27,7 +27,6 @@ public:
     ~Snake();
 
     void moveSnake();
-    void drawSnake();
     void setDirection(enum direction newDirection);
 
 private:
