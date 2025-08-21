@@ -95,12 +95,6 @@ void Game::addSnake(int clientFd)
     this->snakes.push_back(newSnake);
 }
 
-void Game::addDeadSnake(int fd)
-{
-    std::lock_guard<std::mutex> lock(this->deadSnakesMutex);
-    this->deadSnakes.push_back(fd);
-}
-
 void Game::removeSnake(int fd)
 {
     std::lock_guard<std::mutex> lock1(snakesMutex);
@@ -115,22 +109,6 @@ void Game::removeSnake(int fd)
             return;
         }
     }
-}
-
-void Game::clearDeadSnakes()
-{
-    this->deadSnakes.clear();
-}
-
-std::vector<int> Game::getDeadSnakes()
-{
-    std::lock_guard<std::mutex> lock(deadSnakesMutex);
-    std::vector<int> result;
-
-    for (auto iter = deadSnakes.begin(); iter < this->deadSnakes.end(); iter++)
-        result.push_back(*iter);
-
-    return result;
 }
 
 std::string Game::fieldToString()

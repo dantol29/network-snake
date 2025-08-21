@@ -57,7 +57,6 @@ void Server::start()
         }
 
         removeClosedConnections();
-        removeDeadSnakes();
 
         if (shouldSend)
             lastSendTime = now;
@@ -113,15 +112,6 @@ void Server::removeClosedConnections()
 
         closedConnections.clear();
     }
-}
-
-void Server::removeDeadSnakes()
-{
-    std::vector<int> deadSnakes = this->game->getDeadSnakes();
-    for (int i = 0; i < deadSnakes.size(); i++)
-        this->closeConnection(deadSnakes[i]);
-
-    this->game->clearDeadSnakes();
 }
 
 // TODO: handle case when data is not sent in 1 write

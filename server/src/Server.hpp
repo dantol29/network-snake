@@ -27,7 +27,6 @@ private:
     TimePoint lastSendTime;
     char readBuf[10];
 
-    void removeDeadSnakes();
     void acceptNewConnection();
     void closeConnection(int fd);
     void removeClosedConnections();

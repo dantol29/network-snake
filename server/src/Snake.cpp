@@ -83,7 +83,7 @@ void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::st
     }
 
     if (gameField[head->y][head->x] == 'B' || gameField[head->y][head->x] == 'H')
-        return this->game->addDeadSnake(this->fd);
+        return this->game->removeSnake(this->fd);
 
     if (gameField[head->y][head->x] == 'F')
     {
@@ -104,7 +104,7 @@ void Snake::setDirection(int newDir)
         return;
     if ((dir == RIGHT || dir == LEFT) && (this->direction == RIGHT || this->direction == LEFT))
         return;
-        
+
     this->direction = dir;
 }
 
