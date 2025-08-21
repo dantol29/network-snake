@@ -4,7 +4,7 @@
 
 #define GL_COLOR_BUFFER_BIT 0x00004000
 
-Game *game = nullptr;
+Drawer *drawer = nullptr;
 
 Graphics::Graphics(int width, int height, void *gamePointer)
 {
@@ -18,7 +18,7 @@ Graphics::Graphics(int width, int height, void *gamePointer)
     glfwMakeContextCurrent(this->window); // enable openGL
     glfwSwapInterval(1);                  // wait for one monitor refresh per buffer swap
     glfwSetKeyCallback(this->window, Graphics::keyCallback);
-    game = static_cast<Game *>(gamePointer);
+    drawer = static_cast<Drawer *>(gamePointer);
 }
 
 Graphics::~Graphics()
@@ -45,7 +45,7 @@ void Graphics::loop()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black and opaque
         glClear(GL_COLOR_BUFFER_BIT);         // Clear the color buffer (background)
 
-        game->gameLoop();
+        drawer->drawGameField();
 
         glfwSwapBuffers(this->window); // render window
         glfwPollEvents();
@@ -55,5 +55,5 @@ void Graphics::loop()
 void Graphics::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     // TODO: convert key and actions to standard
-    game->keyCallback(key, action);
+    drawer->keyCallback(key, action);
 }

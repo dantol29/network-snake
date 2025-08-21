@@ -32,41 +32,37 @@ Server::Server(Game *game) : game(game)
     serverSocket.events = POLLIN;
     serverSocket.revents = 0;
     connectedClients.push_back(serverSocket);
+
+    lastSendTime = Clock::now();
 }
 
 void Server::start()
 {
-    while (1)
+    while (poll(connectedClients.data(), connectedClients.size(), BLOCKING))
     {
-        int events = poll(connectedClients.data(), connectedClients.size(), BLOCKING);
-        if (events == -1)
-            onerror("Poll error");
+        auto now = Clock::now();
+        bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 50;
+        if (shouldSend)
+            serializedGameData = serializeGameData();
 
-        if (events)
+        int oldSize = connectedClients.size();
+        for (int i = 0; i < oldSize; i++)
         {
-            int size = connectedClients.size();
-            for (int i = 0; i < size; i++)
-            {
-                if (connectedClients[i].revents & POLLIN)
-                {
-                    if (i == 0)
-                        acceptNewConnection();
-                    else
-                        receiveDataFromClient(connectedClients[i].fd, i);
-                }
-                else if (connectedClients[i].revents & POLLOUT)
-                    sendGameData(connectedClients[i].fd);
-                else if (connectedClients[i].revents & (POLLERR | POLLHUP | POLLNVAL))
-                {
-                    if (i == 0)
-                        onerror("Server socket crashed");
-                    else
-                        handleSocketError(connectedClients[i].fd, i);
-                }
-            }
-            removeClosedConnections();
+            if (connectedClients[i].revents & POLLIN)
+                receiveDataFromClient(connectedClients[i].fd, i);
+            else if (connectedClients[i].revents & POLLOUT && shouldSend)
+                sendGameData(connectedClients[i].fd);
+            else if (connectedClients[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+                handleSocketError(connectedClients[i].fd, i);
         }
+
+        removeClosedConnections();
+
+        if (shouldSend)
+            lastSendTime = now;
     }
+
+    onerror("Poll error");
 }
 
 void Server::acceptNewConnection()
@@ -106,44 +102,64 @@ void Server::removeClosedConnections()
     }
 }
 
-void Server::sendGameData(int fd)
+// TODO: handle case when data is not sent in 1 write
+void Server::sendGameData(int fd) const
 {
-    int alreadySent = fdToBytesWritten[fd];
-    int dataSize = game->getFieldSize();
-    if (alreadySent < dataSize)
-    {
-        const std::string data = game->fieldToString().substr(alreadySent);
-        std::cout << "Sendind data: " << data << std::endl;
-        std::cout << "Size: " << dataSize - alreadySent << std::endl;
-
-        ssize_t bytesWritten = write(fd, data.c_str(), dataSize - alreadySent);
-        if (bytesWritten > 0)
-            fdToBytesWritten[fd] += bytesWritten;
-        else if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
-            std::cout << "Socket buffer is full..., trying again: " << fd << std::endl;
-        else
-            std::cout << "Failed to write to: " << fd << std::endl;
-    }
+    ssize_t bytesWritten = write(fd, serializedGameData.c_str(), serializedGameData.size());
+    if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
+        std::cout << "Socket buffer is full..., trying again: " << fd << std::endl;
+    else if (bytesWritten == -1)
+        perror("write");
 }
 
 void Server::receiveDataFromClient(int fd, int index)
 {
-    char buf[1024];
-    int bytesRead = read(fd, &buf, 1024);
-    if (bytesRead == 0)
+    if (index == 0)
+        return acceptNewConnection();
+
+    int bytesRead = read(fd, &readBuf, 1024);
+    if (bytesRead > 0)
+    {
+        printf("Received: %s\n", readBuf);
+        memset(readBuf, 0, 1024);
+    }
+    else if (bytesRead == 0)
         closeConnection(index, fd);
-    else if (bytesRead > 0)
-    {
-        printf("Received: %s\n", buf);
-    }
     else
-    {
         printf("Error while reading!\n");
-    }
 }
 
 void Server::handleSocketError(int fd, int index)
 {
+    if (index == 0)
+        onerror("Server socket crashed");
+
     std::cout << "Socket error: " << index << std::endl;
     closeConnection(index, fd);
 }
+
+// TLV format
+std::string Server::serializeGameData()
+{
+    const std::string gameField = game->fieldToString();
+    const std::string fieldSize = std::to_string(gameField.size());
+    return std::to_string(fieldSize.size()) + fieldSize + gameField;
+}
+
+// TODO: handle case when data is not sent in 1 write
+// void Server::sendGameData(int fd)
+// {
+//     // int alreadySent = fdToBytesWritten[fd];
+//     // int dataSize = game->getFieldSize();
+//     // if (alreadySent < dataSize)
+//     // {
+//     std::cout << "Sendind data" << std::endl;
+//     ssize_t bytesWritten = write(fd, serializedGameData.c_str(), serializedGameData.size());
+//     // if (bytesWritten > 0)
+//     //     fdToBytesWritten[fd] += bytesWritten;
+//     if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
+//         std::cout << "Socket buffer is full..., trying again: " << fd << std::endl;
+//     else if (bytesWritten == -1)
+//         perror("write");
+//     // }
+// }

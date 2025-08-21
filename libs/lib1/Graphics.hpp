@@ -1,7 +1,7 @@
 #ifndef GRAPHICS_HPP
 #define GRAPHICS_HPP
 
-#include "../../src/Game.hpp"
+#include "../../client/src/Drawer.hpp"
 #include <GLFW/glfw3.h>
 
 class Graphics

@@ -4,6 +4,8 @@
 #include "../includes/nibbler.hpp"
 #include "Game.hpp"
 
+class Game;
+
 struct snake
 {
     int x;

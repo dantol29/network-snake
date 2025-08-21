@@ -9,5 +9,8 @@
 1. Thread for the game logic
 2. Thread for the server
 
+## Improvements
+1. Implement multiple socket write/reads if data is not delivered/received
+
 ## Materials
 1. https://www.cs.dartmouth.edu/~campbell/cs50/socketprogramming
