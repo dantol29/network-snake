@@ -1,12 +1,14 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "Game.hpp"
 #include "../includes/nibbler.hpp"
+#include "Game.hpp"
 #include <map>
 
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<Clock>;
+
+class Game;
 
 class Server
 {
@@ -23,10 +25,11 @@ private:
     std::unordered_map<int, int> fdToBytesWritten;
     std::string serializedGameData;
     TimePoint lastSendTime;
-    char readBuf[1024];
+    char readBuf[10];
 
+    void removeDeadSnakes();
     void acceptNewConnection();
-    void closeConnection(int index, int fd);
+    void closeConnection(int fd);
     void removeClosedConnections();
     void sendGameData(int fd) const;
     void receiveDataFromClient(int fd, int index);

@@ -57,6 +57,7 @@ void Server::start()
         }
 
         removeClosedConnections();
+        removeDeadSnakes();
 
         if (shouldSend)
             lastSendTime = now;
@@ -81,14 +82,17 @@ void Server::acceptNewConnection()
         fd.events = POLLIN | POLLOUT;
         fd.revents = 0;
         connectedClients.push_back(fd);
+
+        this->game->addSnake(clientFd);
     }
 }
 
-void Server::closeConnection(int index, int fd)
+void Server::closeConnection(int fd)
 {
     close(fd);
-    closedConnections.push_back(index);
-    printf("Client %d closed\n", index);
+    this->game->removeSnake(fd);
+    closedConnections.push_back(fd);
+    printf("Client %d closed\n", fd);
 }
 
 void Server::removeClosedConnections()
@@ -96,10 +100,28 @@ void Server::removeClosedConnections()
     if (closedConnections.size() > 0)
     {
         for (auto it = closedConnections.begin(); it != closedConnections.end(); it++)
-            connectedClients.erase(connectedClients.begin() + *it);
+        {
+            for (auto it2 = connectedClients.begin(); it2 != connectedClients.end(); it2++)
+            {
+                if (it2->fd == *it)
+                {
+                    connectedClients.erase(it2);
+                    break;
+                }
+            }
+        }
 
         closedConnections.clear();
     }
+}
+
+void Server::removeDeadSnakes()
+{
+    std::vector<int> deadSnakes = this->game->getDeadSnakes();
+    for (int i = 0; i < deadSnakes.size(); i++)
+        this->closeConnection(deadSnakes[i]);
+
+    this->game->clearDeadSnakes();
 }
 
 // TODO: handle case when data is not sent in 1 write
@@ -117,14 +139,14 @@ void Server::receiveDataFromClient(int fd, int index)
     if (index == 0)
         return acceptNewConnection();
 
-    int bytesRead = read(fd, &readBuf, 1024);
-    if (bytesRead > 0)
+    int bytesRead = read(fd, &readBuf, 10);
+    if (bytesRead == 2)
     {
-        printf("Received: %s\n", readBuf);
-        memset(readBuf, 0, 1024);
+        game->setSnakeDirection(fd, (int)readBuf[0]);
+        memset(readBuf, 0, 10);
     }
     else if (bytesRead == 0)
-        closeConnection(index, fd);
+        closeConnection(fd);
     else
         printf("Error while reading!\n");
 }
@@ -135,7 +157,7 @@ void Server::handleSocketError(int fd, int index)
         onerror("Server socket crashed");
 
     std::cout << "Socket error: " << index << std::endl;
-    closeConnection(index, fd);
+    closeConnection(fd);
 }
 
 // TLV format
@@ -145,7 +167,6 @@ std::string Server::serializeGameData()
     const std::string fieldSize = std::to_string(gameField.size());
     return std::to_string(fieldSize.size()) + fieldSize + gameField;
 }
-
 // TODO: handle case when data is not sent in 1 write
 // void Server::sendGameData(int fd)
 // {

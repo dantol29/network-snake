@@ -1,7 +1,7 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(int height, int width, Game *game) : gameHeight(height), gameWidth(width), game(game)
+Snake::Snake(int height, int width, int fd, Game *game) : gameHeight(height), gameWidth(width), fd(fd), game(game)
 {
     this->tail = (struct snake *)malloc(sizeof(struct snake));
     if (!this->tail)
@@ -30,7 +30,7 @@ Snake::~Snake()
     }
 }
 
-void Snake::moveSnake()
+void Snake::moveSnake(std::vector<std::string> &gameField)
 {
     if (!this->tail)
         return;
@@ -44,16 +44,16 @@ void Snake::moveSnake()
         {
             currentPart->x = currentPart->prev->x;
             currentPart->y = currentPart->prev->y;
-            this->game->field[currentPart->y][currentPart->x] = 'B'; // TODO: maybe possibe to reduce writes
+            gameField[currentPart->y][currentPart->x] = 'B'; // TODO: maybe possibe to reduce writes
         }
         else
-            this->moveHead(currentPart, oldX, oldY);
+            this->moveHead(currentPart, oldX, oldY, gameField);
 
         currentPart = currentPart->prev;
     }
 }
 
-void Snake::moveHead(struct snake *head, int oldX, int oldY)
+void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::string> &gameField)
 {
     switch (this->direction)
     {
@@ -82,24 +82,30 @@ void Snake::moveHead(struct snake *head, int oldX, int oldY)
             head->x = 0;
     }
 
-    if (this->game->field[head->y][head->x] == 'B')
-        onerror("GAME OVER!");
+    if (gameField[head->y][head->x] == 'B' || gameField[head->y][head->x] == 'H')
+        return this->game->addDeadSnake(this->fd);
 
-    if (this->game->field[head->y][head->x] == 'F')
+    if (gameField[head->y][head->x] == 'F')
     {
         this->growSnake(oldX, oldY);
         this->game->decreaseFood();
-        this->game->field[oldY][oldX] = 'B';
+        gameField[oldY][oldX] = 'B';
     }
     else
-        this->game->field[oldY][oldX] = FLOOR_SYMBOL;
+        gameField[oldY][oldX] = FLOOR_SYMBOL;
 
-    this->game->field[head->y][head->x] = 'H';
+    gameField[head->y][head->x] = 'H';
 }
 
-void Snake::setDirection(enum direction newDirection)
+void Snake::setDirection(int newDir)
 {
-    this->direction = newDirection;
+    enum direction dir = (enum direction)newDir;
+    if ((dir == UP || dir == DOWN) && (this->direction == DOWN || this->direction == UP))
+        return;
+    if ((dir == RIGHT || dir == LEFT) && (this->direction == RIGHT || this->direction == LEFT))
+        return;
+        
+    this->direction = dir;
 }
 
 void Snake::growSnake(int oldX, int oldY)
@@ -112,4 +118,19 @@ void Snake::growSnake(int oldX, int oldY)
     this->tail->next = newTail;
 
     this->tail = newTail;
+}
+
+void Snake::cleanSnakeFromField(std::vector<std::string> &gameField)
+{
+    struct snake *currentPart = this->tail;
+    while (currentPart)
+    {
+        gameField[currentPart->y][currentPart->x] = FLOOR_SYMBOL;
+        currentPart = currentPart->prev;
+    }
+}
+
+int Snake::getFd() const
+{
+    return this->fd;
 }

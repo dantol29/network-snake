@@ -10,28 +10,23 @@
 
 int main(int argc, char **argv)
 {
-    if (argc != 3)
+    if (argc != 2)
         onerror("Invalid args");
 
-    int height = atoi(argv[1]);
-    int width = atoi(argv[2]);
-    if (height < 5 || width < 5)
+    int size = atoi(argv[1]);
+    if (size < 10)
         onerror("Invalid size");
 
-    Game *game = new Game(height, width);
+    Game *game = new Game(size);
     Server *server = new Server(game);
-    Snake *snake = new Snake(height, width, game);
 
-    game->addSnake(snake);
-
-    std::thread gameThread(&Game::gameLoop, game);
     std::thread serverThread(&Server::start, server);
-    if (gameThread.joinable())
-        gameThread.join();
+    
+    game->gameLoop();
+
     if (serverThread.joinable())
         serverThread.join();
 
     delete game;
-    delete snake;
     delete server;
 }

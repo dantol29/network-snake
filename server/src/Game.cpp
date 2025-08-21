@@ -9,12 +9,12 @@ using TimePoint = std::chrono::time_point<Clock>;
 TimePoint lastMoveTime = Clock::now();
 TimePoint lastEatTime = Clock::now();
 
-Game::Game(int width, int height) : width(width), height(height), fieldSize(width * height)
+Game::Game(int size) : fieldSize(size)
 {
-    for (int i = 0; i < height; i++)
+    for (int i = 0; i < size; i++)
     {
-        std::string row(width, FLOOR_SYMBOL);
-        this->field.push_back(row);
+        std::string row(size, FLOOR_SYMBOL);
+        this->gameField.push_back(row);
     }
 
     this->foodCount = 0;
@@ -25,22 +25,15 @@ void Game::gameLoop()
 {
     while (1)
     {
-        auto now = Clock::now();
-        bool canMove = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastMoveTime).count() >= 300;
-        bool canEat = std::chrono::duration_cast<std::chrono::seconds>(now - lastEatTime).count() >= 3;
+        this->now = Clock::now();
+        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= 300;
+        bool spawnFood = std::chrono::duration_cast<std::chrono::seconds>(this->now - lastEatTime).count() >= 3;
 
-        if (canMove)
-        {
-            this->snake->moveSnake();
-            this->printField();
-            lastMoveTime = now;
-        }
+        if (move)
+            this->moveSnakes();
 
-        if (canEat)
-        {
+        if (spawnFood)
             this->spawnFood();
-            lastEatTime = now;
-        }
     }
 }
 
@@ -49,26 +42,24 @@ void Game::spawnFood()
     if (foodCount > 1)
         return;
 
+    std::lock_guard<std::mutex> lock(gameFieldMutex);
+
     for (int i = 0; i < MAX_FOOD_SPAWN_TRIES; i++)
     {
         int r1 = rand();
         int r2 = rand();
-        int x = r1 % this->width;
-        int y = r2 % this->height;
+        int x = r1 % this->fieldSize;
+        int y = r2 % this->fieldSize;
 
-        if (this->field[y][x] == FLOOR_SYMBOL)
+        if (this->gameField[y][x] == FLOOR_SYMBOL)
         {
-            std::cout << "FOOD!" << std::endl;
-            this->field[y][x] = 'F';
+            this->gameField[y][x] = 'F';
+            lastEatTime = this->now;
             ++foodCount;
             return;
         }
     }
 }
-
-/*
-    UTILS
-*/
 
 void Game::decreaseFood()
 {
@@ -76,22 +67,79 @@ void Game::decreaseFood()
         this->foodCount--;
 }
 
-void Game::addSnake(Snake *snake)
+void Game::moveSnakes()
 {
-    this->snake = snake;
+    std::lock_guard<std::mutex> lock1(this->gameFieldMutex);
+    std::lock_guard<std::mutex> lock2(this->snakesMutex);
+
+    for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
+        (*it)->moveSnake(this->gameField);
+
+    // this->printField();
+    lastMoveTime = this->now;
 }
 
-int Game::getFieldSize() const
+void Game::setSnakeDirection(int fd, int dir)
 {
-    return this->fieldSize;
+    std::lock_guard<std::mutex> lock(this->snakesMutex);
+    for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
+        if ((*iter)->getFd() == fd)
+            return (*iter)->setDirection(dir);
 }
 
-std::string Game::fieldToString() const
+void Game::addSnake(int clientFd)
 {
+    std::lock_guard<std::mutex> lock(snakesMutex);
+
+    Snake *newSnake = new Snake(this->getFieldSize(), this->getFieldSize(), clientFd, this);
+    this->snakes.push_back(newSnake);
+}
+
+void Game::addDeadSnake(int fd)
+{
+    std::lock_guard<std::mutex> lock(this->deadSnakesMutex);
+    this->deadSnakes.push_back(fd);
+}
+
+void Game::removeSnake(int fd)
+{
+    std::lock_guard<std::mutex> lock1(snakesMutex);
+    std::lock_guard<std::mutex> lock2(gameFieldMutex);
+
+    for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
+    {
+        if ((*iter)->getFd() == fd)
+        {
+            (*iter)->cleanSnakeFromField(this->gameField);
+            this->snakes.erase(iter);
+            return;
+        }
+    }
+}
+
+void Game::clearDeadSnakes()
+{
+    this->deadSnakes.clear();
+}
+
+std::vector<int> Game::getDeadSnakes()
+{
+    std::lock_guard<std::mutex> lock(deadSnakesMutex);
+    std::vector<int> result;
+
+    for (auto iter = deadSnakes.begin(); iter < this->deadSnakes.end(); iter++)
+        result.push_back(*iter);
+
+    return result;
+}
+
+std::string Game::fieldToString()
+{
+    std::lock_guard<std::mutex> lock(this->gameFieldMutex);
     std::string data;
 
-    for (int i = 0; i < this->field.size(); i++)
-        data += this->field[i];
+    for (int i = 0; i < this->gameField.size(); i++)
+        data += this->gameField[i];
 
     return data;
 }
@@ -99,7 +147,12 @@ std::string Game::fieldToString() const
 void Game::printField() const
 {
     printf("\n\n");
-    for (int i = 0; i < this->field.size(); i++)
-        printf("%3d:%s\n", i, this->field[i].c_str());
+    for (int i = 0; i < this->gameField.size(); i++)
+        printf("%3d:%s\n", i, this->gameField[i].c_str());
     printf("\n\n");
+}
+
+int Game::getFieldSize() const
+{
+    return this->fieldSize;
 }
