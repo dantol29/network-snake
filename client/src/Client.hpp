@@ -10,17 +10,26 @@ public:
     ~Client();
 
     void start();
-    std::vector<std::string> getGameField() const;
+    void setDirection(enum direction dir);
+    const std::vector<std::string> &getGameField();
+    std::mutex& getGameFieldMutex();
 
 private:
     int serverSocket;
-    struct pollfd serverFd;
     char readBuf[16384]; // 16 kb
+    struct pollfd serverFd;
+    enum direction previousDirection;
+
+    // Accessed by drawer thread
+    std::mutex gameFieldMutex;
     std::vector<std::string> gameField;
     std::atomic<bool> &stopFlag;
+    std::atomic<enum direction> direction;
 
     void receiveGameData();
     void deserealizeGameData(int bytesRead);
+    void sendDirection();
+    void enableSend(enum direction newDirection);
     void printGameField() const;
 };
 

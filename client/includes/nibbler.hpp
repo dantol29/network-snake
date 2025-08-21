@@ -13,6 +13,7 @@
 #include <dlfcn.h>
 #include <thread>
 #include <atomic>
+#include <mutex>
 
 #define TILE_SIZE 0.05f
 #define SCALE 20.0f

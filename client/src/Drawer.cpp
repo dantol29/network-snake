@@ -1,6 +1,6 @@
 #include "Drawer.hpp"
 
-Drawer::Drawer(const Client *client)
+Drawer::Drawer(Client *client)
 {
     this->client = client;
 }
@@ -48,7 +48,11 @@ void Drawer::openWindow()
 void Drawer::drawGameField()
 {
     struct rgb rgb;
-    const std::vector<std::string> gameField = this->client->getGameField();
+    
+    std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
+    std::lock_guard<std::mutex> lock(gameFieldMutex);
+    
+    const std::vector<std::string> &gameField = this->client->getGameField();
 
     for (int y = 0; y < gameField.size(); y++)
     {
@@ -78,16 +82,16 @@ void Drawer::keyCallback(int key, int action)
         switch (key)
         {
         case 265:
-            this->direction = UP;
+            this->client->setDirection(UP);
             break;
         case 264:
-            this->direction = DOWN;
+            this->client->setDirection(DOWN);
             break;
         case 263:
-            this->direction = LEFT;
+            this->client->setDirection(LEFT);
             break;
         case 262:
-            this->direction = RIGHT;
+            this->client->setDirection(RIGHT);
             break;
         }
     }

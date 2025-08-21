@@ -4,7 +4,7 @@
 #define SERVER_IP "127.0.0.1"
 #define BLOCKING -1
 
-Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag)
+Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), previousDirection(UP), direction(UP)
 {
     this->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (this->serverSocket < 0)
@@ -27,11 +27,16 @@ Client::~Client() {}
 
 void Client::start()
 {
-    // when there is data avaliblae to send - add POLLOUT to serverFd
     while (poll(&this->serverFd, 1, BLOCKING))
     {
-        if (serverFd.revents & POLLIN)
+        if (this->serverFd.revents & POLLIN)
             receiveGameData();
+        if (this->serverFd.revents & POLLOUT)
+            sendDirection();
+
+        auto currentDirection = this->direction.load();
+        if (this->previousDirection != currentDirection)
+            enableSend(currentDirection);
 
         if (stopFlag.load())
             return;
@@ -68,7 +73,8 @@ void Client::deserealizeGameData(int bytesRead)
     if (1 + lenSize + dataLenInt > bytesRead)
         onerror("Not enough data received");
 
-    // lock mutex
+    std::lock_guard<std::mutex> lock(this->gameFieldMutex);
+
     this->gameField.clear();
 
     for (int y = 0; y < rowSize; y++)
@@ -80,12 +86,41 @@ void Client::deserealizeGameData(int bytesRead)
         this->gameField.push_back(row);
     }
 
-    this->printGameField();
+    // this->printGameField();
 }
 
-std::vector<std::string> Client::getGameField() const
+void Client::sendDirection()
+{
+    char writeBuf[2];
+    writeBuf[0] = this->previousDirection;
+    writeBuf[1] = '\0';
+
+    int bytesWritten = write(this->serverSocket, &writeBuf, 2);
+    if (bytesWritten == 2)
+        this->serverFd.events = POLLIN; // disable POLLOUT
+    else
+        perror("write");
+}
+
+void Client::setDirection(enum direction dir)
+{
+    this->direction.store(dir);
+}
+
+void Client::enableSend(enum direction newDirection)
+{
+    this->previousDirection = newDirection;
+    this->serverFd.events = POLLIN | POLLOUT; // enable POLLOUT to send new direction
+}
+
+const std::vector<std::string> &Client::getGameField()
 {
     return this->gameField;
+}
+
+std::mutex &Client::getGameFieldMutex()
+{
+    return this->gameFieldMutex;
 }
 
 void Client::printGameField() const

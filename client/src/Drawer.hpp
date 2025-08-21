@@ -9,7 +9,7 @@ class Client;
 class Drawer
 {
 public:
-    Drawer(const Client *client);
+    Drawer(Client *client);
     ~Drawer();
 
     void loadDynamicLibrary(const char *lib);
@@ -18,10 +18,9 @@ public:
     void drawGameField();
 
 private:
-    const Client *client;
+    Client *client;
     void *dynamicLibrary;
     void *window;
-    enum direction direction;
     initFunc init;
     loopFunc loop;
     drawSquareFunc drawSquare;
