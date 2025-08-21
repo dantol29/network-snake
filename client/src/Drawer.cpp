@@ -1,0 +1,94 @@
+#include "Drawer.hpp"
+
+Drawer::Drawer(const Client *client)
+{
+    this->client = client;
+}
+
+Drawer::~Drawer()
+{
+    this->cleanup(this->window);
+    dlclose(this->dynamicLibrary);
+}
+
+void Drawer::loadDynamicLibrary(const char *lib)
+{
+    this->dynamicLibrary = dlopen(lib, RTLD_LAZY);
+    if (!this->dynamicLibrary)
+        onerror("Failed to load dynlib");
+
+    dlerror(); // clean errors
+
+    this->init = (initFunc)dlsym(this->dynamicLibrary, "init");
+    this->loop = (loopFunc)dlsym(this->dynamicLibrary, "loop");
+    this->cleanup = (cleanupFunc)dlsym(this->dynamicLibrary, "cleanup");
+    this->drawSquare = (drawSquareFunc)dlsym(this->dynamicLibrary, "drawSquare");
+
+    char *error = dlerror(); // check dlsym calls
+    if (error != NULL)
+        onerror("Failed to find functions in dynamic lib");
+
+    if (!this->init || !this->loop || !this->cleanup || !this->drawSquare)
+        onerror("Failed to init lib functions");
+}
+
+void Drawer::start()
+{
+    this->openWindow();
+    this->loop(this->window);
+}
+
+void Drawer::openWindow()
+{
+    this->window = this->init(800, 600, this);
+    if (!this->window)
+        onerror("Failed to init lib");
+}
+
+void Drawer::drawGameField()
+{
+    struct rgb rgb;
+    const std::vector<std::string> gameField = this->client->getGameField();
+
+    for (int y = 0; y < gameField.size(); y++)
+    {
+        float windowY = 0.9f - (float)y / SCALE;
+        for (int x = 0; x < gameField[y].size(); x++)
+        {
+            float windowX = -1.0f + (float)x / SCALE;
+            char tile = gameField[y][x];
+            if (tile == 'F')
+                rgb = {0.5f, 0.1f, 0.1f};
+            else if (tile == 'B')
+                rgb = {0.0f, 0.6f, 0.2f};
+            else if (tile == 'H')
+                rgb = {0.9f, 0.3f, 0.0f};
+            else
+                continue;
+
+            this->drawSquare(this->window, windowX, windowY, TILE_SIZE, rgb);
+        }
+    }
+}
+
+void Drawer::keyCallback(int key, int action)
+{
+    if (action == 1)
+    {
+        switch (key)
+        {
+        case 265:
+            this->direction = UP;
+            break;
+        case 264:
+            this->direction = DOWN;
+            break;
+        case 263:
+            this->direction = LEFT;
+            break;
+        case 262:
+            this->direction = RIGHT;
+            break;
+        }
+    }
+}
