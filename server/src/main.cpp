@@ -10,22 +10,23 @@
 
 int main(int argc, char **argv)
 {
-    if (argc != 2)
-        onerror("Invalid args");
+    if (argc != 3)
+        onerror("Usage: ./nibbler height width");
 
-    int size = atoi(argv[1]);
-    if (size < 10)
+    int height = atoi(argv[1]);
+    int width = atoi(argv[2]);
+    if (height < 10 || width < 10)
         onerror("Invalid size");
 
-    Game *game = new Game(size);
+    Game *game = new Game(height, width);
     Server *server = new Server(game);
 
-    std::thread serverThread(&Server::start, server);
-    
-    game->gameLoop();
+    std::thread gameThread(&Game::start, game);
 
-    if (serverThread.joinable())
-        serverThread.join();
+    server->start();
+
+    if (gameThread.joinable())
+        gameThread.join();
 
     delete game;
     delete server;

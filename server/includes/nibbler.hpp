@@ -13,6 +13,8 @@
 #include <vector>
 #include <iostream>
 #include <thread>
+#include <atomic>
+#include <memory>
 
 #define FLOOR_SYMBOL '.'
 

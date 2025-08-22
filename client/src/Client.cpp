@@ -23,7 +23,10 @@ Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), previousDirect
     this->serverFd.revents = 0;
 }
 
-Client::~Client() {}
+Client::~Client()
+{
+    close(this->serverSocket);
+}
 
 void Client::start()
 {
@@ -55,40 +58,6 @@ void Client::receiveGameData()
         onerror("Error while reading from server socket");
 }
 
-// TLV format
-void Client::deserealizeGameData(int bytesRead)
-{
-    std::string row;
-
-    const int lenSize = this->readBuf[0] - '0';
-    if (lenSize < 1)
-        return;
-
-    const std::string dataLen(this->readBuf + 1, lenSize);
-    const int dataLenInt = atoi(dataLen.c_str());
-    const int rowSize = sqrt(dataLenInt);
-    if (dataLenInt == 0 || rowSize == 0)
-        return;
-
-    if (1 + lenSize + dataLenInt > bytesRead)
-        onerror("Not enough data received");
-
-    std::lock_guard<std::mutex> lock(this->gameFieldMutex);
-
-    this->gameField.clear();
-
-    for (int y = 0; y < rowSize; y++)
-    {
-        row.clear();
-        for (int x = 0; x < rowSize; x++)
-            row += this->readBuf[x + lenSize + 1 + y * rowSize];
-
-        this->gameField.push_back(row);
-    }
-
-    // this->printGameField();
-}
-
 void Client::sendDirection()
 {
     char writeBuf[2];
@@ -113,6 +82,65 @@ void Client::enableSend(enum direction newDirection)
     this->serverFd.events = POLLIN | POLLOUT; // enable POLLOUT to send new direction
 }
 
+// TLV format
+void Client::deserealizeGameData(int bytesRead)
+{
+    int index = 0;
+
+    const std::string heightStr = Client::deserealizeValue(readBuf, &index);
+    const std::string widthStr = Client::deserealizeValue(readBuf + index, &index);
+    const std::string fieldStr = Client::deserealizeValue(readBuf + index, &index);
+    if (heightStr.empty() || widthStr.empty() || fieldStr.empty())
+        return Client::printError("Could not deserealize incoming data");
+
+    const int height = atoi(heightStr.c_str());
+    const int width = atoi(widthStr.c_str());
+    if (height == 0 || width == 0)
+        return Client::printError("Invalid length or width");
+
+    if (height * width != fieldStr.size())
+        return Client::printError("Game field was not received correctly");
+
+    std::lock_guard<std::mutex> lock(this->gameFieldMutex);
+
+    this->gameField.clear();
+
+    std::string row;
+    for (int y = 0; y < height; y++)
+    {
+        row.clear();
+        for (int x = 0; x < width; x++)
+            row += fieldStr[x + y * height];
+
+        this->gameField.push_back(row);
+    }
+
+    this->height.store(height);
+    this->width.store(width);
+}
+
+std::string Client::deserealizeValue(char *readBuf, int *index)
+{
+    const int lenSize = readBuf[0] - '0';
+    if (lenSize < 1)
+        return "";
+
+    const std::string len(readBuf + 1, lenSize);
+    const int lenInt = atoi(len.c_str());
+    if (lenInt == 0)
+        return "";
+
+    *index += 1 + len.size() + lenInt;
+
+    const std::string value(readBuf + 1 + len.size(), lenInt);
+    return value;
+}
+
+void Client::printError(std::string str)
+{
+    std::cerr << str << std::endl;
+}
+
 const std::vector<std::string> &Client::getGameField()
 {
     return this->gameField;
@@ -123,10 +151,12 @@ std::mutex &Client::getGameFieldMutex()
     return this->gameFieldMutex;
 }
 
-void Client::printGameField() const
+int Client::getWidth()
 {
-    printf("\n\n");
-    for (int i = 0; i < this->gameField.size(); i++)
-        printf("%3d:%s\n", i, this->gameField[i].c_str());
-    printf("\n\n");
+    return this->width.load();
+}
+
+int Client::getHeight()
+{
+    return this->height.load();
 }

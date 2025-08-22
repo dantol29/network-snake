@@ -1,7 +1,7 @@
 NAME = nibbler
 CC = c++
-CFLAGS = -O2 -Wall -Wextra
-FSANITIZE = -fsanitize=thread
+CFLAGS = -O2 -Wall -Wextra -Werror
+FSANITIZE = -fsanitize=address
 SOURCES_M := src/main.cpp src/Game.cpp src/Snake.cpp src/Server.cpp
 
 OBJECTS := $(SOURCES_M:.cpp=.o)

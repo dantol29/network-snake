@@ -9,11 +9,11 @@ using TimePoint = std::chrono::time_point<Clock>;
 TimePoint lastMoveTime = Clock::now();
 TimePoint lastEatTime = Clock::now();
 
-Game::Game(int size) : fieldSize(size)
+Game::Game(int height, int width) : height(height), width(width), stopFlag(false)
 {
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < height; i++)
     {
-        std::string row(size, FLOOR_SYMBOL);
+        std::string row(width, FLOOR_SYMBOL);
         this->gameField.push_back(row);
     }
 
@@ -21,12 +21,22 @@ Game::Game(int size) : fieldSize(size)
     srand(time(NULL)); // init random generator
 }
 
-void Game::gameLoop()
+Game::~Game()
+{
+    std::cout << "Game destr called" << std::endl;
+}
+
+void Game::stop()
+{
+    this->stopFlag.store(true);
+}
+
+void Game::start()
 {
     while (1)
     {
         this->now = Clock::now();
-        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= 300;
+        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= 900;
         bool spawnFood = std::chrono::duration_cast<std::chrono::seconds>(this->now - lastEatTime).count() >= 3;
 
         if (move)
@@ -34,6 +44,9 @@ void Game::gameLoop()
 
         if (spawnFood)
             this->spawnFood();
+
+        if (stopFlag.load())
+            return;
     }
 }
 
@@ -48,8 +61,8 @@ void Game::spawnFood()
     {
         int r1 = rand();
         int r2 = rand();
-        int x = r1 % this->fieldSize;
-        int y = r2 % this->fieldSize;
+        int x = r1 % (this->width - 1);
+        int y = r2 % (this->height - 1);
 
         if (this->gameField[y][x] == FLOOR_SYMBOL)
         {
@@ -96,7 +109,7 @@ void Game::setSnakeDirection(int fd, int dir)
 void Game::addSnake(int clientFd)
 {
     std::lock_guard<std::mutex> lock(snakesMutex);
-    Snake *newSnake = new Snake(this->getFieldSize(), this->getFieldSize(), clientFd, this);
+    Snake *newSnake = new Snake(this->height, this->width, clientFd, this);
     this->snakes.push_back(newSnake);
 }
 
@@ -138,7 +151,17 @@ void Game::printField() const
     printf("\n\n");
 }
 
-int Game::getFieldSize() const
+int Game::getHeight() const
 {
-    return this->fieldSize;
+    return this->height;
+}
+
+int Game::getWidth() const
+{
+    return this->width;
+}
+
+bool Game::getStopFlag()
+{
+    return this->stopFlag.load();
 }

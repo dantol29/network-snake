@@ -34,12 +34,24 @@ Server::Server(Game *game) : game(game)
     connectedClients.push_back(serverSocket);
 
     lastSendTime = Clock::now();
+
+    this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
+    this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
+}
+
+Server::~Server()
+{
+    std::cout << "Destructor called!" << std::endl;
+    close(serverFd);
 }
 
 void Server::start()
 {
     while (poll(connectedClients.data(), connectedClients.size(), BLOCKING))
     {
+        if (this->game->getStopFlag())
+            return;
+
         auto now = Clock::now();
         bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 100;
         if (shouldSend)
@@ -153,9 +165,16 @@ void Server::handleSocketError(int fd, int index)
 // TLV format
 std::string Server::serializeGameData()
 {
-    const std::string gameField = game->fieldToString();
-    const std::string fieldSize = std::to_string(gameField.size());
-    return std::to_string(fieldSize.size()) + fieldSize + gameField;
+    const std::string field = Server::serializeValue(game->fieldToString());
+    return this->serializedHeight + this->serializedWidth + field;
+}
+
+std::string Server::serializeValue(const std::string &value)
+{
+    const std::string len = std::to_string(value.size());
+    const std::string lenSize = std::to_string(len.size());
+
+    return lenSize + len + value;
 }
 // TODO: handle case when data is not sent in 1 write
 // void Server::sendGameData(int fd)

@@ -55,44 +55,52 @@ void Snake::moveSnake(std::vector<std::string> &gameField)
 
 void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::string> &gameField)
 {
+    bool isDead = false;
+
     switch (this->direction)
     {
     case UP:
         if (head->y > 0)
             head->y -= 1;
         else
-            head->y = this->gameHeight - 1;
+            isDead = true;
         break;
     case DOWN:
         if (head->y < this->gameHeight - 1)
             head->y += 1;
         else
-            head->y = 0;
+            isDead = true;
         break;
     case LEFT:
         if (head->x > 0)
             head->x -= 1;
         else
-            head->x = this->gameWidth - 1;
+            isDead = true;
         break;
     case RIGHT:
         if (head->x < this->gameWidth - 1)
             head->x += 1;
         else
-            head->x = 0;
+            isDead = true;
     }
 
-    if (gameField[head->y][head->x] != 'F')
-        gameField[oldY][oldX] = FLOOR_SYMBOL;
-    else
+    if (gameField[head->y][head->x] == 'F')
     {
         this->growSnake(oldX, oldY);
         this->game->decreaseFood();
         gameField[oldY][oldX] = 'B';
     }
+    else
+        gameField[oldY][oldX] = FLOOR_SYMBOL;
 
     if (gameField[head->y][head->x] == 'B' || gameField[head->y][head->x] == 'H')
+        isDead = true;
+
+    if (isDead)
+    {
+        // this->game->stop();
         return this->game->addDeadSnake(this->fd);
+    }
 
     gameField[head->y][head->x] = 'H';
 }
@@ -122,11 +130,9 @@ void Snake::growSnake(int oldX, int oldY)
 
 void Snake::cleanSnakeFromField(std::vector<std::string> &gameField)
 {
-    std::cout << "x: " << this->tail->x << ", y: " << this->tail->y << std::endl;
     struct snake *currentPart = this->tail;
     while (currentPart)
     {
-        std::cout << "Iter" << std::endl;
         gameField[currentPart->y][currentPart->x] = FLOOR_SYMBOL;
         currentPart = currentPart->prev;
     }

@@ -14,8 +14,11 @@ class Server
 {
 public:
     Server(Game *game);
+    ~Server();
 
     void start();
+
+    static std::string serializeValue(const std::string &value);
 
 private:
     Game *game;
@@ -24,6 +27,8 @@ private:
     std::vector<int> closedConnections;
     std::unordered_map<int, int> fdToBytesWritten;
     std::string serializedGameData;
+    std::string serializedHeight;
+    std::string serializedWidth;
     TimePoint lastSendTime;
     char readBuf[10];
 
