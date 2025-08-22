@@ -12,5 +12,14 @@
 ## Improvements
 1. Implement multiple socket write/reads if data is not delivered/received
 
+## TODO
+1. Replace onerror() with proper exit
+2. Add 2 dynamic libs
+3. Check memory leaks
+4. Stop server when game is finished
+5. Add ability for screen to move with the snake
+6. Improve graphics(more than 1 bit for snake part)
+7. Spawn more food if more players
+
 ## Materials
 1. https://www.cs.dartmouth.edu/~campbell/cs50/socketprogramming

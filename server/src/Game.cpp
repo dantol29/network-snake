@@ -75,7 +75,13 @@ void Game::moveSnakes()
     for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
         (*it)->moveSnake(this->gameField);
 
-    // this->printField();
+    std::lock_guard<std::mutex> lock3(this->deadSnakesMutex);
+
+    for (auto it = this->deadSnakes.begin(); it != this->deadSnakes.end(); it++)
+        this->removeSnake(*it);
+    this->deadSnakes.clear();
+
+    this->printField();
     lastMoveTime = this->now;
 }
 
@@ -90,16 +96,18 @@ void Game::setSnakeDirection(int fd, int dir)
 void Game::addSnake(int clientFd)
 {
     std::lock_guard<std::mutex> lock(snakesMutex);
-
     Snake *newSnake = new Snake(this->getFieldSize(), this->getFieldSize(), clientFd, this);
     this->snakes.push_back(newSnake);
 }
 
+void Game::addDeadSnake(int fd)
+{
+    std::lock_guard<std::mutex> lock3(this->deadSnakesMutex);
+    this->deadSnakes.push_back(fd);
+}
+
 void Game::removeSnake(int fd)
 {
-    std::lock_guard<std::mutex> lock1(snakesMutex);
-    std::lock_guard<std::mutex> lock2(gameFieldMutex);
-
     for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
     {
         if ((*iter)->getFd() == fd)

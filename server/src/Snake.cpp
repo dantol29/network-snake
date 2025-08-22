@@ -82,17 +82,17 @@ void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::st
             head->x = 0;
     }
 
-    if (gameField[head->y][head->x] == 'B' || gameField[head->y][head->x] == 'H')
-        return this->game->removeSnake(this->fd);
-
-    if (gameField[head->y][head->x] == 'F')
+    if (gameField[head->y][head->x] != 'F')
+        gameField[oldY][oldX] = FLOOR_SYMBOL;
+    else
     {
         this->growSnake(oldX, oldY);
         this->game->decreaseFood();
         gameField[oldY][oldX] = 'B';
     }
-    else
-        gameField[oldY][oldX] = FLOOR_SYMBOL;
+
+    if (gameField[head->y][head->x] == 'B' || gameField[head->y][head->x] == 'H')
+        return this->game->addDeadSnake(this->fd);
 
     gameField[head->y][head->x] = 'H';
 }
@@ -122,9 +122,11 @@ void Snake::growSnake(int oldX, int oldY)
 
 void Snake::cleanSnakeFromField(std::vector<std::string> &gameField)
 {
+    std::cout << "x: " << this->tail->x << ", y: " << this->tail->y << std::endl;
     struct snake *currentPart = this->tail;
     while (currentPart)
     {
+        std::cout << "Iter" << std::endl;
         gameField[currentPart->y][currentPart->x] = FLOOR_SYMBOL;
         currentPart = currentPart->prev;
     }

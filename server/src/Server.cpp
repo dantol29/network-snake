@@ -41,7 +41,7 @@ void Server::start()
     while (poll(connectedClients.data(), connectedClients.size(), BLOCKING))
     {
         auto now = Clock::now();
-        bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 50;
+        bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 100;
         if (shouldSend)
             serializedGameData = serializeGameData();
 
@@ -89,9 +89,9 @@ void Server::acceptNewConnection()
 void Server::closeConnection(int fd)
 {
     close(fd);
-    this->game->removeSnake(fd);
     closedConnections.push_back(fd);
-    printf("Client %d closed\n", fd);
+    this->game->addDeadSnake(fd);
+    printf("Client %d removed\n", fd);
 }
 
 void Server::removeClosedConnections()
