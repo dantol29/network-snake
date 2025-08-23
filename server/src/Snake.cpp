@@ -7,8 +7,8 @@ Snake::Snake(int height, int width, int fd, Game *game) : gameHeight(height), ga
     if (!this->tail)
         onerror("Memory error");
 
-    this->tail->x = 2;
-    this->tail->y = 3;
+    this->tail->x = height / 2;
+    this->tail->y = width / 2;
     this->tail->next = NULL;
     this->tail->prev = NULL;
     this->direction = UP;
@@ -136,6 +136,12 @@ void Snake::cleanSnakeFromField(std::vector<std::string> &gameField)
         gameField[currentPart->y][currentPart->x] = FLOOR_SYMBOL;
         currentPart = currentPart->prev;
     }
+}
+
+void Snake::updateField(int height, int width)
+{
+    this->gameHeight = height;
+    this->gameWidth = width;
 }
 
 int Snake::getFd() const

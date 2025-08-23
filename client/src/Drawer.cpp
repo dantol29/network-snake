@@ -3,8 +3,6 @@
 #define WIDTH 1000
 #define HEIGHT 1000
 #define SCREEN_LEN 2
-#define GAME_SIZE_X 20
-#define GAME_SIZE_y 20
 
 Drawer::Drawer(Client *client)
 {
@@ -46,7 +44,7 @@ void Drawer::start()
 
 void Drawer::openWindow()
 {
-    this->window = this->init(1000, 1000, this);
+    this->window = this->init(HEIGHT, WIDTH, this);
     if (!this->window)
         onerror("Failed to init lib");
 }
@@ -59,17 +57,17 @@ void Drawer::drawGameField()
     std::lock_guard<std::mutex> lock(gameFieldMutex);
 
     const std::vector<std::string> &gameField = this->client->getGameField();
-    const int height = this->client->getHeight();
-    const int width = this->client->getWidth();
-    const float step = (float)SCREEN_LEN / height;
-    std::cout << step << std::endl;
+    const int gameHeight = this->client->getHeight();
+    const int gameWidth = this->client->getWidth();
+    const float stepY = (float)SCREEN_LEN / gameHeight;
+    const float stepX = (float)SCREEN_LEN / gameWidth;
 
-    for (int y = 0; y < height; y++)
+    for (int y = 0; y < gameHeight; y++)
     {
-        float windowY = 1.0f - (float)y * step; // TODO: 1.0f - smth
-        for (int x = 0; x < width; x++)
+        float windowY = (1.0f - stepY) - (float)y * stepY; // TODO: 1.0f - smth
+        for (int x = 0; x < gameWidth; x++)
         {
-            float windowX = -1.0f + (float)x * step;
+            float windowX = -1.0f + (float)x * stepX;
             char tile = gameField[y][x];
             if (tile == 'F')
                 rgb = {0.5f, 0.1f, 0.1f};
@@ -80,7 +78,7 @@ void Drawer::drawGameField()
             else
                 continue;
 
-            this->drawSquare(this->window, windowX, windowY, step, rgb);
+            this->drawSquare(this->window, windowX, windowY, stepX, stepY, rgb);
         }
     }
 }

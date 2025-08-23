@@ -95,6 +95,10 @@ void Server::acceptNewConnection()
         connectedClients.push_back(fd);
 
         this->game->addSnake(clientFd);
+
+        this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
+        this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
+        
     }
 }
 

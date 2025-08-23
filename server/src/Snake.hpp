@@ -31,6 +31,7 @@ public:
     void moveSnake(std::vector<std::string> &gameField);
     void cleanSnakeFromField(std::vector<std::string> &gameField);
     void setDirection(int newDir);
+    void updateField(int height, int width);
     int getFd() const;
 
 private:

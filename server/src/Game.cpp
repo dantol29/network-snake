@@ -36,7 +36,7 @@ void Game::start()
     while (1)
     {
         this->now = Clock::now();
-        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= 900;
+        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= 200;
         bool spawnFood = std::chrono::duration_cast<std::chrono::seconds>(this->now - lastEatTime).count() >= 3;
 
         if (move)
@@ -108,9 +108,13 @@ void Game::setSnakeDirection(int fd, int dir)
 
 void Game::addSnake(int clientFd)
 {
-    std::lock_guard<std::mutex> lock(snakesMutex);
+    std::lock_guard<std::mutex> lock1(snakesMutex);
+    std::lock_guard<std::mutex> lock2(gameFieldMutex);
+
     Snake *newSnake = new Snake(this->height, this->width, clientFd, this);
     this->snakes.push_back(newSnake);
+
+    this->increaseGameField();
 }
 
 void Game::addDeadSnake(int fd)
@@ -130,6 +134,24 @@ void Game::removeSnake(int fd)
             return;
         }
     }
+}
+
+void Game::increaseGameField()
+{
+    int currentHeight = this->height.load();
+    int currentWidth = this->width.load();
+    int newHeight = static_cast<int>(currentHeight * 1.10 + 0.5);
+    int newWidth = static_cast<int>(currentWidth * 1.10 + 0.5);
+
+    this->height.store(newHeight);
+    this->width.store(newWidth);
+
+    for (auto iter = this->snakes.begin(); iter != this->snakes.end(); ++iter)
+        (*iter)->updateField(newHeight, newWidth);
+
+    this->gameField.resize(newHeight);
+    for (int i = 0; i < newHeight; i++)
+        this->gameField[i].resize(newWidth, '.');
 }
 
 std::string Game::fieldToString()
@@ -153,12 +175,12 @@ void Game::printField() const
 
 int Game::getHeight() const
 {
-    return this->height;
+    return this->height.load();
 }
 
 int Game::getWidth() const
 {
-    return this->width;
+    return this->width.load();
 }
 
 bool Game::getStopFlag()

@@ -29,11 +29,11 @@ public:
 
 private:
     int foodCount;
-    const int height;
-    const int width;
     std::chrono::steady_clock::time_point now;
 
     // Used by another thread
+    std::atomic<int> height;
+    std::atomic<int> width;
     std::atomic<bool> stopFlag;
     std::mutex deadSnakesMutex;
     std::vector<int> deadSnakes;
@@ -45,6 +45,7 @@ private:
     void spawnFood();
     void moveSnakes();
     void removeSnake(int fd);
+    void increaseGameField();
     void printField() const;
 };
 

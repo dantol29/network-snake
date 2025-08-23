@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 
     int height = atoi(argv[1]);
     int width = atoi(argv[2]);
-    if (height < 10 || width < 10)
+    if (height < 10 || width < 10 || height > 100 || width > 100)
         onerror("Invalid size");
 
     Game *game = new Game(height, width);

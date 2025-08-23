@@ -27,14 +27,14 @@ Graphics::~Graphics()
     glfwTerminate();
 }
 
-void Graphics::drawSquare(GLfloat x, GLfloat y, GLfloat size, struct rgb color) const
+void Graphics::drawSquare(GLfloat x, GLfloat y, GLfloat width, GLfloat height, struct rgb color) const
 {
     glColor3f(color.r, color.g, color.b);
     glBegin(GL_QUADS);
-    glVertex2f(x, y);               // bottom-left
-    glVertex2f(x + size, y);        // bottom-right
-    glVertex2f(x + size, y + size); // top-right
-    glVertex2f(x, y + size);        // top-left
+    glVertex2f(x, y);                  // bottom-left
+    glVertex2f(x + width, y);          // bottom-right
+    glVertex2f(x + width, y + height); // top-right
+    glVertex2f(x, y + height);         // top-left
     glEnd();
 }
 

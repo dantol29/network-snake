@@ -16,7 +16,7 @@ public:
     ~Graphics();
 
     void loop();
-    void drawSquare(GLfloat x, GLfloat y, GLfloat size, struct rgb color) const;
+    void drawSquare(GLfloat x, GLfloat y, GLfloat width, GLfloat height, struct rgb color) const;
 };
 
 extern "C"
@@ -39,10 +39,10 @@ extern "C"
             static_cast<Graphics *>(g)->loop();
     }
 
-    void drawSquare(void *g, float x, float y, float size, struct rgb color)
+    void drawSquare(void *g, float x, float y, float width, float height, struct rgb color)
     {
         if (g)
-            static_cast<Graphics *>(g)->drawSquare(x, y, size, color);
+            static_cast<Graphics *>(g)->drawSquare(x, y, width, height, color);
     }
 };
 
