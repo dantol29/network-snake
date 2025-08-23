@@ -14,6 +14,7 @@ Snake::Snake(int height, int width, int fd, Game *game) : gameHeight(height), ga
     this->direction = UP;
 }
 
+// TODO: migrate to C++ linked list
 Snake::~Snake()
 {
     if (!this->tail)
@@ -28,6 +29,8 @@ Snake::~Snake()
         prev = prev->prev;
         free(tmp);
     }
+
+    std::cout << "Snake destructor called" << std::endl;
 }
 
 void Snake::moveSnake(std::vector<std::string> &gameField)
@@ -87,8 +90,8 @@ void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::st
     if (gameField[head->y][head->x] == 'F')
     {
         this->growSnake(oldX, oldY);
-        this->game->decreaseFood();
         gameField[oldY][oldX] = 'B';
+        this->game->decreaseFood();
     }
     else
         gameField[oldY][oldX] = FLOOR_SYMBOL;
@@ -105,7 +108,7 @@ void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::st
     gameField[head->y][head->x] = 'H';
 }
 
-void Snake::setDirection(int newDir)
+void Snake::setDirection(const int newDir)
 {
     enum direction dir = (enum direction)newDir;
     if ((dir == UP || dir == DOWN) && (this->direction == DOWN || this->direction == UP))
@@ -116,7 +119,7 @@ void Snake::setDirection(int newDir)
     this->direction = dir;
 }
 
-void Snake::growSnake(int oldX, int oldY)
+void Snake::growSnake(const int oldX, const int oldY)
 {
     struct snake *newTail = (struct snake *)malloc(sizeof(struct snake));
     newTail->next = NULL;
@@ -138,7 +141,7 @@ void Snake::cleanSnakeFromField(std::vector<std::string> &gameField)
     }
 }
 
-void Snake::updateField(int height, int width)
+void Snake::updateGameSize(const int height, const int width)
 {
     this->gameHeight = height;
     this->gameWidth = width;

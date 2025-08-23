@@ -76,14 +76,15 @@ void Client::setDirection(enum direction dir)
     this->direction.store(dir);
 }
 
-void Client::enableSend(enum direction newDirection)
+// TODO: might be a better way to enable POLLOUT without check in a loop
+void Client::enableSend(const enum direction newDirection)
 {
     this->previousDirection = newDirection;
     this->serverFd.events = POLLIN | POLLOUT; // enable POLLOUT to send new direction
 }
 
 // TLV format
-void Client::deserealizeGameData(int bytesRead)
+void Client::deserealizeGameData(const int bytesRead)
 {
     int index = 0;
 
@@ -119,7 +120,7 @@ void Client::deserealizeGameData(int bytesRead)
     this->width.store(width);
 }
 
-std::string Client::deserealizeValue(char *readBuf, int *index)
+std::string Client::deserealizeValue(const char *readBuf, int *index)
 {
     const int lenSize = readBuf[0] - '0';
     if (lenSize < 1)
@@ -136,12 +137,9 @@ std::string Client::deserealizeValue(char *readBuf, int *index)
     return value;
 }
 
-void Client::printError(std::string str)
-{
-    std::cerr << str << std::endl;
-}
+/// GETTERS
 
-const std::vector<std::string> &Client::getGameField()
+const std::vector<std::string> &Client::getGameField() const
 {
     return this->gameField;
 }
@@ -151,12 +149,19 @@ std::mutex &Client::getGameFieldMutex()
     return this->gameFieldMutex;
 }
 
-int Client::getWidth()
+int Client::getWidth() const
 {
     return this->width.load();
 }
 
-int Client::getHeight()
+int Client::getHeight() const
 {
     return this->height.load();
+}
+
+/// UTILS
+
+void Client::printError(const std::string &str)
+{
+    std::cerr << str << std::endl;
 }

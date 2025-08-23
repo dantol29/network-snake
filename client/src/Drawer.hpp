@@ -12,15 +12,17 @@ public:
     Drawer(Client *client);
     ~Drawer();
 
+    void start();
+    
     void loadDynamicLibrary(const char *lib);
     void keyCallback(int key, int action);
-    void start();
     void drawGameField();
 
 private:
     Client *client;
     void *dynamicLibrary;
     void *window;
+
     initFunc init;
     loopFunc loop;
     drawSquareFunc drawSquare;

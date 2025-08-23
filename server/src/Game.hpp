@@ -11,19 +11,19 @@ class Snake;
 class Game
 {
 public:
-    Game(int height, int width);
+    Game(const int height, const int width);
     ~Game();
 
     void start();
     void stop();
 
     void decreaseFood();
-    void addSnake(int fd);
-    void addDeadSnake(int fd);
-    void setSnakeDirection(int fd, int dir);
+    void addSnake(const int fd);
+    void addDeadSnake(const int fd);
+    void setSnakeDirection(const int fd, const int dir);
     std::string fieldToString();
 
-    bool getStopFlag();
+    bool getStopFlag() const;
     int getHeight() const;
     int getWidth() const;
 
@@ -44,7 +44,8 @@ private:
 
     void spawnFood();
     void moveSnakes();
-    void removeSnake(int fd);
+    void removeSnake(const int fd);
+    void removeDeadSnakes();
     void increaseGameField();
     void printField() const;
 };

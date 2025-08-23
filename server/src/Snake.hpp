@@ -25,25 +25,26 @@ enum direction
 class Snake
 {
 public:
-    Snake(int height, int width, int fd, Game *game);
+    Snake(const int height, const int width, const int fd, Game *game);
     ~Snake();
 
     void moveSnake(std::vector<std::string> &gameField);
     void cleanSnakeFromField(std::vector<std::string> &gameField);
-    void setDirection(int newDir);
-    void updateField(int height, int width);
+    void setDirection(const int newDir);
+    void updateGameSize(const int height, const int width);
+
     int getFd() const;
 
 private:
     Game *game;
+    const int fd;
     struct snake *tail;
     direction direction;
     int gameHeight;
     int gameWidth;
-    int fd;
 
-    void growSnake(int oldX, int oldY);
-    void moveHead(struct snake *head, int oldX, int oldY, std::vector<std::string> &gameField);
+    void growSnake(const int oldX, const int oldY);
+    void moveHead(struct snake *head, const int oldX, const int oldY, std::vector<std::string> &gameField);
 };
 
 #endif

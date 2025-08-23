@@ -10,15 +10,15 @@ public:
     ~Client();
 
     void start();
-    void setDirection(enum direction dir);
+    void setDirection(const enum direction dir);
 
-    const std::vector<std::string> &getGameField();
+    const std::vector<std::string> &getGameField() const;
     std::mutex &getGameFieldMutex();
-    int getWidth();
-    int getHeight();
+    int getWidth() const;
+    int getHeight() const;
 
-    static std::string deserealizeValue(char *readBuf, int *index);
-    static void printError(std::string str);
+    static std::string deserealizeValue(const char *readBuf, int *index);
+    static void printError(const std::string &str);
 
 private:
     int serverSocket;
@@ -35,9 +35,9 @@ private:
     std::atomic<int> width;
 
     void receiveGameData();
-    void deserealizeGameData(int bytesRead);
+    void deserealizeGameData(const int bytesRead);
     void sendDirection();
-    void enableSend(enum direction newDirection);
+    void enableSend(const enum direction newDirection);
 };
 
 #endif

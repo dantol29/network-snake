@@ -15,28 +15,29 @@
 
 ## TODO
 
-[] Replace onerror() with proper exit
-[] Add 2 dynamic libs
-[] Check memory leaks
-[x] Stop server when game is finished
-[x] Scale game based on width and height
-[] Add borders
-[] Spawn more food if more players
-[] Add canonical form for classes
-[x] Accept both game width and height
-[x] Parse args - too big, too small
-[x] The edges of the plane can’t be passed through
-[] The snake starts with a size of 4 squares in the middle of the game area.
-[] Single player mode must remain available
-[] Add const
-[] If game field is not square - it is not rendered correctly
-[] Review potential data races
+- [] Replace onerror() with proper exit
+- [] Add 2 dynamic libs
+- [] Check memory leaks
+- [x] Stop server when game is finished
+- [x] Scale game based on width and height
+- [] Add borders
+- [] Spawn more food if more players
+- [] Add canonical form for classes
+- [x] Accept both game width and height
+- [x] Parse args - too big, too small
+- [x] The edges of the plane can’t be passed through
+- [] The snake starts with a size of 4 squares in the middle of the game area.
+- [] Single player mode must remain available
+- [x] Add const
+- [] If game field is not square - it is not rendered correctly
+- [] Review potential data races
+- [] When player quits and rejoins - do not increase game field
 
 ## Features
 
-[x] Scale game field when new player is joining
-[] Add ability for screen to move with the snake
-[] Improve graphics - draw smooth snake position transactions before new data arrives
+- [x] Scale game field when new player is joining
+- [] Add ability for screen to move with the snake
+- [] Improve graphics - draw smooth snake position transactions before new data arrives
 
 ## Materials
 

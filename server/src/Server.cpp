@@ -79,16 +79,16 @@ void Server::start()
 
 void Server::acceptNewConnection()
 {
-    struct pollfd fd;
     struct sockaddr_in cliAddr;
-
     socklen_t cliLen = sizeof(cliAddr);
+
     int clientFd = accept(serverFd, (struct sockaddr *)&cliAddr, &cliLen);
     if (clientFd >= 0)
     {
         if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
             onerror("Failed to make client fd non-blocking");
 
+        struct pollfd fd;
         fd.fd = clientFd;
         fd.events = POLLIN | POLLOUT;
         fd.revents = 0;
@@ -98,16 +98,15 @@ void Server::acceptNewConnection()
 
         this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
         this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
-        
     }
 }
 
-void Server::closeConnection(int fd)
+void Server::closeConnection(const int fd)
 {
     close(fd);
     closedConnections.push_back(fd);
     this->game->addDeadSnake(fd);
-    printf("Client %d removed\n", fd);
+    std::cout << "Client removed: " << fd << std::endl;
 }
 
 void Server::removeClosedConnections()
@@ -130,17 +129,16 @@ void Server::removeClosedConnections()
     }
 }
 
-// TODO: handle case when data is not sent in 1 write
-void Server::sendGameData(int fd) const
+void Server::sendGameData(const int fd) const
 {
     ssize_t bytesWritten = write(fd, serializedGameData.c_str(), serializedGameData.size());
     if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
-        std::cout << "Socket buffer is full..., trying again: " << fd << std::endl;
+        std::cout << "Socket buffer is full, could not sent game data: " << fd << std::endl;
     else if (bytesWritten == -1)
         perror("write");
 }
 
-void Server::receiveDataFromClient(int fd, int index)
+void Server::receiveDataFromClient(const int fd, const int index)
 {
     if (index == 0)
         return acceptNewConnection();
@@ -154,10 +152,10 @@ void Server::receiveDataFromClient(int fd, int index)
     else if (bytesRead == 0)
         closeConnection(fd);
     else
-        printf("Error while reading!\n");
+        perror("Error while reading!\n");
 }
 
-void Server::handleSocketError(int fd, int index)
+void Server::handleSocketError(const int fd, const int index)
 {
     if (index == 0)
         onerror("Server socket crashed");
