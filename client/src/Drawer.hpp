@@ -6,6 +6,12 @@
 
 class Client;
 
+struct s_position
+{
+    int x;
+    int y;
+};
+
 class Drawer
 {
 public:
@@ -13,7 +19,7 @@ public:
     ~Drawer();
 
     void start();
-    
+
     void loadDynamicLibrary(const char *lib);
     void keyCallback(int key, int action);
     void drawGameField();
@@ -30,6 +36,8 @@ private:
 
     void openWindow();
     void printField() const;
+    void drawBorder(int x, int y, float windowX, float windowY);
+    struct s_position findSnakeHead(const std::vector<std::string> &gameField) const;
 };
 
 #endif

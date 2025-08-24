@@ -20,7 +20,7 @@
 - [] Check memory leaks
 - [x] Stop server when game is finished
 - [x] Scale game based on width and height
-- [] Add borders
+- [] Draw borders
 - [] Spawn more food if more players
 - [] Add canonical form for classes
 - [x] Accept both game width and height
@@ -31,12 +31,12 @@
 - [x] Add const
 - [] If game field is not square - it is not rendered correctly
 - [] Review potential data races
-- [] When player quits and rejoins - do not increase game field
+- [x] When player quits and rejoins - do not increase game field
 
 ## Features
 
 - [x] Scale game field when new player is joining
-- [] Add ability for screen to move with the snake
+- [x] Center snake on the screen
 - [] Improve graphics - draw smooth snake position transactions before new data arrives
 
 ## Materials

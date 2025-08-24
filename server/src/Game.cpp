@@ -18,6 +18,8 @@ Game::Game(const int height, const int width) : height(height), width(width), st
     }
 
     this->foodCount = 0;
+    this->maxSnakeCount = 0;
+
     srand(time(NULL)); // init random generator
 }
 
@@ -36,7 +38,7 @@ void Game::start()
     while (1)
     {
         this->now = Clock::now();
-        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= 200;
+        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= 300;
         bool spawnFood = std::chrono::duration_cast<std::chrono::seconds>(this->now - lastEatTime).count() >= 3;
 
         if (move)
@@ -96,7 +98,11 @@ void Game::addSnake(const int clientFd)
     Snake *newSnake = new Snake(this->height, this->width, clientFd, this);
     this->snakes.push_back(newSnake);
 
-    this->increaseGameField();
+    if (this->snakes.size() > this->maxSnakeCount)
+    {
+        this->maxSnakeCount = this->snakes.size();
+        this->increaseGameField();
+    }
 }
 
 void Game::addDeadSnake(const int fd)
