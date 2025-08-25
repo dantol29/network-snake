@@ -54,7 +54,7 @@ void Game::start()
 
 void Game::spawnFood()
 {
-    if (foodCount > 1)
+    if (this->snakes.size() * 2 <= this->foodCount)
         return;
 
     std::lock_guard<std::mutex> lock(gameFieldMutex);
@@ -70,7 +70,7 @@ void Game::spawnFood()
         {
             this->gameField[y][x] = 'F';
             lastEatTime = this->now;
-            ++foodCount;
+            ++this->foodCount;
             return;
         }
     }

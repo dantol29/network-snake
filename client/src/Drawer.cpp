@@ -2,13 +2,12 @@
 
 #define WIDTH 1000
 #define HEIGHT 1000
-#define SCREEN_LEN 2
-#define SCREEN_SIZE 20
-#define STEP 0.1f
+#define SCREEN_LEN 2.0f
 
 Drawer::Drawer(Client *client)
 {
     this->client = client;
+    this->screenSize = 20;
 }
 
 Drawer::~Drawer()
@@ -60,30 +59,26 @@ void Drawer::drawGameField()
 
     const std::vector<std::string> &gameField = this->client->getGameField();
     struct s_position pos = this->findSnakeHead(gameField);
-    const int height = this->client->getHeight();
-    const int width = this->client->getWidth();
+    this->height = this->client->getHeight();
+    this->width = this->client->getWidth();
+    const int screenCenter = screenSize / 2;
+    const float step = SCREEN_LEN / screenSize;
 
-    const int centerX = SCREEN_SIZE / 2;
-    const int centerY = SCREEN_SIZE / 2;
-
-    for (int y = 0; y < SCREEN_SIZE; y++)
+    for (int sy = 0; sy < this->screenSize; sy++)
     {
-        int offsetY = y - pos.y;
-        int drawY = pos.y + offsetY;
-        float windowY = 1.0f - (centerY + offsetY) * STEP;
-
-        for (int x = 0; x < SCREEN_SIZE; x++)
+        int wy = pos.y + (sy - screenCenter);
+        float windowY = 1.0f - (sy + 0.5f) * step;
+        for (int sx = 0; sx < this->screenSize; sx++)
         {
-            int offsetX = x - pos.x;
-            float windowX = -1.0f + (centerX + offsetX) * STEP;
-            int drawX = pos.x + offsetX;
+            int wx = pos.x + (sx - screenCenter);
+            float windowX = -1.0f + (sx + 0.5f) * step;
 
-            if (drawX < 0 || drawX > width || drawY < 0 || drawY > height)
+            if (wx < 0 || wx >= width || wy < 0 || wy >= height)
                 continue;
 
-            this->drawBorder(drawX, drawY, windowX, windowY);
+            this->drawBorder(wx, wy, windowX, windowY, step);
 
-            char tile = gameField[drawY][drawX];
+            char tile = gameField[wy][wx];
 
             if (tile == 'F')
                 rgb = {0.5f, 0.1f, 0.1f};
@@ -94,33 +89,23 @@ void Drawer::drawGameField()
             else
                 continue;
 
-            this->drawSquare(this->window, windowX, windowY, STEP, STEP, rgb);
+            this->drawSquare(this->window, windowX, windowY, step, step, rgb);
         }
     }
 }
 
-void Drawer::drawBorder(int x, int y, float windowX, float windowY)
+void Drawer::drawBorder(int x, int y, float windowX, float windowY, float step)
 {
-    rgb rgb = {1.0f, 0.0f, 0.0f};
-    float t = STEP; // thinner, change as needed
+    rgb rgb = {7.0f, 7.0f, 7.0f};
 
-    // world border
     if (x == 0)
-    {
-        this->drawSquare(this->window, windowX - (STEP), windowY, t, STEP, rgb);
-    }
-    if (x == SCREEN_SIZE - 1)
-    {
-        this->drawSquare(this->window, windowX + (STEP), windowY, t, STEP, rgb);
-    }
+        this->drawSquare(this->window, windowX - step, windowY, step, step, rgb);
+    if (x == this->width - 1)
+        this->drawSquare(this->window, windowX + step, windowY, step, step, rgb);
     if (y == 0)
-    {
-        this->drawSquare(this->window, windowX, windowY - (STEP * 0.5f) + (t * 0.5f), STEP, t, rgb);
-    }
-    if (y == SCREEN_SIZE - 1)
-    {
-        this->drawSquare(this->window, windowX, windowY + (STEP * 0.5f) - (t * 0.5f), STEP, t, rgb);
-    }
+        this->drawSquare(this->window, windowX, windowY + step, step, step, rgb);
+    if (y == this->height - 1)
+        this->drawSquare(this->window, windowX, windowY - step, step, step, rgb);
 }
 
 struct s_position Drawer::findSnakeHead(const std::vector<std::string> &gameField) const
@@ -161,6 +146,11 @@ void Drawer::keyCallback(int key, int action)
         case 262:
             this->client->setDirection(RIGHT);
             break;
+        case 77: // M
+            this->screenSize = this->screenSize * 1.10 + 0.5;
+            break;
+        case 78: // N
+            this->screenSize = this->screenSize / 1.10;
         }
     }
 }

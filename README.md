@@ -20,8 +20,8 @@
 - [] Check memory leaks
 - [x] Stop server when game is finished
 - [x] Scale game based on width and height
-- [] Draw borders
-- [] Spawn more food if more players
+- [x] Draw borders
+- [x] Spawn more food if more players
 - [] Add canonical form for classes
 - [x] Accept both game width and height
 - [x] Parse args - too big, too small
@@ -37,6 +37,7 @@
 
 - [x] Scale game field when new player is joining
 - [x] Center snake on the screen
+- [x] Zoom in & Zoom out
 - [] Improve graphics - draw smooth snake position transactions before new data arrives
 
 ## Materials

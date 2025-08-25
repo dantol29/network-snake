@@ -28,6 +28,9 @@ private:
     Client *client;
     void *dynamicLibrary;
     void *window;
+    int screenSize;
+    int height;
+    int width;
 
     initFunc init;
     loopFunc loop;
@@ -36,7 +39,7 @@ private:
 
     void openWindow();
     void printField() const;
-    void drawBorder(int x, int y, float windowX, float windowY);
+    void drawBorder(int x, int y, float windowX, float windowY, float step);
     struct s_position findSnakeHead(const std::vector<std::string> &gameField) const;
 };
 
