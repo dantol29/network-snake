@@ -6,22 +6,6 @@
 
 class Game;
 
-struct snake
-{
-    int x;
-    int y;
-    snake *next;
-    snake *prev;
-};
-
-enum direction
-{
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
-};
-
 class Snake
 {
 public:
@@ -33,6 +17,8 @@ public:
     void setDirection(const int newDir);
     void updateGameSize(const int height, const int width);
 
+    int getHeadX() const;
+    int getHeadY() const;
     int getFd() const;
 
 private:
@@ -42,6 +28,10 @@ private:
     direction direction;
     int gameHeight;
     int gameWidth;
+
+    // Used by server thread
+    std::atomic<int> headX;
+    std::atomic<int> headY;
 
     void growSnake(const int oldX, const int oldY);
     void moveHead(struct snake *head, const int oldX, const int oldY, std::vector<std::string> &gameField);

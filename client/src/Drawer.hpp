@@ -6,12 +6,6 @@
 
 class Client;
 
-struct s_position
-{
-    int x;
-    int y;
-};
-
 class Drawer
 {
 public:
@@ -40,7 +34,6 @@ private:
     void openWindow();
     void printField() const;
     void drawBorder(int x, int y, float windowX, float windowY, float step);
-    struct s_position findSnakeHead(const std::vector<std::string> &gameField) const;
 };
 
 #endif

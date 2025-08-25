@@ -18,6 +18,22 @@
 
 #define FLOOR_SYMBOL '.'
 
+struct snake
+{
+    int x;
+    int y;
+    snake *next;
+    snake *prev;
+};
+
+enum direction
+{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT
+};
+
 // utils
 [[noreturn]] void onerror(const char *msg);
 

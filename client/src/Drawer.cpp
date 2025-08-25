@@ -58,19 +58,20 @@ void Drawer::drawGameField()
     std::lock_guard<std::mutex> lock(gameFieldMutex);
 
     const std::vector<std::string> &gameField = this->client->getGameField();
-    struct s_position pos = this->findSnakeHead(gameField);
     this->height = this->client->getHeight();
     this->width = this->client->getWidth();
+    const int snakeHeadX = this->client->getSnakeX();
+    const int snakeHeadY = this->client->getSnakeY();
     const int screenCenter = screenSize / 2;
     const float step = SCREEN_LEN / screenSize;
 
     for (int sy = 0; sy < this->screenSize; sy++)
     {
-        int wy = pos.y + (sy - screenCenter);
+        int wy = snakeHeadY + (sy - screenCenter);
         float windowY = 1.0f - (sy + 0.5f) * step;
         for (int sx = 0; sx < this->screenSize; sx++)
         {
-            int wx = pos.x + (sx - screenCenter);
+            int wx = snakeHeadX + (sx - screenCenter);
             float windowX = -1.0f + (sx + 0.5f) * step;
 
             if (wx < 0 || wx >= width || wy < 0 || wy >= height)
@@ -79,7 +80,6 @@ void Drawer::drawGameField()
             this->drawBorder(wx, wy, windowX, windowY, step);
 
             char tile = gameField[wy][wx];
-
             if (tile == 'F')
                 rgb = {0.5f, 0.1f, 0.1f};
             else if (tile == 'B')
@@ -106,26 +106,6 @@ void Drawer::drawBorder(int x, int y, float windowX, float windowY, float step)
         this->drawSquare(this->window, windowX, windowY + step, step, step, rgb);
     if (y == this->height - 1)
         this->drawSquare(this->window, windowX, windowY - step, step, step, rgb);
-}
-
-struct s_position Drawer::findSnakeHead(const std::vector<std::string> &gameField) const
-{
-    struct s_position pos;
-    pos.x = -1;
-    pos.y = -1;
-
-    for (auto iter = gameField.begin(); iter != gameField.end(); iter++)
-    {
-        ssize_t foundPos = iter->find_first_of('H');
-        if (foundPos != std::string::npos)
-        {
-            pos.x = foundPos;
-            pos.y = std::distance(gameField.begin(), iter);
-            break;
-        }
-    }
-
-    return pos;
 }
 
 void Drawer::keyCallback(int key, int action)

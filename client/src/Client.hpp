@@ -16,6 +16,8 @@ public:
     std::mutex &getGameFieldMutex();
     int getWidth() const;
     int getHeight() const;
+    int getSnakeX() const;
+    int getSnakeY() const;
 
     static std::string deserealizeValue(const char *readBuf, int *index);
     static void printError(const std::string &str);
@@ -33,6 +35,8 @@ private:
     std::atomic<enum direction> direction;
     std::atomic<int> height;
     std::atomic<int> width;
+    std::atomic<int> snakeX;
+    std::atomic<int> snakeY;
 
     void receiveGameData();
     void deserealizeGameData(const int bytesRead);

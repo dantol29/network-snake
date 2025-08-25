@@ -23,9 +23,10 @@ public:
     void setSnakeDirection(const int fd, const int dir);
     std::string fieldToString();
 
-    bool getStopFlag() const;
+    struct snake getSnakeHead(const int fd) const;
     int getHeight() const;
     int getWidth() const;
+    bool getStopFlag() const;
 
 private:
     int foodCount;

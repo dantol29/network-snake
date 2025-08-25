@@ -1,7 +1,7 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(int height, int width, int fd, Game *game) : gameHeight(height), gameWidth(width), fd(fd), game(game)
+Snake::Snake(int height, int width, int fd, Game *game) : gameHeight(height), gameWidth(width), fd(fd), game(game), headX(height / 2), headY(width / 2)
 {
     this->tail = (struct snake *)malloc(sizeof(struct snake));
     if (!this->tail)
@@ -106,6 +106,8 @@ void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::st
     }
 
     gameField[head->y][head->x] = 'H';
+    this->headX.store(head->x);
+    this->headY.store(head->y);
 }
 
 void Snake::setDirection(const int newDir)
@@ -145,6 +147,16 @@ void Snake::updateGameSize(const int height, const int width)
 {
     this->gameHeight = height;
     this->gameWidth = width;
+}
+
+int Snake::getHeadX() const
+{
+    return this->headX.load();
+}
+
+int Snake::getHeadY() const
+{
+    return this->headY.load();
 }
 
 int Snake::getFd() const

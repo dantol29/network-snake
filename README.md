@@ -32,6 +32,7 @@
 - [] If game field is not square - it is not rendered correctly
 - [] Review potential data races
 - [x] When player quits and rejoins - do not increase game field
+- [] Store snake id in the field
 
 ## Features
 
@@ -39,6 +40,11 @@
 - [x] Center snake on the screen
 - [x] Zoom in & Zoom out
 - [] Improve graphics - draw smooth snake position transactions before new data arrives
+
+## If game scales - things to improve
+
+- A hashmap of `unordered_map<int fd, snakes>` to remove iterations over snakes vector
+- Add logic if data is not sent/received to socket in one write
 
 ## Materials
 

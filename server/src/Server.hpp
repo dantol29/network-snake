@@ -27,7 +27,7 @@ private:
     TimePoint lastSendTime;
     char readBuf[10];
 
-    std::string serializedGameData;
+    std::string serializedGameField;
     std::string serializedHeight;
     std::string serializedWidth;
 
@@ -37,7 +37,7 @@ private:
     void sendGameData(const int fd) const;
     void receiveDataFromClient(const int fd, const int index);
     void handleSocketError(const int fd, const int index);
-    std::string serializeGameData();
+    std::string serializeGameField();
 };
 
 #endif

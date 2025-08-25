@@ -167,6 +167,23 @@ void Game::decreaseFood()
 
 /// GETTERS
 
+struct snake Game::getSnakeHead(const int fd) const
+{
+    struct snake head = {0};
+
+    for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
+    {
+        if ((*iter)->getFd() == fd)
+        {
+            head.x = (*iter)->getHeadX();
+            head.y = (*iter)->getHeadY();
+            break;
+        }
+    }
+
+    return head;
+}
+
 int Game::getHeight() const
 {
     return this->height.load();

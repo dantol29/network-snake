@@ -55,7 +55,7 @@ void Server::start()
         auto now = Clock::now();
         bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 100;
         if (shouldSend)
-            serializedGameData = serializeGameData();
+            this->serializedGameField = serializeGameField();
 
         int oldSize = connectedClients.size();
         for (int i = 0; i < oldSize; i++)
@@ -96,6 +96,7 @@ void Server::acceptNewConnection()
 
         this->game->addSnake(clientFd);
 
+        // game size might change on new player add
         this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
         this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
     }
@@ -131,6 +132,11 @@ void Server::removeClosedConnections()
 
 void Server::sendGameData(const int fd) const
 {
+    struct snake head = this->game->getSnakeHead(fd);
+    const std::string headX = serializeValue(std::to_string(head.x));
+    const std::string headY = serializeValue(std::to_string(head.y));
+    const std::string serializedGameData = headX + headY + this->serializedGameField;
+
     ssize_t bytesWritten = write(fd, serializedGameData.c_str(), serializedGameData.size());
     if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
         std::cout << "Socket buffer is full, could not sent game data: " << fd << std::endl;
@@ -165,7 +171,7 @@ void Server::handleSocketError(const int fd, const int index)
 }
 
 // TLV format
-std::string Server::serializeGameData()
+std::string Server::serializeGameField()
 {
     const std::string field = Server::serializeValue(game->fieldToString());
     return this->serializedHeight + this->serializedWidth + field;
@@ -178,20 +184,3 @@ std::string Server::serializeValue(const std::string &value)
 
     return lenSize + len + value;
 }
-// TODO: handle case when data is not sent in 1 write
-// void Server::sendGameData(int fd)
-// {
-//     // int alreadySent = fdToBytesWritten[fd];
-//     // int dataSize = game->getFieldSize();
-//     // if (alreadySent < dataSize)
-//     // {
-//     std::cout << "Sendind data" << std::endl;
-//     ssize_t bytesWritten = write(fd, serializedGameData.c_str(), serializedGameData.size());
-//     // if (bytesWritten > 0)
-//     //     fdToBytesWritten[fd] += bytesWritten;
-//     if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
-//         std::cout << "Socket buffer is full..., trying again: " << fd << std::endl;
-//     else if (bytesWritten == -1)
-//         perror("write");
-//     // }
-// }

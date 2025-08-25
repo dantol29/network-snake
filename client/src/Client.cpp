@@ -4,7 +4,7 @@
 #define SERVER_IP "127.0.0.1"
 #define BLOCKING -1
 
-Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), previousDirection(UP), direction(UP)
+Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), previousDirection(UP), direction(UP), snakeX(0), snakeY(0), height(0), width(0)
 {
     this->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (this->serverSocket < 0)
@@ -88,36 +88,47 @@ void Client::deserealizeGameData(const int bytesRead)
 {
     int index = 0;
 
-    const std::string heightStr = Client::deserealizeValue(readBuf, &index);
+    const std::string snakeXStr = Client::deserealizeValue(readBuf, &index);
+    const std::string snakeYStr = Client::deserealizeValue(readBuf + index, &index);
+    const std::string heightStr = Client::deserealizeValue(readBuf + index, &index);
     const std::string widthStr = Client::deserealizeValue(readBuf + index, &index);
     const std::string fieldStr = Client::deserealizeValue(readBuf + index, &index);
-    if (heightStr.empty() || widthStr.empty() || fieldStr.empty())
+    if (snakeXStr.empty() || snakeYStr.empty() || heightStr.empty() || widthStr.empty() || fieldStr.empty())
         return Client::printError("Could not deserealize incoming data");
 
-    const int height = atoi(heightStr.c_str());
-    const int width = atoi(widthStr.c_str());
-    if (height == 0 || width == 0)
-        return Client::printError("Invalid length or width");
-
-    if (height * width != fieldStr.size())
-        return Client::printError("Game field was not received correctly");
-
-    std::lock_guard<std::mutex> lock(this->gameFieldMutex);
-
-    this->gameField.clear();
-
-    std::string row;
-    for (int y = 0; y < height; y++)
+    try
     {
-        row.clear();
-        for (int x = 0; x < width; x++)
-            row += fieldStr[x + y * height];
+        const int snakeX = std::stoi(snakeXStr);
+        const int snakeY = std::stoi(snakeYStr);
+        const int height = std::stoi(heightStr);
+        const int width = std::stoi(widthStr);
 
-        this->gameField.push_back(row);
+        if (height * width != fieldStr.size())
+            return Client::printError("Game field was not received correctly");
+
+        std::lock_guard<std::mutex> lock(this->gameFieldMutex);
+
+        this->gameField.clear();
+
+        std::string row;
+        for (int y = 0; y < height; y++)
+        {
+            row.clear();
+            for (int x = 0; x < width; x++)
+                row += fieldStr[x + y * height];
+
+            this->gameField.push_back(row);
+        }
+
+        this->snakeX.store(snakeX);
+        this->snakeY.store(snakeY);
+        this->height.store(height);
+        this->width.store(width);
     }
-
-    this->height.store(height);
-    this->width.store(width);
+    catch (...)
+    {
+        Client::printError("Game data was not received correctly");
+    }
 }
 
 std::string Client::deserealizeValue(const char *readBuf, int *index)
@@ -157,6 +168,16 @@ int Client::getWidth() const
 int Client::getHeight() const
 {
     return this->height.load();
+}
+
+int Client::getSnakeX() const
+{
+    return this->snakeX.load();
+}
+
+int Client::getSnakeY() const
+{
+    return this->snakeY.load();
 }
 
 /// UTILS
