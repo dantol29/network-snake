@@ -112,7 +112,7 @@ void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::st
 
 void Snake::setDirection(const int newDir)
 {
-    enum direction dir = (enum direction)newDir;
+    enum e_direction dir = (enum e_direction)newDir;
     if ((dir == UP || dir == DOWN) && (this->direction == DOWN || this->direction == UP))
         return;
     if ((dir == RIGHT || dir == LEFT) && (this->direction == RIGHT || this->direction == LEFT))

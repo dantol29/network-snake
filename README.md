@@ -27,12 +27,12 @@
 - [x] Parse args - too big, too small
 - [x] The edges of the plane can’t be passed through
 - [] The snake starts with a size of 4 squares in the middle of the game area.
-- [] Single player mode must remain available
+- [x] Single player mode must remain available
 - [x] Add const
 - [] If game field is not square - it is not rendered correctly
 - [] Review potential data races
 - [x] When player quits and rejoins - do not increase game field
-- [] Store snake id in the field
+- [x] Send snakes coordinates, so that client knows which snake to follow
 
 ## Features
 
@@ -45,6 +45,7 @@
 
 - A hashmap of `unordered_map<int fd, snakes>` to remove iterations over snakes vector
 - Add logic if data is not sent/received to socket in one write
+- Send only map around the snake (in case field gets really big)
 
 ## Materials
 

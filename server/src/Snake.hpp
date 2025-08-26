@@ -25,7 +25,7 @@ private:
     Game *game;
     const int fd;
     struct snake *tail;
-    direction direction;
+    enum e_direction direction;
     int gameHeight;
     int gameWidth;
 

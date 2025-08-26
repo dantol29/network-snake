@@ -15,6 +15,7 @@
 #include <thread>
 #include <atomic>
 #include <memory>
+#include <mutex>
 
 #define FLOOR_SYMBOL '.'
 
@@ -26,7 +27,7 @@ struct snake
     snake *prev;
 };
 
-enum direction
+enum e_direction
 {
     UP,
     DOWN,
