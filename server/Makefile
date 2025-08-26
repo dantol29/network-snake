@@ -7,7 +7,7 @@ SOURCES_M := src/main.cpp src/Game.cpp src/Snake.cpp src/Server.cpp
 OBJECTS := $(SOURCES_M:.cpp=.o)
 
 $(NAME): $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) $(FSANITIZE) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $(NAME)
 
 all: $(NAME)
 
