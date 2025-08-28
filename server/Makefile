@@ -1,5 +1,5 @@
 NAME = nibbler
-CC = c++
+CC = g++
 CFLAGS = -O2 -Wall -Wextra -Werror
 FSANITIZE = -fsanitize=address
 SOURCES_M := src/main.cpp src/Game.cpp src/Snake.cpp src/Server.cpp
