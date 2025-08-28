@@ -53,7 +53,7 @@ void Server::start()
             return;
 
         auto now = Clock::now();
-        bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 100;
+        bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 50;
         if (shouldSend)
             this->serializedGameField = serializeGameField();
 

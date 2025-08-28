@@ -86,7 +86,7 @@ void Game::moveSnakes()
 
     this->removeDeadSnakes();
 
-    this->printField();
+    // this->printField();
     lastMoveTime = this->now;
 }
 

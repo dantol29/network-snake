@@ -40,9 +40,11 @@ private:
     std::atomic<int> snakeY;
 
     void receiveGameData();
-    void deserealizeGameData(const int bytesRead);
     void sendDirection();
     void enableSend(const enum direction newDirection);
+    void deserealizeGameData(const int bytesRead);
+    void parseGameData(const char *message);
+    void updateGameState(int snakeX, int snakeY, int height, int width, const std::string &fieldStr);
 };
 
 #endif

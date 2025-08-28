@@ -54,7 +54,6 @@ void Client::start()
 void Client::receiveGameData()
 {
     int bytesRead = read(this->serverSocket, &this->readBuf, 16384);
-    std::cout << bytesRead << std::endl;
     if (bytesRead > 0)
         deserealizeGameData(bytesRead);
     else if (bytesRead == 0)
@@ -88,70 +87,79 @@ void Client::enableSend(const enum direction newDirection)
     this->serverFd.events = POLLIN | POLLOUT; // enable POLLOUT to send new direction
 }
 
-// TLV format
 void Client::deserealizeGameData(const int bytesRead)
 {
-    // std::cout << "started reading" << std::endl;
     this->buffer.append(readBuf, bytesRead);
 
-    size_t delimeterPos = buffer.find("END");
+    const size_t delimeterPos = buffer.find("END");
     if (delimeterPos == std::string::npos)
-    {
-        std::cout << "message not received fully";
         return;
-    }
-
-    int index = 0;
-    const std::string snakeXStr = Client::deserealizeValue(this->buffer.c_str(), &index);
-    const std::string snakeYStr = Client::deserealizeValue(this->buffer.c_str() + index, &index);
-    const std::string heightStr = Client::deserealizeValue(this->buffer.c_str() + index, &index);
-    const std::string widthStr = Client::deserealizeValue(this->buffer.c_str() + index, &index);
-    const std::string fieldStr = Client::deserealizeValue(this->buffer.c_str() + index, &index);
-    if (snakeXStr.empty() || snakeYStr.empty() || heightStr.empty() || widthStr.empty() || fieldStr.empty())
-    {
-        // std::cout << bytesRead << snakeXStr << ", " << snakeYStr << ", " << heightStr << ", " << widthStr << std::endl;
-        // return Client::printError("Could not deserealize incoming data");
-        std::cout << "Failed: " << bytesRead << std::endl;
-        return;
-    }
 
     try
     {
-        const int snakeX = std::stoi(snakeXStr);
-        const int snakeY = std::stoi(snakeYStr);
-        const int height = std::stoi(heightStr);
-        const int width = std::stoi(widthStr);
-
-        if (height * width != fieldStr.size())
-            return Client::printError("Game field was not received correctly");
-
-        std::lock_guard<std::mutex> lock(this->gameFieldMutex);
-
-        this->gameField.clear();
-
-        std::string row;
-        for (int y = 0; y < height; y++)
-        {
-            row.clear();
-            for (int x = 0; x < width; x++)
-                row += fieldStr[x + y * height];
-
-            this->gameField.push_back(row);
-        }
-
-        this->snakeX.store(snakeX);
-        this->snakeY.store(snakeY);
-        this->height.store(height);
-        this->width.store(width);
+        this->parseGameData(this->buffer.substr(0, delimeterPos).c_str());
+    }
+    catch (const char *e)
+    {
+        Client::printError("Game data processing error: " + std::string(e));
     }
     catch (...)
     {
-        Client::printError("Game data was not received correctly");
+        Client::printError("Game data processing error: unknown");
     }
 
     this->buffer.erase(0, delimeterPos + 3);
 }
 
+void Client::parseGameData(const char *data)
+{
+    int index = 0;
+
+    const std::string snakeXStr = Client::deserealizeValue(data, &index);
+    const std::string snakeYStr = Client::deserealizeValue(data + index, &index);
+    const std::string heightStr = Client::deserealizeValue(data + index, &index);
+    const std::string widthStr = Client::deserealizeValue(data + index, &index);
+    const std::string fieldStr = Client::deserealizeValue(data + index, &index);
+    if (snakeXStr.empty() || snakeYStr.empty() || heightStr.empty() || widthStr.empty() || fieldStr.empty())
+        throw("Missing required fields");
+
+    const int snakeX = std::stoi(snakeXStr);
+    const int snakeY = std::stoi(snakeYStr);
+    const int height = std::stoi(heightStr);
+    const int width = std::stoi(widthStr);
+
+    if (height * width != fieldStr.size())
+        throw("Field size mismatch");
+
+    if (height <= 0 || width <= 0 || height > 900 || width > 900)
+        throw("Invalid dimensions");
+
+    this->updateGameState(snakeX, snakeY, height, width, fieldStr);
+}
+
+void Client::updateGameState(int snakeX, int snakeY, int height, int width, const std::string &fieldStr)
+{
+    std::lock_guard<std::mutex> lock(this->gameFieldMutex);
+
+    this->gameField.clear();
+
+    std::string row;
+    for (int y = 0; y < height; y++)
+    {
+        row.clear();
+        for (int x = 0; x < width; x++)
+            row += fieldStr[x + y * height];
+
+        this->gameField.push_back(row);
+    }
+
+    this->snakeX.store(snakeX);
+    this->snakeY.store(snakeY);
+    this->height.store(height);
+    this->width.store(width);
+}
+
+// TLV format
 std::string Client::deserealizeValue(const char *readBuf, int *index)
 {
     const int lenSize = readBuf[0] - '0';
