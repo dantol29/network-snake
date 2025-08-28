@@ -38,7 +38,7 @@ void Game::start()
     while (1)
     {
         this->now = Clock::now();
-        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= 300;
+        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= SNAKE_SPEED;
         bool spawnFood = std::chrono::duration_cast<std::chrono::seconds>(this->now - lastEatTime).count() >= 3;
 
         if (move)

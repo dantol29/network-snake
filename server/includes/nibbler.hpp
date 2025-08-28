@@ -18,6 +18,7 @@
 #include <mutex>
 
 #define FLOOR_SYMBOL '.'
+#define SNAKE_SPEED 150
 
 struct snake
 {
