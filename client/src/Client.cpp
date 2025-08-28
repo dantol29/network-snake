@@ -1,7 +1,7 @@
 #include "Client.hpp"
 
-#define SERVER_PORT 8080
-#define SERVER_IP "127.0.0.1"
+#define SERVER_PORT 45413
+#define SERVER_IP "34.1.194.123"
 #define BLOCKING -1
 
 Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), previousDirection(UP), direction(UP), snakeX(0), snakeY(0), height(0), width(0)
@@ -15,8 +15,12 @@ Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), previousDirect
     serverAddr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
 
+    std::cout << "connecting..." << std::endl;
+
     if (connect(this->serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
         onerror("Connect to server error");
+
+    std::cout << "connected" << std::endl;
 
     this->serverFd.fd = this->serverSocket;
     this->serverFd.events = POLLIN;
@@ -50,6 +54,7 @@ void Client::start()
 void Client::receiveGameData()
 {
     int bytesRead = read(this->serverSocket, &this->readBuf, 16384);
+    std::cout << bytesRead << std::endl;
     if (bytesRead > 0)
         deserealizeGameData(bytesRead);
     else if (bytesRead == 0)
@@ -86,15 +91,29 @@ void Client::enableSend(const enum direction newDirection)
 // TLV format
 void Client::deserealizeGameData(const int bytesRead)
 {
-    int index = 0;
+    // std::cout << "started reading" << std::endl;
+    this->buffer.append(readBuf, bytesRead);
 
-    const std::string snakeXStr = Client::deserealizeValue(readBuf, &index);
-    const std::string snakeYStr = Client::deserealizeValue(readBuf + index, &index);
-    const std::string heightStr = Client::deserealizeValue(readBuf + index, &index);
-    const std::string widthStr = Client::deserealizeValue(readBuf + index, &index);
-    const std::string fieldStr = Client::deserealizeValue(readBuf + index, &index);
+    size_t delimeterPos = buffer.find("END");
+    if (delimeterPos == std::string::npos)
+    {
+        std::cout << "message not received fully";
+        return;
+    }
+
+    int index = 0;
+    const std::string snakeXStr = Client::deserealizeValue(this->buffer.c_str(), &index);
+    const std::string snakeYStr = Client::deserealizeValue(this->buffer.c_str() + index, &index);
+    const std::string heightStr = Client::deserealizeValue(this->buffer.c_str() + index, &index);
+    const std::string widthStr = Client::deserealizeValue(this->buffer.c_str() + index, &index);
+    const std::string fieldStr = Client::deserealizeValue(this->buffer.c_str() + index, &index);
     if (snakeXStr.empty() || snakeYStr.empty() || heightStr.empty() || widthStr.empty() || fieldStr.empty())
-        return Client::printError("Could not deserealize incoming data");
+    {
+        // std::cout << bytesRead << snakeXStr << ", " << snakeYStr << ", " << heightStr << ", " << widthStr << std::endl;
+        // return Client::printError("Could not deserealize incoming data");
+        std::cout << "Failed: " << bytesRead << std::endl;
+        return;
+    }
 
     try
     {
@@ -129,6 +148,8 @@ void Client::deserealizeGameData(const int bytesRead)
     {
         Client::printError("Game data was not received correctly");
     }
+
+    this->buffer.erase(0, delimeterPos + 3);
 }
 
 std::string Client::deserealizeValue(const char *readBuf, int *index)

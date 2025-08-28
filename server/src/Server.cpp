@@ -135,7 +135,7 @@ void Server::sendGameData(const int fd) const
     struct snake head = this->game->getSnakeHead(fd);
     const std::string headX = serializeValue(std::to_string(head.x));
     const std::string headY = serializeValue(std::to_string(head.y));
-    const std::string serializedGameData = headX + headY + this->serializedGameField;
+    const std::string serializedGameData = headX + headY + this->serializedGameField + "END";
 
     ssize_t bytesWritten = write(fd, serializedGameData.c_str(), serializedGameData.size());
     if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))

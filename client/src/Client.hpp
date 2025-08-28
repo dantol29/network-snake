@@ -25,6 +25,7 @@ public:
 private:
     int serverSocket;
     char readBuf[16384]; // 16 kb
+    std::string buffer;
     struct pollfd serverFd;
     enum direction previousDirection;
 
