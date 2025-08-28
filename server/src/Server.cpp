@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-#define SERV_PORT 3000
+#define SERV_PORT 8080
 #define MAX_CLIENT_CONNECTIONS 10
 #define NON_BLOCKING 0
 #define BLOCKING -1
