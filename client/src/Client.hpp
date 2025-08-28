@@ -23,7 +23,9 @@ public:
     static void printError(const std::string &str);
 
 private:
-    int serverSocket;
+    int tcpSocket;
+    int udpSocket;
+    sockaddr_in serverAddr;
     char readBuf[16384]; // 16 kb
     std::string buffer;
     struct pollfd serverFd;
@@ -39,6 +41,7 @@ private:
     std::atomic<int> snakeX;
     std::atomic<int> snakeY;
 
+    void setupSocket();
     void receiveGameData();
     void sendDirection();
     void enableSend(const enum direction newDirection);

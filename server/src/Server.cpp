@@ -7,31 +7,37 @@
 
 Server::Server(Game *game) : game(game)
 {
-    struct pollfd serverSocket;
     struct sockaddr_in serverAddr;
 
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     serverAddr.sin_port = htons(SERV_PORT);
 
-    serverFd = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverFd == -1)
-        onerror("Failed to create a socket");
+    this->tcpServerFd = socket(AF_INET, SOCK_STREAM, 0);
+    if (this->tcpServerFd == -1)
+        onerror("Failed to create a tcp socket");
 
-    if (bind(serverFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
-        onerror("Failed to assign address to a socket");
+    if (bind(this->tcpServerFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
+        onerror("Failed to assign address to a tcp socket");
 
     // make socket passive to accept incoming connection requests
-    if (listen(serverFd, MAX_CLIENT_CONNECTIONS) == -1)
-        onerror("Failed to make socket passive");
+    if (listen(this->tcpServerFd, MAX_CLIENT_CONNECTIONS) == -1)
+        onerror("Failed to make tcp socket passive");
 
-    if (fcntl(serverFd, F_SETFL, O_NONBLOCK) == -1)
-        onerror("Failed to make socket non-blocking");
+    if (fcntl(this->tcpServerFd, F_SETFL, O_NONBLOCK) == -1)
+        onerror("Failed to make tcp socket non-blocking");
 
-    serverSocket.fd = serverFd;
-    serverSocket.events = POLLIN;
-    serverSocket.revents = 0;
-    connectedClients.push_back(serverSocket);
+    this->udpServerFd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (this->udpServerFd == -1)
+        onerror("Failed to create a udp socket");
+
+    if (bind(this->udpServerFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
+        onerror("Failed to assign address to a udp socket");
+
+    pollfd tcpPoll = {tcpServerFd, POLLIN, 0};
+    pollfd udpPoll = {udpServerFd, POLLIN, 0};
+    connectedClients.push_back(tcpPoll);
+    connectedClients.push_back(udpPoll);
 
     lastSendTime = Clock::now();
 
@@ -42,7 +48,8 @@ Server::Server(Game *game) : game(game)
 Server::~Server()
 {
     std::cout << "Destructor called!" << std::endl;
-    close(serverFd);
+    close(this->tcpServerFd);
+    close(this->udpServerFd);
 }
 
 void Server::start()
@@ -82,7 +89,7 @@ void Server::acceptNewConnection()
     struct sockaddr_in cliAddr;
     socklen_t cliLen = sizeof(cliAddr);
 
-    int clientFd = accept(serverFd, (struct sockaddr *)&cliAddr, &cliLen);
+    int clientFd = accept(tcpServerFd, (struct sockaddr *)&cliAddr, &cliLen);
     if (clientFd >= 0)
     {
         if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
@@ -130,6 +137,7 @@ void Server::removeClosedConnections()
     }
 }
 
+// TCP
 void Server::sendGameData(const int fd) const
 {
     struct snake head = this->game->getSnakeHead(fd);
@@ -144,17 +152,29 @@ void Server::sendGameData(const int fd) const
         perror("write");
 }
 
+// UDP
 void Server::receiveDataFromClient(const int fd, const int index)
 {
     if (index == 0)
         return acceptNewConnection();
 
+    if (index == 1)
+    {
+        sockaddr_in clientAddr;
+        socklen_t clientAddrLen = sizeof(clientAddr);
+        int n = recvfrom(this->udpServerFd, readBuf, 2, 0, (sockaddr *)&clientAddr, &clientAddrLen);
+        if (n == 2)
+            game->setSnakeDirection(5, (int)readBuf[0]);
+        else
+        {
+            std::cout << "ERROR!" << std::endl;
+        }
+        return;
+    }
+
     int bytesRead = read(fd, &readBuf, 10);
     if (bytesRead == 2)
-    {
         game->setSnakeDirection(fd, (int)readBuf[0]);
-        memset(readBuf, 0, 10);
-    }
     else if (bytesRead == 0)
         closeConnection(fd);
     else

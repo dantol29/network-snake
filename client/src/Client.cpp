@@ -1,35 +1,50 @@
 #include "Client.hpp"
 
 #define SERVER_PORT 45413
+// #define SERVER_PORT 8080
 #define SERVER_IP "34.1.194.123"
+// #define SERVER_IP "127.0.0.1"
 #define BLOCKING -1
 
 Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), previousDirection(UP), direction(UP), snakeX(0), snakeY(0), height(0), width(0)
 {
-    this->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->serverSocket < 0)
+    this->tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (this->tcpSocket < 0)
         onerror("Socket init error");
 
-    sockaddr_in serverAddr;
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(SERVER_PORT);
-    inet_pton(AF_INET, SERVER_IP, &serverAddr.sin_addr);
+    this->udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    this->setupSocket();
+
+    this->serverAddr.sin_family = AF_INET;
+    this->serverAddr.sin_port = htons(SERVER_PORT);
+    inet_pton(AF_INET, SERVER_IP, &this->serverAddr.sin_addr);
 
     std::cout << "connecting..." << std::endl;
 
-    if (connect(this->serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) < 0)
+    if (connect(this->tcpSocket, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr)) < 0)
         onerror("Connect to server error");
 
     std::cout << "connected" << std::endl;
 
-    this->serverFd.fd = this->serverSocket;
+    this->serverFd.fd = this->tcpSocket;
     this->serverFd.events = POLLIN;
     this->serverFd.revents = 0;
 }
 
 Client::~Client()
 {
-    close(this->serverSocket);
+    close(this->tcpSocket);
+}
+
+void Client::setupSocket()
+{
+    int flag = 1; // Disable Nagle's Algorithm
+    setsockopt(this->tcpSocket, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
+
+    int bufsize = 8192; // Smaller buffers for lower latency
+    setsockopt(this->tcpSocket, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(bufsize));
+    setsockopt(this->tcpSocket, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize));
 }
 
 void Client::start()
@@ -53,7 +68,7 @@ void Client::start()
 
 void Client::receiveGameData()
 {
-    int bytesRead = read(this->serverSocket, &this->readBuf, 16384);
+    int bytesRead = read(this->tcpSocket, &this->readBuf, 16384);
     if (bytesRead > 0)
         deserealizeGameData(bytesRead);
     else if (bytesRead == 0)
@@ -68,11 +83,13 @@ void Client::sendDirection()
     writeBuf[0] = this->previousDirection;
     writeBuf[1] = '\0';
 
-    int bytesWritten = write(this->serverSocket, &writeBuf, 2);
-    if (bytesWritten == 2)
-        this->serverFd.events = POLLIN; // disable POLLOUT
-    else
-        perror("write");
+    sendto(this->udpSocket, &writeBuf, 2, 0, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr));
+    std::cout << "Message sent!" << std::endl;
+    // int bytesWritten = write(this->tcpSocket, &writeBuf, 2);
+    // if (bytesWritten == 2)
+    this->serverFd.events = POLLIN; // disable POLLOUT
+    // else
+    //     perror("write");
 }
 
 void Client::setDirection(enum direction dir)

@@ -21,7 +21,8 @@ public:
 
 private:
     Game *game;
-    int serverFd;
+    int tcpServerFd;
+    int udpServerFd;
     std::vector<struct pollfd> connectedClients;
     std::vector<int> closedConnections;
     TimePoint lastSendTime;

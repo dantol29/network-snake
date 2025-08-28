@@ -135,10 +135,12 @@ void Game::removeDeadSnakes()
 
 void Game::setSnakeDirection(const int fd, const int dir)
 {
+    std::cout << "updating dir" << std::endl;
     std::lock_guard<std::mutex> lock(this->snakesMutex);
     for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
         if ((*iter)->getFd() == fd)
             return (*iter)->setDirection(dir);
+    std::cout << "finished" << std::endl;
 }
 
 void Game::increaseGameField()
