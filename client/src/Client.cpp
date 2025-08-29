@@ -11,8 +11,6 @@ Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), snakeX(0), sna
 
     this->udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
-    this->setupSocket();
-
     this->serverAddr.sin_family = AF_INET;
     this->serverAddr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &this->serverAddr.sin_addr);
@@ -32,25 +30,13 @@ Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), snakeX(0), sna
 Client::~Client()
 {
     close(this->tcpSocket);
-}
-
-void Client::setupSocket()
-{
-    int flag = 1; // Disable Nagle's Algorithm
-    setsockopt(this->tcpSocket, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
-
-    int bufsize = 8192; // Smaller buffers for lower latency
-    setsockopt(this->tcpSocket, SOL_SOCKET, SO_SNDBUF, &bufsize, sizeof(bufsize));
-    setsockopt(this->tcpSocket, SOL_SOCKET, SO_RCVBUF, &bufsize, sizeof(bufsize));
+    close(this->udpSocket);
 }
 
 void Client::start()
 {
-    while (1)
+    while (poll(&this->serverFd, 1, BLOCKING))
     {
-        if (poll(&this->serverFd, 1, BLOCKING) < 0)
-            break;
-
         if (this->serverFd.revents & POLLIN)
             receiveGameData();
 
@@ -68,13 +54,10 @@ void Client::receiveGameData()
     if (bytesRead > 0)
     {
         auto currentTime = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                           currentTime - lastReadTime)
-                           .count();
-
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastReadTime).count();
         std::cout << "(" << elapsed << " ms)" << std::endl;
-
         lastReadTime = currentTime;
+
         deserealizeGameData(bytesRead);
     }
     else if (bytesRead == 0)
@@ -92,8 +75,6 @@ void Client::sendDirection(const enum direction newDirection) const
     int bytesSent = sendto(this->udpSocket, &writeBuf, 2, 0, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr));
     if (bytesSent != 2) // TODO: retry sending
         std::cout << "Error sending!" << std::endl;
-    else
-        std::cout << "Message sent!" << std::endl;
 }
 
 void Client::deserealizeGameData(const int bytesRead)

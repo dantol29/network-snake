@@ -1,4 +1,7 @@
-# Play classic snake over SSH with your friends!
+# Play classic snake online!
+
+## How to play?
+`./start.sh`
 
 ## Switch between 3 graphical libraries at runtime!
 
@@ -6,12 +9,6 @@
 2. -
 3. -
 
-## Multi-threaded execution for the smoothest experience!
-
-1. A thread for the game logic
-2. A thread for the server
-3. A thread for the client
-4. A thread for the drawer
 
 ## TODO
 

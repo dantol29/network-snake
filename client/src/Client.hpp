@@ -39,7 +39,6 @@ private:
     std::atomic<int> snakeX;
     std::atomic<int> snakeY;
 
-    void setupSocket();
     void receiveGameData();
     void deserealizeGameData(const int bytesRead);
     void parseGameData(const char *message);
