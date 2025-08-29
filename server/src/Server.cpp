@@ -16,6 +16,8 @@ Server::Server(Game *game) : game(game)
     this->tcpServerFd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->tcpServerFd == -1)
         onerror("Failed to create a tcp socket");
+    
+    this->setupSocket();
 
     if (bind(this->tcpServerFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
         onerror("Failed to assign address to a tcp socket");
@@ -43,6 +45,12 @@ Server::Server(Game *game) : game(game)
 
     this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
     this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
+}
+
+void Server::setupSocket()
+{
+    int flag = 1; // Disable Nagle's Algorithm
+    setsockopt(this->tcpServerFd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag));
 }
 
 Server::~Server()

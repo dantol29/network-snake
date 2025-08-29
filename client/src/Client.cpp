@@ -48,7 +48,7 @@ void Client::start()
 {
     while (1)
     {
-        if (poll(&this->serverFd, 1, POLL_TIMEOUT_MS) < 0)
+        if (poll(&this->serverFd, 1, BLOCKING) < 0)
             break;
 
         if (this->serverFd.revents & POLLIN)
@@ -62,9 +62,21 @@ void Client::start()
 
 void Client::receiveGameData()
 {
+    static auto lastReadTime = std::chrono::steady_clock::now();
+
     int bytesRead = read(this->tcpSocket, &this->readBuf, 16384);
     if (bytesRead > 0)
+    {
+        auto currentTime = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           currentTime - lastReadTime)
+                           .count();
+
+        std::cout << "(" << elapsed << " ms)" << std::endl;
+
+        lastReadTime = currentTime;
         deserealizeGameData(bytesRead);
+    }
     else if (bytesRead == 0)
         onerror("Server closed connection");
     else

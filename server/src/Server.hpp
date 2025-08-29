@@ -32,6 +32,7 @@ private:
     std::string serializedHeight;
     std::string serializedWidth;
 
+    void setupSocket();
     void acceptNewConnection();
     void closeConnection(const int fd);
     void removeClosedConnections();

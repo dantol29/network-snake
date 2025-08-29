@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <poll.h>
