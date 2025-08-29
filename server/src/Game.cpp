@@ -74,6 +74,8 @@ void Game::spawnFood()
             return;
         }
     }
+
+    this->setIsDataUpdated(true);
 }
 
 void Game::moveSnakes()
@@ -85,8 +87,8 @@ void Game::moveSnakes()
         (*it)->moveSnake(this->gameField);
 
     this->removeDeadSnakes();
+    this->setIsDataUpdated(true);
 
-    // this->printField();
     lastMoveTime = this->now;
 }
 
@@ -167,6 +169,11 @@ void Game::decreaseFood()
         this->foodCount--;
 }
 
+void Game::setIsDataUpdated(bool value)
+{
+    this->isDataUpdated.store(value);
+}
+
 /// GETTERS
 
 struct snake Game::getSnakeHead(const int fd) const
@@ -199,6 +206,11 @@ int Game::getWidth() const
 bool Game::getStopFlag() const
 {
     return this->stopFlag.load();
+}
+
+bool Game::getIsDataUpdated() const
+{
+    return this->isDataUpdated.load();
 }
 
 /// UTILS

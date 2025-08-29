@@ -16,7 +16,7 @@ Server::Server(Game *game) : game(game)
     this->tcpServerFd = socket(AF_INET, SOCK_STREAM, 0);
     if (this->tcpServerFd == -1)
         onerror("Failed to create a tcp socket");
-    
+
     this->setupSocket();
 
     if (bind(this->tcpServerFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
@@ -67,10 +67,12 @@ void Server::start()
         if (this->game->getStopFlag())
             return;
 
-        auto now = Clock::now();
-        bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 20;
+        bool shouldSend = this->game->getIsDataUpdated();
         if (shouldSend)
+        {
+            this->game->setIsDataUpdated(false);
             this->serializedGameField = serializeGameField();
+        }
 
         int oldSize = connectedClients.size();
         for (int i = 0; i < oldSize; i++)
@@ -84,9 +86,6 @@ void Server::start()
         }
 
         removeClosedConnections();
-
-        if (shouldSend)
-            lastSendTime = now;
     }
 
     onerror("Poll error");
