@@ -60,7 +60,7 @@ void Server::start()
             return;
 
         auto now = Clock::now();
-        bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 50;
+        bool shouldSend = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastSendTime).count() >= 20;
         if (shouldSend)
             this->serializedGameField = serializeGameField();
 
@@ -166,19 +166,15 @@ void Server::receiveDataFromClient(const int fd, const int index)
         if (n == 2)
             game->setSnakeDirection(5, (int)readBuf[0]);
         else
-        {
             std::cout << "ERROR!" << std::endl;
-        }
         return;
     }
 
     int bytesRead = read(fd, &readBuf, 10);
-    if (bytesRead == 2)
-        game->setSnakeDirection(fd, (int)readBuf[0]);
-    else if (bytesRead == 0)
+    if (bytesRead == 0)
         closeConnection(fd);
     else
-        perror("Error while reading!\n");
+        perror("Error while reading!");
 }
 
 void Server::handleSocketError(const int fd, const int index)

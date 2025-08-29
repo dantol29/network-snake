@@ -1,12 +1,9 @@
 #include "Client.hpp"
 
-#define SERVER_PORT 45413
-// #define SERVER_PORT 8080
-#define SERVER_IP "34.1.194.123"
-// #define SERVER_IP "127.0.0.1"
 #define BLOCKING -1
+#define POLL_TIMEOUT_MS 10
 
-Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), previousDirection(UP), direction(UP), snakeX(0), snakeY(0), height(0), width(0)
+Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), snakeX(0), snakeY(0), height(0), width(0)
 {
     this->tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (this->tcpSocket < 0)
@@ -49,16 +46,13 @@ void Client::setupSocket()
 
 void Client::start()
 {
-    while (poll(&this->serverFd, 1, BLOCKING))
+    while (1)
     {
+        if (poll(&this->serverFd, 1, POLL_TIMEOUT_MS) < 0)
+            break;
+
         if (this->serverFd.revents & POLLIN)
             receiveGameData();
-        if (this->serverFd.revents & POLLOUT)
-            sendDirection();
-
-        auto currentDirection = this->direction.load();
-        if (this->previousDirection != currentDirection)
-            enableSend(currentDirection);
 
         if (stopFlag.load())
             return;
@@ -77,31 +71,17 @@ void Client::receiveGameData()
         onerror("Error while reading from server socket");
 }
 
-void Client::sendDirection()
+void Client::sendDirection(const enum direction newDirection) const
 {
     char writeBuf[2];
-    writeBuf[0] = this->previousDirection;
+    writeBuf[0] = newDirection;
     writeBuf[1] = '\0';
 
-    sendto(this->udpSocket, &writeBuf, 2, 0, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr));
-    std::cout << "Message sent!" << std::endl;
-    // int bytesWritten = write(this->tcpSocket, &writeBuf, 2);
-    // if (bytesWritten == 2)
-    this->serverFd.events = POLLIN; // disable POLLOUT
-    // else
-    //     perror("write");
-}
-
-void Client::setDirection(enum direction dir)
-{
-    this->direction.store(dir);
-}
-
-// TODO: might be a better way to enable POLLOUT without check in a loop
-void Client::enableSend(const enum direction newDirection)
-{
-    this->previousDirection = newDirection;
-    this->serverFd.events = POLLIN | POLLOUT; // enable POLLOUT to send new direction
+    int bytesSent = sendto(this->udpSocket, &writeBuf, 2, 0, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr));
+    if (bytesSent != 2) // TODO: retry sending
+        std::cout << "Error sending!" << std::endl;
+    else
+        std::cout << "Message sent!" << std::endl;
 }
 
 void Client::deserealizeGameData(const int bytesRead)

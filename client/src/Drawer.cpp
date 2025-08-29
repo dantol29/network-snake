@@ -115,16 +115,16 @@ void Drawer::keyCallback(int key, int action)
         switch (key)
         {
         case 265:
-            this->client->setDirection(UP);
+            this->client->sendDirection(UP);
             break;
         case 264:
-            this->client->setDirection(DOWN);
+            this->client->sendDirection(DOWN);
             break;
         case 263:
-            this->client->setDirection(LEFT);
+            this->client->sendDirection(LEFT);
             break;
         case 262:
-            this->client->setDirection(RIGHT);
+            this->client->sendDirection(RIGHT);
             break;
         case 77: // M
             this->screenSize = this->screenSize * 1.10 + 0.5;
