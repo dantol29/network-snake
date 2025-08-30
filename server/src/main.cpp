@@ -2,7 +2,7 @@
 #include "Game.hpp"
 #include "Server.hpp"
 
-[[noreturn]] void onerror(const char *msg)
+void onerror(const char *msg)
 {
     write(STDERR_FILENO, msg, strlen(msg));
     exit(EXIT_FAILURE);

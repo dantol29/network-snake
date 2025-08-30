@@ -43,6 +43,6 @@ typedef void (*loopFunc)(void *);
 typedef void (*cleanupFunc)(void *);
 typedef void (*drawSquareFunc)(void *, float, float, float, float, struct rgb);
 
-[[noreturn]] void onerror(const char *msg);
+void onerror(const char *msg);
 
 #endif

@@ -38,6 +38,6 @@ enum e_direction
 };
 
 // utils
-[[noreturn]] void onerror(const char *msg);
+void onerror(const char *msg);
 
 #endif
