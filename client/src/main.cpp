@@ -2,7 +2,7 @@
 #include "Client.hpp"
 #include "Drawer.hpp"
 
-[[noreturn]] void onerror(const char *msg)
+void onerror(const char *msg)
 {
     write(STDERR_FILENO, msg, strlen(msg));
     write(2, "\n", 2);
