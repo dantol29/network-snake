@@ -108,7 +108,7 @@ void Server::acceptNewConnection()
         fd.revents = 0;
         connectedClients.push_back(fd);
 
-        this->game->addSnake(clientFd);
+        this->game->addSnake(clientFd, cliAddr.sin_addr.s_addr);
 
         // game size might change on new player add
         this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
@@ -171,7 +171,7 @@ void Server::receiveDataFromClient(const int fd, const int index)
         socklen_t clientAddrLen = sizeof(clientAddr);
         int n = recvfrom(this->udpServerFd, readBuf, 2, 0, (sockaddr *)&clientAddr, &clientAddrLen);
         if (n == 2)
-            game->setSnakeDirection(5, (int)readBuf[0]);
+            game->updateSnakeDirection(clientAddr.sin_addr.s_addr, (int)readBuf[0]);
         else
             std::cout << "ERROR!" << std::endl;
         return;

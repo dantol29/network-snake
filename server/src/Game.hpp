@@ -18,9 +18,9 @@ public:
     void stop();
 
     void decreaseFood();
-    void addSnake(const int fd);
+    void addSnake(const int fd, in_addr_t clientAddr);
     void addDeadSnake(const int fd);
-    void setSnakeDirection(const int fd, const int dir);
+    void updateSnakeDirection(in_addr_t clientAddr, const int dir);
     void setIsDataUpdated(bool value);
     std::string fieldToString();
 

@@ -92,12 +92,12 @@ void Game::moveSnakes()
     lastMoveTime = this->now;
 }
 
-void Game::addSnake(const int clientFd)
+void Game::addSnake(const int clientFd, in_addr_t clientAddr)
 {
     std::lock_guard<std::mutex> lock1(snakesMutex);
     std::lock_guard<std::mutex> lock2(gameFieldMutex);
 
-    Snake *newSnake = new Snake(this->height, this->width, clientFd, this);
+    Snake *newSnake = new Snake(this, this->height, this->width, clientFd, clientAddr);
     this->snakes.push_back(newSnake);
 
     if (this->snakes.size() > this->maxSnakeCount)
@@ -135,12 +135,12 @@ void Game::removeDeadSnakes()
     this->deadSnakes.clear();
 }
 
-void Game::setSnakeDirection(const int fd, const int dir)
+void Game::updateSnakeDirection(in_addr_t clientAddr, const int dir)
 {
     std::cout << "updating dir" << std::endl;
     std::lock_guard<std::mutex> lock(this->snakesMutex);
     for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
-        if ((*iter)->getFd() == fd)
+        if ((*iter)->getClientAddress() == clientAddr)
             return (*iter)->setDirection(dir);
     std::cout << "finished" << std::endl;
 }

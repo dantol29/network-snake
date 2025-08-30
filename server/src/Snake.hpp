@@ -9,7 +9,7 @@ class Game;
 class Snake
 {
 public:
-    Snake(const int height, const int width, const int fd, Game *game);
+    Snake(Game *game, int height, int width, int fd, in_addr_t clientAddr);
     ~Snake();
 
     void moveSnake(std::vector<std::string> &gameField);
@@ -20,10 +20,12 @@ public:
     int getHeadX() const;
     int getHeadY() const;
     int getFd() const;
+    in_addr_t getClientAddress() const;
 
 private:
     Game *game;
     const int fd;
+    const in_addr_t clientAddr;
     struct snake *tail;
     enum e_direction direction;
     int gameHeight;
