@@ -31,7 +31,6 @@ public:
 private:
     int foodCount;
     int maxSnakeCount;
-    std::chrono::steady_clock::time_point now;
 
     // Used by another thread
     std::atomic<int> height;

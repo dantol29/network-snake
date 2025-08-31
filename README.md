@@ -14,7 +14,8 @@
 
 - [] Replace onerror() with proper exit
 - [] Add 2 dynamic libs
-- [] Check memory leaks
+- [x] Check memory leaks in Server
+- [] Check memory leaks in Client
 - [x] Stop server when game is finished
 - [x] Scale game based on width and height
 - [x] Draw borders
@@ -27,7 +28,8 @@
 - [x] Single player mode must remain available
 - [x] Add const
 - [] If game field is not square - it is not rendered correctly
-- [] Review potential data races
+- [x] Data races in Server
+- [] Data races in Client
 - [x] When player quits and rejoins - do not increase game field
 - [x] Send snakes coordinates, so that client knows which snake to follow
 

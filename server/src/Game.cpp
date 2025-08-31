@@ -40,14 +40,11 @@ void Game::start()
 {
     while (1)
     {
-        this->now = Clock::now();
-        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= SNAKE_SPEED;
-
+        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - lastMoveTime).count() >= SNAKE_SPEED;
         if (move)
             this->moveSnakes();
 
-        if (this->snakes.size() * 2 > this->foodCount)
-            this->spawnFood();
+        this->spawnFood();
 
         if (stopFlag.load())
             return;
@@ -56,6 +53,11 @@ void Game::start()
 
 void Game::spawnFood()
 {
+    {
+        std::lock_guard<std::mutex> lock2(snakesMutex);
+        if (!(this->snakes.size() * 2 > this->foodCount))
+            return;
+    }
     std::lock_guard<std::mutex> lock(gameFieldMutex);
 
     for (int i = 0; i < MAX_FOOD_SPAWN_TRIES; i++)
@@ -68,7 +70,6 @@ void Game::spawnFood()
         if (this->gameField[y][x] == FLOOR_SYMBOL)
         {
             this->gameField[y][x] = 'F';
-            lastEatTime = this->now;
             ++this->foodCount;
             return;
         }
@@ -79,8 +80,8 @@ void Game::spawnFood()
 
 void Game::moveSnakes()
 {
-    std::lock_guard<std::mutex> lock1(this->gameFieldMutex);
     std::lock_guard<std::mutex> lock2(this->snakesMutex);
+    std::lock_guard<std::mutex> lock1(this->gameFieldMutex);
 
     for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
         it->second->moveSnake(this->gameField);
@@ -88,7 +89,7 @@ void Game::moveSnakes()
     this->removeDeadSnakes();
     this->setIsDataUpdated(true);
 
-    lastMoveTime = this->now;
+    lastMoveTime = Clock::now();
 }
 
 void Game::addSnake(const int clientFd)
