@@ -23,6 +23,12 @@
 #define SERVER_IP "165.22.79.64"
 // #define SERVER_IP "127.0.0.1"
 
+#ifdef __APPLE__
+#define LIB_EXTENSION ".dylib"
+#elif __linux__
+#define LIB_EXTENSION ".so"
+#endif
+
 enum direction
 {
     UP,

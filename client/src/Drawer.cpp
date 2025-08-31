@@ -16,9 +16,10 @@ Drawer::~Drawer()
     dlclose(this->dynamicLibrary);
 }
 
-void Drawer::loadDynamicLibrary(const char *lib)
+void Drawer::loadDynamicLibrary(const std::string &lib)
 {
-    this->dynamicLibrary = dlopen(lib, RTLD_LAZY);
+    std::string libPath = lib + LIB_EXTENSION;
+    this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
     if (!this->dynamicLibrary)
         onerror("Failed to load dynlib");
 

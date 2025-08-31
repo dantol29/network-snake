@@ -14,7 +14,7 @@ public:
 
     void start();
 
-    void loadDynamicLibrary(const char *lib);
+    void loadDynamicLibrary(const std::string &lib);
     void keyCallback(int key, int action);
     void drawGameField();
 

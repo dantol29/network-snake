@@ -177,11 +177,7 @@ void Server::receiveDataFromClient(const int fd, const int index)
         return;
     }
 
-    int bytesRead = read(fd, &readBuf, 10);
-    if (bytesRead == 0)
-        closeConnection(fd);
-    else
-        perror("Error while reading!");
+    closeConnection(fd);
 }
 
 void Server::handleSocketError(const int fd, const int index)

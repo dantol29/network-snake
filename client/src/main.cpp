@@ -16,7 +16,7 @@ int main()
     Client *client = new Client(stopFlag);
     Drawer *drawer = new Drawer(client);
 
-    drawer->loadDynamicLibrary("/Users/tolmadan/Desktop/42/nibbler/libs/lib1/lib1.dylib");
+    drawer->loadDynamicLibrary("/Users/tolmadan/Desktop/42/nibbler/libs/lib1/lib1");
 
     std::thread clientThread(&Client::start, client);
 
