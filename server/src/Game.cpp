@@ -18,7 +18,6 @@ Game::Game(const int height, const int width) : height(height), width(width), st
     }
 
     this->foodCount = 0;
-    this->maxSnakeCount = 0;
 
     srand(time(NULL)); // init random generator
 }
@@ -38,27 +37,29 @@ void Game::stop()
 
 void Game::start()
 {
-    while (1)
+    auto nextMoveTime = Clock::now() + std::chrono::milliseconds(SNAKE_SPEED);
+
+    while (!stopFlag.load())
     {
-        bool move = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - lastMoveTime).count() >= SNAKE_SPEED;
-        if (move)
+        auto now = Clock::now();
+        if (now >= nextMoveTime)
+        {
+            std::lock_guard<std::mutex> lock1(this->snakesMutex);
+            std::lock_guard<std::mutex> lock2(this->gameFieldMutex);
+
             this->moveSnakes();
+            this->spawnFood();
+            nextMoveTime = now + std::chrono::milliseconds(SNAKE_SPEED);
+        }
 
-        this->spawnFood();
-
-        if (stopFlag.load())
-            return;
+        std::this_thread::sleep_until(nextMoveTime);
     }
 }
 
 void Game::spawnFood()
 {
-    {
-        std::lock_guard<std::mutex> lock2(snakesMutex);
-        if (!(this->snakes.size() * 2 > this->foodCount))
-            return;
-    }
-    std::lock_guard<std::mutex> lock(gameFieldMutex);
+    if (!(this->snakes.size() * 2 > this->foodCount))
+        return;
 
     for (int i = 0; i < MAX_FOOD_SPAWN_TRIES; i++)
     {
@@ -80,9 +81,6 @@ void Game::spawnFood()
 
 void Game::moveSnakes()
 {
-    std::lock_guard<std::mutex> lock2(this->snakesMutex);
-    std::lock_guard<std::mutex> lock1(this->gameFieldMutex);
-
     for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
         it->second->moveSnake(this->gameField);
 
@@ -95,16 +93,8 @@ void Game::moveSnakes()
 void Game::addSnake(const int clientFd)
 {
     std::lock_guard<std::mutex> lock1(snakesMutex);
-    std::lock_guard<std::mutex> lock2(gameFieldMutex);
-
     Snake *newSnake = new Snake(this, clientFd);
     this->snakes[clientFd] = newSnake;
-
-    if (this->snakes.size() > this->maxSnakeCount)
-    {
-        this->maxSnakeCount = this->snakes.size();
-        this->increaseGameField();
-    }
 }
 
 void Game::addDeadSnake(const int fd)

@@ -31,7 +31,6 @@ public:
 
 private:
     int foodCount;
-    int maxSnakeCount;
 
     // Used by another thread
     std::atomic<int> height;

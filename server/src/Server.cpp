@@ -60,10 +60,10 @@ Server::~Server()
 
 void Server::start()
 {
-    while (poll(connectedClients.data(), connectedClients.size(), BLOCKING))
+    while (!this->game->getStopFlag())
     {
-        if (this->game->getStopFlag())
-            return;
+        if (poll(connectedClients.data(), connectedClients.size(), BLOCKING) < 0)
+            break;
 
         bool shouldSend = this->game->getIsDataUpdated();
         if (shouldSend)
@@ -109,10 +109,6 @@ void Server::acceptNewConnection()
         this->addressToFd[cliAddr.sin_addr.s_addr] = clientFd;
 
         this->game->addSnake(clientFd);
-
-        // game size might change on new player add
-        this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
-        this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
     }
 }
 
