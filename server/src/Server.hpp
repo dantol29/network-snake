@@ -22,6 +22,7 @@ private:
     int udpServerFd;
     std::vector<struct pollfd> connectedClients;
     std::vector<int> closedConnections;
+    std::unordered_map<in_addr_t, int> addressToFd;
     char readBuf[10];
 
     std::string serializedGameField;

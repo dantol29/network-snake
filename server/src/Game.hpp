@@ -16,13 +16,13 @@ public:
     void stop();
 
     void decreaseFood();
-    void addSnake(const int fd, in_addr_t clientAddr);
+    void addSnake(const int fd);
     void addDeadSnake(const int fd);
-    void updateSnakeDirection(in_addr_t clientAddr, const int dir);
+    void updateSnakeDirection(const int fd, const int dir);
     void setIsDataUpdated(bool value);
     std::string fieldToString();
 
-    struct snake getSnakeHead(const int fd) const;
+    struct snake getSnakeHead(const int fd);
     int getHeight() const;
     int getWidth() const;
     bool getStopFlag() const;
@@ -41,13 +41,12 @@ private:
     std::mutex deadSnakesMutex;
     std::vector<int> deadSnakes;
     std::mutex snakesMutex;
-    std::unordered_map<in_addr_t, Snake *> snakes;
+    std::unordered_map<int, Snake *> snakes;
     std::mutex gameFieldMutex;
     std::vector<std::string> gameField;
 
     void spawnFood();
     void moveSnakes();
-    void removeSnake(const int fd);
     void removeDeadSnakes();
     void increaseGameField();
     void printField() const;

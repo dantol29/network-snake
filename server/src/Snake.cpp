@@ -1,7 +1,7 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(Game *game, int height, int width, int fd, in_addr_t clientAddr) : gameHeight(height), gameWidth(width), fd(fd), clientAddr(clientAddr), game(game), headX(height / 2), headY(width / 2)
+Snake::Snake(Game *game, int height, int width, int fd) : gameHeight(height), gameWidth(width), game(game), headX(height / 2), headY(width / 2), fd(fd)
 {
     this->tail = (struct snake *)malloc(sizeof(struct snake));
     if (!this->tail)
@@ -146,11 +146,6 @@ void Snake::updateGameSize(const int height, const int width)
     this->gameWidth = width;
 }
 
-in_addr_t Snake::getClientAddress() const
-{
-    return this->clientAddr;
-}
-
 int Snake::getHeadX() const
 {
     return this->headX.load();
@@ -159,9 +154,4 @@ int Snake::getHeadX() const
 int Snake::getHeadY() const
 {
     return this->headY.load();
-}
-
-int Snake::getFd() const
-{
-    return this->fd;
 }
