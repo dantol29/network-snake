@@ -17,6 +17,8 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 
 #define FLOOR_SYMBOL '.'
 #define SNAKE_SPEED 150

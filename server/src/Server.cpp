@@ -41,8 +41,6 @@ Server::Server(Game *game) : game(game)
     connectedClients.push_back(tcpPoll);
     connectedClients.push_back(udpPoll);
 
-    lastSendTime = Clock::now();
-
     this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
     this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
 }

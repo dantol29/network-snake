@@ -2,8 +2,6 @@
 #define GAME_HPP
 
 #include "../includes/nibbler.hpp"
-#include <vector>
-#include <string>
 #include "Snake.hpp"
 
 class Snake;
@@ -43,7 +41,7 @@ private:
     std::mutex deadSnakesMutex;
     std::vector<int> deadSnakes;
     std::mutex snakesMutex;
-    std::vector<Snake *> snakes;
+    std::unordered_map<in_addr_t, Snake *> snakes;
     std::mutex gameFieldMutex;
     std::vector<std::string> gameField;
 

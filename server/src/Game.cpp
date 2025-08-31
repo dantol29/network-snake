@@ -39,12 +39,11 @@ void Game::start()
     {
         this->now = Clock::now();
         bool move = std::chrono::duration_cast<std::chrono::milliseconds>(this->now - lastMoveTime).count() >= SNAKE_SPEED;
-        bool spawnFood = std::chrono::duration_cast<std::chrono::seconds>(this->now - lastEatTime).count() >= 3;
 
         if (move)
             this->moveSnakes();
 
-        if (spawnFood)
+        if (this->snakes.size() * 2 <= this->foodCount)
             this->spawnFood();
 
         if (stopFlag.load())
@@ -54,9 +53,6 @@ void Game::start()
 
 void Game::spawnFood()
 {
-    if (this->snakes.size() * 2 <= this->foodCount)
-        return;
-
     std::lock_guard<std::mutex> lock(gameFieldMutex);
 
     for (int i = 0; i < MAX_FOOD_SPAWN_TRIES; i++)
@@ -84,7 +80,7 @@ void Game::moveSnakes()
     std::lock_guard<std::mutex> lock2(this->snakesMutex);
 
     for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
-        (*it)->moveSnake(this->gameField);
+        (*it).second->moveSnake(this->gameField);
 
     this->removeDeadSnakes();
     this->setIsDataUpdated(true);
@@ -98,7 +94,7 @@ void Game::addSnake(const int clientFd, in_addr_t clientAddr)
     std::lock_guard<std::mutex> lock2(gameFieldMutex);
 
     Snake *newSnake = new Snake(this, this->height, this->width, clientFd, clientAddr);
-    this->snakes.push_back(newSnake);
+    this->snakes[clientAddr] = newSnake;
 
     if (this->snakes.size() > this->maxSnakeCount)
     {
@@ -117,9 +113,9 @@ void Game::removeSnake(const int fd)
 {
     for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
     {
-        if ((*iter)->getFd() == fd)
+        if ((*iter).second->getFd() == fd)
         {
-            (*iter)->cleanSnakeFromField(this->gameField);
+            (*iter).second->cleanSnakeFromField(this->gameField);
             this->snakes.erase(iter);
             return;
         }
@@ -137,12 +133,8 @@ void Game::removeDeadSnakes()
 
 void Game::updateSnakeDirection(in_addr_t clientAddr, const int dir)
 {
-    std::cout << "updating dir" << std::endl;
     std::lock_guard<std::mutex> lock(this->snakesMutex);
-    for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
-        if ((*iter)->getClientAddress() == clientAddr)
-            return (*iter)->setDirection(dir);
-    std::cout << "finished" << std::endl;
+    this->snakes[clientAddr]->setDirection(dir);
 }
 
 void Game::increaseGameField()
@@ -156,7 +148,7 @@ void Game::increaseGameField()
     this->width.store(newWidth);
 
     for (auto iter = this->snakes.begin(); iter != this->snakes.end(); ++iter)
-        (*iter)->updateGameSize(newHeight, newWidth);
+        (*iter).second->updateGameSize(newHeight, newWidth);
 
     this->gameField.resize(newHeight);
     for (int i = 0; i < newHeight; i++)
@@ -182,10 +174,10 @@ struct snake Game::getSnakeHead(const int fd) const
 
     for (auto iter = this->snakes.begin(); iter != this->snakes.end(); iter++)
     {
-        if ((*iter)->getFd() == fd)
+        if ((*iter).second->getFd() == fd)
         {
-            head.x = (*iter)->getHeadX();
-            head.y = (*iter)->getHeadY();
+            head.x = (*iter).second->getHeadX();
+            head.y = (*iter).second->getHeadY();
             break;
         }
     }

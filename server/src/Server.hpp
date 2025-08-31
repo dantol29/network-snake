@@ -4,9 +4,6 @@
 #include "../includes/nibbler.hpp"
 #include "Game.hpp"
 
-using Clock = std::chrono::steady_clock;
-using TimePoint = std::chrono::time_point<Clock>;
-
 class Game;
 
 class Server
@@ -25,7 +22,6 @@ private:
     int udpServerFd;
     std::vector<struct pollfd> connectedClients;
     std::vector<int> closedConnections;
-    TimePoint lastSendTime;
     char readBuf[10];
 
     std::string serializedGameField;

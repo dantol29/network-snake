@@ -38,12 +38,6 @@
 - [x] Zoom in & Zoom out
 - [] Improve graphics - draw smooth snake position transactions before new data arrives
 
-## If game scales - things to improve
-
-- A hashmap of `unordered_map<int fd, snakes>` to remove iterations over snakes vector
-- Add logic if data is not sent/received to socket in one write
-- Send only map around the snake (in case field gets really big)
-
 ## Materials
 
 1. https://www.cs.dartmouth.edu/~campbell/cs50/socketprogramming
