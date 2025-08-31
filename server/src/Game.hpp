@@ -21,8 +21,9 @@ public:
     void updateSnakeDirection(const int fd, const int dir);
     void setIsDataUpdated(bool value);
     std::string fieldToString();
+    void printField() const;
 
-    struct snake getSnakeHead(const int fd);
+    struct coordinates getSnakeHead(const int fd);
     int getHeight() const;
     int getWidth() const;
     bool getStopFlag() const;
@@ -48,7 +49,6 @@ private:
     void moveSnakes();
     void removeDeadSnakes();
     void increaseGameField();
-    void printField() const;
 };
 
 #endif

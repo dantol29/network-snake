@@ -1,7 +1,6 @@
 #ifndef NIBBLER_HPP
 #define NIBBLER_HPP
 
-#include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <time.h>
@@ -19,16 +18,15 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <list>
 
 #define FLOOR_SYMBOL '.'
 #define SNAKE_SPEED 150
 
-struct snake
+struct coordinates
 {
     int x;
     int y;
-    snake *next;
-    snake *prev;
 };
 
 enum e_direction

@@ -9,31 +9,22 @@ class Game;
 class Snake
 {
 public:
-    Snake(Game *game, int height, int width, int fd);
+    Snake(Game *game, int fd);
     ~Snake();
 
     void moveSnake(std::vector<std::string> &gameField);
-    void cleanSnakeFromField(std::vector<std::string> &gameField);
+    void cleanup(std::vector<std::string> &gameField);
     void setDirection(const int newDir);
-    void updateGameSize(const int height, const int width);
 
-    int getHeadX() const;
-    int getHeadY() const;
+    struct coordinates getHead() const;
 
 private:
     Game *game;
-    struct snake *tail;
+    std::list<struct coordinates> body;
     enum e_direction direction;
     const int fd;
-    int gameHeight;
-    int gameWidth;
 
-    // Used by server thread
-    std::atomic<int> headX;
-    std::atomic<int> headY;
-
-    void growSnake(const int oldX, const int oldY);
-    void moveHead(struct snake *head, const int oldX, const int oldY, std::vector<std::string> &gameField);
+    struct coordinates moveHead(int currentX, int currentY, std::vector<std::string> &gameField);
 };
 
 #endif

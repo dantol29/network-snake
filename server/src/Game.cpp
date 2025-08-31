@@ -97,7 +97,7 @@ void Game::addSnake(const int clientFd)
     std::lock_guard<std::mutex> lock1(snakesMutex);
     std::lock_guard<std::mutex> lock2(gameFieldMutex);
 
-    Snake *newSnake = new Snake(this, this->height, this->width, clientFd);
+    Snake *newSnake = new Snake(this, clientFd);
     this->snakes[clientFd] = newSnake;
 
     if (this->snakes.size() > this->maxSnakeCount)
@@ -122,7 +122,7 @@ void Game::removeDeadSnakes()
         auto snake = this->snakes.find(*it);
         if (snake != this->snakes.end() && snake->second)
         {
-            snake->second->cleanSnakeFromField(this->gameField);
+            snake->second->cleanup(this->gameField);
             delete snake->second;
             this->snakes.erase(snake);
         }
@@ -146,9 +146,6 @@ void Game::increaseGameField()
     this->height.store(newHeight);
     this->width.store(newWidth);
 
-    for (auto iter = this->snakes.begin(); iter != this->snakes.end(); ++iter)
-        iter->second->updateGameSize(newHeight, newWidth);
-
     this->gameField.resize(newHeight);
     for (int i = 0; i < newHeight; i++)
         this->gameField[i].resize(newWidth, '.');
@@ -167,15 +164,15 @@ void Game::setIsDataUpdated(bool value)
 
 /// GETTERS
 
-struct snake Game::getSnakeHead(const int fd)
+struct coordinates Game::getSnakeHead(const int fd)
 {
-    struct snake head = {0};
+    std::lock_guard<std::mutex> lock(snakesMutex);
+
+    struct coordinates head = {0};
     auto it = this->snakes.find(fd);
     if (it != this->snakes.end() && it->second)
-    {
-        head.x = it->second->getHeadX();
-        head.y = it->second->getHeadY();
-    }
+        head = it->second->getHead();
+
     return head;
 }
 

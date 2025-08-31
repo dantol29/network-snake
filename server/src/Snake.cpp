@@ -1,110 +1,83 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(Game *game, int height, int width, int fd) : gameHeight(height), gameWidth(width), game(game), headX(height / 2), headY(width / 2), fd(fd)
+Snake::Snake(Game *game, int fd) : game(game), fd(fd)
 {
-    this->tail = (struct snake *)malloc(sizeof(struct snake));
-    if (!this->tail)
-        onerror("Memory error");
+    struct coordinates c;
+    c.x = this->game->getHeight() / 2;
+    c.y = this->game->getWidth() / 2;
+    this->body.push_front(c);
+    c.x = this->game->getHeight() / 2;
+    c.y = this->game->getWidth() / 2 + 1;
+    this->body.push_back(c);
 
-    this->tail->x = height / 2;
-    this->tail->y = width / 2;
-    this->tail->next = NULL;
-    this->tail->prev = NULL;
     this->direction = UP;
 }
 
-// TODO: migrate to C++ linked list
 Snake::~Snake()
 {
-    if (!this->tail)
-        return;
-
-    struct snake *prev = this->tail;
-    struct snake *tmp;
-
-    while (prev)
-    {
-        tmp = prev;
-        prev = prev->prev;
-        free(tmp);
-    }
-
     std::cout << "Snake destructor called" << std::endl;
 }
 
 void Snake::moveSnake(std::vector<std::string> &gameField)
 {
-    if (!this->tail)
-        return;
+    auto currentHead = body.front();
+    auto newCoord = moveHead(currentHead.x, currentHead.y, gameField);
+    body.push_front({newCoord.x, newCoord.y});
 
-    int oldY = this->tail->y;
-    int oldX = this->tail->x;
-    struct snake *currentPart = this->tail;
-    while (currentPart)
+    if (gameField[newCoord.y][newCoord.x] == 'F')
+        this->game->decreaseFood();
+    else
     {
-        if (currentPart->prev)
-        {
-            currentPart->x = currentPart->prev->x;
-            currentPart->y = currentPart->prev->y;
-            gameField[currentPart->y][currentPart->x] = 'B'; // TODO: maybe possibe to reduce writes
-        }
-        else
-            this->moveHead(currentPart, oldX, oldY, gameField);
-
-        currentPart = currentPart->prev;
+        auto tail = body.back();
+        gameField[tail.y][tail.x] = FLOOR_SYMBOL;
+        body.pop_back();
     }
+
+    for (const auto &segment : body)
+        gameField[segment.y][segment.x] = 'B';
+
+    gameField[newCoord.y][newCoord.x] = 'H';
 }
 
-void Snake::moveHead(struct snake *head, int oldX, int oldY, std::vector<std::string> &gameField)
+struct coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::string> &gameField)
 {
     bool isDead = false;
 
     switch (this->direction)
     {
     case UP:
-        if (head->y > 0)
-            head->y -= 1;
+        if (currentY > 0)
+            currentY -= 1;
         else
             isDead = true;
         break;
     case DOWN:
-        if (head->y < this->gameHeight - 1)
-            head->y += 1;
+        if (currentY < this->game->getHeight() - 1)
+            currentY += 1;
         else
             isDead = true;
         break;
     case LEFT:
-        if (head->x > 0)
-            head->x -= 1;
+        if (currentX > 0)
+            currentX -= 1;
         else
             isDead = true;
         break;
     case RIGHT:
-        if (head->x < this->gameWidth - 1)
-            head->x += 1;
+        if (currentX < this->game->getWidth() - 1)
+            currentX += 1;
         else
             isDead = true;
     }
 
-    if (gameField[head->y][head->x] == 'F')
-    {
-        this->growSnake(oldX, oldY);
-        gameField[oldY][oldX] = 'B';
-        this->game->decreaseFood();
-    }
-    else
-        gameField[oldY][oldX] = FLOOR_SYMBOL;
-
-    if (gameField[head->y][head->x] == 'B' || gameField[head->y][head->x] == 'H')
+    if (gameField[currentY][currentX] == 'B' || gameField[currentY][currentX] == 'H')
         isDead = true;
 
     if (isDead)
-        return this->game->addDeadSnake(this->fd);
+        this->game->addDeadSnake(this->fd);
 
-    gameField[head->y][head->x] = 'H';
-    this->headX.store(head->x);
-    this->headY.store(head->y);
+    return {currentX, currentY};
 }
 
 void Snake::setDirection(const int newDir)
@@ -118,40 +91,13 @@ void Snake::setDirection(const int newDir)
     this->direction = dir;
 }
 
-void Snake::growSnake(const int oldX, const int oldY)
+void Snake::cleanup(std::vector<std::string> &gameField)
 {
-    struct snake *newTail = (struct snake *)malloc(sizeof(struct snake));
-    newTail->next = NULL;
-    newTail->x = oldX;
-    newTail->y = oldY;
-    newTail->prev = this->tail;
-    this->tail->next = newTail;
-
-    this->tail = newTail;
+    for (const auto &segment : body)
+        gameField[segment.y][segment.x] = FLOOR_SYMBOL;
 }
 
-void Snake::cleanSnakeFromField(std::vector<std::string> &gameField)
+struct coordinates Snake::getHead() const
 {
-    struct snake *currentPart = this->tail;
-    while (currentPart)
-    {
-        gameField[currentPart->y][currentPart->x] = FLOOR_SYMBOL;
-        currentPart = currentPart->prev;
-    }
-}
-
-void Snake::updateGameSize(const int height, const int width)
-{
-    this->gameHeight = height;
-    this->gameWidth = width;
-}
-
-int Snake::getHeadX() const
-{
-    return this->headX.load();
-}
-
-int Snake::getHeadY() const
-{
-    return this->headY.load();
+    return this->body.front();
 }
