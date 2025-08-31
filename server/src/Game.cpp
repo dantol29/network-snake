@@ -26,6 +26,9 @@ Game::Game(const int height, const int width) : height(height), width(width), st
 Game::~Game()
 {
     std::cout << "Game destr called" << std::endl;
+
+    for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
+        delete it->second;
 }
 
 void Game::stop()
@@ -80,7 +83,7 @@ void Game::moveSnakes()
     std::lock_guard<std::mutex> lock2(this->snakesMutex);
 
     for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
-        (*it).second->moveSnake(this->gameField);
+        it->second->moveSnake(this->gameField);
 
     this->removeDeadSnakes();
     this->setIsDataUpdated(true);
@@ -119,6 +122,7 @@ void Game::removeDeadSnakes()
         if (snake != this->snakes.end() && snake->second)
         {
             snake->second->cleanSnakeFromField(this->gameField);
+            delete snake->second;
             this->snakes.erase(snake);
         }
     }
@@ -142,7 +146,7 @@ void Game::increaseGameField()
     this->width.store(newWidth);
 
     for (auto iter = this->snakes.begin(); iter != this->snakes.end(); ++iter)
-        (*iter).second->updateGameSize(newHeight, newWidth);
+        iter->second->updateGameSize(newHeight, newWidth);
 
     this->gameField.resize(newHeight);
     for (int i = 0; i < newHeight; i++)
