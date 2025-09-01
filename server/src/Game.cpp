@@ -84,7 +84,7 @@ void Game::spawnFood()
 void Game::moveSnakes()
 {
     std::lock_guard<std::mutex> lock(this->snakesMutex);
-    for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
+    for (auto it = this->snakes.begin(); it != this->snakes.end();)
     {
         it->second->moveSnake(this->writableField);
         if (it->second->getIsDead())
@@ -94,6 +94,8 @@ void Game::moveSnakes()
             it = snakes.erase(it);
             --this->snakeCount;
         }
+        else
+            ++it;
     }
 }
 
@@ -135,7 +137,10 @@ void Game::swapBuffers()
 void Game::updateSnakeDirection(const int fd, const int dir)
 {
     std::lock_guard<std::mutex> lock(this->snakesMutex);
-    this->snakes[fd]->setDirection(dir);
+
+    auto it = this->snakes.find(fd);
+    if (it != this->snakes.end() && it->second)
+        this->snakes[fd]->setDirection(dir);
 }
 
 void Game::decreaseFood()
