@@ -17,7 +17,6 @@ public:
     void setDirection(const int newDir);
 
     bool getIsDead() const;
-    int getFd() const;
     struct coordinates getHead() const;
 
 private:

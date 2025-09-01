@@ -102,8 +102,3 @@ bool Snake::getIsDead() const
 {
     return this->isDead;
 }
-
-int Snake::getFd() const
-{
-    return this->fd;
-}

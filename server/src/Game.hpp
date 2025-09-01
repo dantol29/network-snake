@@ -21,7 +21,6 @@ public:
     void updateSnakeDirection(const int fd, const int dir);
     void setIsDataUpdated(bool value);
     std::string fieldToString();
-    void printField() const;
 
     struct coordinates getSnakeHead(const int fd);
     int getHeight() const;
@@ -35,19 +34,22 @@ private:
     // Used by another thread
     std::atomic<int> height;
     std::atomic<int> width;
+    std::atomic<int> snakeCount;
     std::atomic<bool> stopFlag;
     std::atomic<bool> isDataUpdated;
     std::mutex snakesMutex;
     std::unordered_map<int, Snake *> snakes;
 
+    std::mutex readableFieldMutex;
     std::vector<std::string> gameFieldA;
     std::vector<std::string> gameFieldB;
-    std::atomic<std::vector<std::string> *> readableField{&gameFieldA};
-    std::vector<std::string> *writableField = &gameFieldB;
+    std::vector<std::string> *readableField;
+    std::vector<std::string> *writableField;
 
     void spawnFood();
     void moveSnakes();
     void swapBuffers();
+    void printField();
 };
 
 #endif
