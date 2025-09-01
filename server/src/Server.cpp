@@ -116,7 +116,7 @@ void Server::closeConnection(const int fd)
 {
     close(fd);
     closedConnections.push_back(fd);
-    this->game->addDeadSnake(fd);
+    this->game->removeSnake(fd);
     std::cout << "Client removed: " << fd << std::endl;
 }
 

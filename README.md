@@ -1,16 +1,23 @@
-# Server/Client model for a multiplayer game
+# A modern multiplayer snake game built in C++ with real-time networking capabilities.
 
-## How to play?
+## How to play (compatible with macOS and Linux)?
+
 `./start.sh`
 
 ## Architecture
+
+Client-server architecture where multiple players can compete in the same game field simultaneously
 ![arch](main.png)
 
-## Switch between 3 graphical libraries at runtime!
+## Features
 
-1. GLFW(OpenGL)
-2. -
-3. -
+- 3 dynamic graphic libraries that can be changed on runtime
+- Support for multiple concurrent players
+- Real-time synchronization across all clients
+- TCP server for reliable client connections
+- UDP support for low-latency game updates
+- Efficient serialization
+- Concurrent server and game loop with proper synchronization
 
 ## Materials
 

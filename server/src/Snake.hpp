@@ -12,10 +12,12 @@ public:
     Snake(Game *game, int fd);
     ~Snake();
 
-    void moveSnake(std::vector<std::string> &gameField);
-    void cleanup(std::vector<std::string> &gameField);
+    void moveSnake(std::vector<std::string> *gameField);
+    void cleanup(std::vector<std::string> *gameField);
     void setDirection(const int newDir);
 
+    bool getIsDead() const;
+    int getFd() const;
     struct coordinates getHead() const;
 
 private:
@@ -23,8 +25,9 @@ private:
     std::list<struct coordinates> body;
     enum e_direction direction;
     const int fd;
+    bool isDead;
 
-    struct coordinates moveHead(int currentX, int currentY, std::vector<std::string> &gameField);
+    struct coordinates moveHead(int currentX, int currentY, std::vector<std::string> *gameField);
 };
 
 #endif

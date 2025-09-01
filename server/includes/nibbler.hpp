@@ -22,6 +22,7 @@
 
 #define FLOOR_SYMBOL '.'
 #define SNAKE_SPEED 150
+#define MAX_PLAYERS 100
 
 struct coordinates
 {

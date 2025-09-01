@@ -17,7 +17,7 @@ public:
 
     void decreaseFood();
     void addSnake(const int fd);
-    void addDeadSnake(const int fd);
+    void removeSnake(const int fd);
     void updateSnakeDirection(const int fd, const int dir);
     void setIsDataUpdated(bool value);
     std::string fieldToString();
@@ -37,17 +37,17 @@ private:
     std::atomic<int> width;
     std::atomic<bool> stopFlag;
     std::atomic<bool> isDataUpdated;
-    std::mutex deadSnakesMutex;
-    std::vector<int> deadSnakes;
     std::mutex snakesMutex;
     std::unordered_map<int, Snake *> snakes;
-    std::mutex gameFieldMutex;
-    std::vector<std::string> gameField;
+
+    std::vector<std::string> gameFieldA;
+    std::vector<std::string> gameFieldB;
+    std::atomic<std::vector<std::string> *> readableField{&gameFieldA};
+    std::vector<std::string> *writableField = &gameFieldB;
 
     void spawnFood();
     void moveSnakes();
-    void removeDeadSnakes();
-    void increaseGameField();
+    void swapBuffers();
 };
 
 #endif
