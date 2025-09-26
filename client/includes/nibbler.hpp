@@ -46,7 +46,10 @@ struct rgb
 
 typedef void *(*initFunc)(int, int, void *);
 typedef void (*loopFunc)(void *);
+typedef void (*displayFunc)(void *);
+typedef void (*cleanScreenFunc)(void *);
 typedef void (*cleanupFunc)(void *);
+typedef void (*closeWindowFunc)(void *);
 typedef void (*drawSquareFunc)(void *, float, float, float, float, struct rgb);
 
 void onerror(const char *msg);

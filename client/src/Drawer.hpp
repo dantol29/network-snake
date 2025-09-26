@@ -25,9 +25,14 @@ private:
     int screenSize;
     int height;
     int width;
+    int prevSnakeHeadX;
+    int prevSnakeHeadY;
 
     initFunc init;
     loopFunc loop;
+    displayFunc display;
+    cleanScreenFunc cleanScreen;
+    closeWindowFunc closeWindow;
     drawSquareFunc drawSquare;
     cleanupFunc cleanup;
 

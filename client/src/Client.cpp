@@ -101,6 +101,8 @@ void Client::deserealizeGameData(const int bytesRead)
     this->buffer.erase(0, delimeterPos + 3);
 }
 
+// Data format:
+// SNAKE_X | SNAKE_Y | GAME_HEIGHT | GAME_WIDTH | GAME_FIELD
 void Client::parseGameData(const char *data)
 {
     int index = 0;

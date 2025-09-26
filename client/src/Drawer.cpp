@@ -8,6 +8,8 @@ Drawer::Drawer(Client *client)
 {
     this->client = client;
     this->screenSize = 20;
+    this->prevSnakeHeadX = 0;
+    this->prevSnakeHeadY = 0;
 }
 
 Drawer::~Drawer()
@@ -28,13 +30,16 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
     this->init = (initFunc)dlsym(this->dynamicLibrary, "init");
     this->loop = (loopFunc)dlsym(this->dynamicLibrary, "loop");
     this->cleanup = (cleanupFunc)dlsym(this->dynamicLibrary, "cleanup");
+    this->closeWindow = (closeWindowFunc)dlsym(this->dynamicLibrary, "closeWindow");
     this->drawSquare = (drawSquareFunc)dlsym(this->dynamicLibrary, "drawSquare");
+    this->display = (displayFunc)dlsym(this->dynamicLibrary, "display");
+    this->cleanScreen = (cleanScreenFunc)dlsym(this->dynamicLibrary, "cleanScreen");
 
     char *error = dlerror(); // check dlsym calls
     if (error != NULL)
         onerror("Failed to find functions in dynamic lib");
 
-    if (!this->init || !this->loop || !this->cleanup || !this->drawSquare)
+    if (!this->init || !this->loop || !this->cleanup || !this->drawSquare || !this->closeWindow || !this->display || !this->cleanScreen)
         onerror("Failed to init lib functions");
 }
 
@@ -42,6 +47,7 @@ void Drawer::start()
 {
     this->openWindow();
     this->loop(this->window);
+    std::cout << "Loop ended" << std::endl;
 }
 
 void Drawer::openWindow()
@@ -56,15 +62,19 @@ void Drawer::drawGameField()
     struct rgb rgb;
 
     std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
-    std::lock_guard<std::mutex> lock(gameFieldMutex);
+    const int snakeHeadX = this->client->getSnakeX();
+    const int snakeHeadY = this->client->getSnakeY();
+    if (snakeHeadX == this->prevSnakeHeadX && snakeHeadY == this->prevSnakeHeadY)
+        return;
 
+    std::lock_guard<std::mutex> lock(gameFieldMutex);
     const std::vector<std::string> &gameField = this->client->getGameField();
     this->height = this->client->getHeight();
     this->width = this->client->getWidth();
-    const int snakeHeadX = this->client->getSnakeX();
-    const int snakeHeadY = this->client->getSnakeY();
     const int screenCenter = screenSize / 2;
     const float step = SCREEN_LEN / screenSize;
+
+    this->cleanScreen(this->window);
 
     for (int sy = 0; sy < this->screenSize; sy++)
     {
@@ -93,6 +103,11 @@ void Drawer::drawGameField()
             this->drawSquare(this->window, windowX, windowY, step, step, rgb);
         }
     }
+
+    this->prevSnakeHeadX = snakeHeadX;
+    this->prevSnakeHeadY = snakeHeadY;
+
+    this->display(this->window);
 }
 
 void Drawer::drawBorder(int x, int y, float windowX, float windowY, float step)
@@ -128,6 +143,14 @@ void Drawer::keyCallback(int key, int action)
             this->client->sendDirection(RIGHT);
             break;
         case 77: // M
+            // std::cout << "Changing lib!" << std::endl;
+            // this->closeWindow(this->window);
+            // this->cleanup(this->window);
+            // dlclose(this->dynamicLibrary);
+            // this->loadDynamicLibrary("/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2");
+            std::cout << "Starting lib!" << std::endl;
+
+            // this->start();
             this->screenSize = this->screenSize * 1.10 + 0.5;
             break;
         case 78: // N
