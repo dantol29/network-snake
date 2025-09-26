@@ -1,3 +1,4 @@
 *.o
 nibbler
-lib1.dylib
+lib1.*
+lib2.*

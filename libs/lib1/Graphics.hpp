@@ -16,6 +16,9 @@ public:
     ~Graphics();
 
     void loop();
+    void display();
+    void cleanScreen();
+    void closeWindow();
     void drawSquare(GLfloat x, GLfloat y, GLfloat width, GLfloat height, struct rgb color) const;
 };
 
@@ -39,10 +42,28 @@ extern "C"
             static_cast<Graphics *>(g)->loop();
     }
 
+    void display(void *g)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->display();
+    }
+
+    void cleanScreen(void *g)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->cleanScreen();
+    }
+
     void drawSquare(void *g, float x, float y, float width, float height, struct rgb color)
     {
         if (g)
             static_cast<Graphics *>(g)->drawSquare(x, y, width, height, color);
+    }
+
+    void closeWindow(void *g)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->closeWindow();
     }
 };
 

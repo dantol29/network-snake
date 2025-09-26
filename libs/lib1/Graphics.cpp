@@ -11,7 +11,7 @@ Graphics::Graphics(int width, int height, void *gamePointer)
     if (!glfwInit())
         return; // TODO: handle error
 
-    this->window = (GLFWwindow *)glfwCreateWindow(width, height, "GLFW library", NULL, NULL);
+    this->window = (GLFWwindow *)glfwCreateWindow(width, height, "GLFW", NULL, NULL);
     if (!this->window)
         return;
 
@@ -27,6 +27,22 @@ Graphics::~Graphics()
     glfwTerminate();
 }
 
+void Graphics::closeWindow()
+{
+    glfwSetWindowShouldClose(this->window, GLFW_TRUE);
+}
+
+void Graphics::loop()
+{
+    while (!glfwWindowShouldClose(this->window))
+    {
+        drawer->drawGameField();
+        glfwPollEvents();
+    }
+
+    std::cout << "Exit loop 1" << std::endl;
+}
+
 void Graphics::drawSquare(GLfloat x, GLfloat y, GLfloat width, GLfloat height, struct rgb color) const
 {
     glColor3f(color.r, color.g, color.b);
@@ -38,18 +54,18 @@ void Graphics::drawSquare(GLfloat x, GLfloat y, GLfloat width, GLfloat height, s
     glEnd();
 }
 
-void Graphics::loop()
+void Graphics::display()
 {
-    while (!glfwWindowShouldClose(this->window))
-    {
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black and opaque
-        glClear(GL_COLOR_BUFFER_BIT);         // Clear the color buffer (background)
+    if (!this->window)
+        return;
 
-        drawer->drawGameField();
+    glfwSwapBuffers(this->window); // Render window
+}
 
-        glfwSwapBuffers(this->window); // render window
-        glfwPollEvents();
-    }
+void Graphics::cleanScreen()
+{
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void Graphics::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)

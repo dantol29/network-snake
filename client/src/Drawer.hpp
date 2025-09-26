@@ -17,6 +17,7 @@ public:
     void loadDynamicLibrary(const std::string &lib);
     void keyCallback(int key, int action);
     void drawGameField();
+    void switchDynamicLib();
 
 private:
     Client *client;
@@ -27,6 +28,7 @@ private:
     int width;
     int prevSnakeHeadX;
     int prevSnakeHeadY;
+    std::string switchLibPath;
 
     initFunc init;
     loopFunc loop;

@@ -10,13 +10,10 @@ Drawer::Drawer(Client *client)
     this->screenSize = 20;
     this->prevSnakeHeadX = 0;
     this->prevSnakeHeadY = 0;
+    this->switchLibPath = "";
 }
 
-Drawer::~Drawer()
-{
-    this->cleanup(this->window);
-    dlclose(this->dynamicLibrary);
-}
+Drawer::~Drawer() {}
 
 void Drawer::loadDynamicLibrary(const std::string &lib)
 {
@@ -43,11 +40,28 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
         onerror("Failed to init lib functions");
 }
 
+void Drawer::switchDynamicLib()
+{
+    std::cout << "Switching library" << std::endl;
+    this->loadDynamicLibrary(this->switchLibPath);
+    this->switchLibPath = "";
+}
+
 void Drawer::start()
 {
-    this->openWindow();
-    this->loop(this->window);
-    std::cout << "Loop ended" << std::endl;
+    while (1)
+    {
+        this->openWindow();
+        this->loop(this->window);
+
+        this->cleanup(this->window);
+        dlclose(this->dynamicLibrary);
+
+        if (this->switchLibPath.empty())
+            return;
+
+        this->switchDynamicLib();
+    }
 }
 
 void Drawer::openWindow()
@@ -142,15 +156,17 @@ void Drawer::keyCallback(int key, int action)
         case 262:
             this->client->sendDirection(RIGHT);
             break;
+        case 49: // 1
+            std::cout << "Changing to LIB 1" << std::endl;
+            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib1/lib1";
+            this->closeWindow(this->window);
+            break;
+        case 50: // 2
+            std::cout << "Changing to LIB 2" << std::endl;
+            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2";
+            this->closeWindow(this->window);
+            break;
         case 77: // M
-            // std::cout << "Changing lib!" << std::endl;
-            // this->closeWindow(this->window);
-            // this->cleanup(this->window);
-            // dlclose(this->dynamicLibrary);
-            // this->loadDynamicLibrary("/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2");
-            std::cout << "Starting lib!" << std::endl;
-
-            // this->start();
             this->screenSize = this->screenSize * 1.10 + 0.5;
             break;
         case 78: // N
