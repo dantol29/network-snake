@@ -26,6 +26,8 @@ void Graphics::loop()
         {
             if (event->is<sf::Event::Closed>())
                 this->gameWindow.close();
+            else if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+                this->keyCallback(keyPressed->code);
         }
 
         drawer->drawGameField();
@@ -60,4 +62,41 @@ void Graphics::display()
 void Graphics::cleanScreen()
 {
     this->gameWindow.clear();
+}
+
+void Graphics::keyCallback(sf::Keyboard::Key code)
+{
+    switch (code)
+    {
+    case sf::Keyboard::Key::W:
+    case sf::Keyboard::Key::Up:
+        drawer->keyCallback(UP, 1);
+        break;
+    case sf::Keyboard::Key::S:
+    case sf::Keyboard::Key::Down:
+        drawer->keyCallback(DOWN, 1);
+        break;
+    case sf::Keyboard::Key::A:
+    case sf::Keyboard::Key::Left:
+        drawer->keyCallback(LEFT, 1);
+        break;
+    case sf::Keyboard::Key::D:
+    case sf::Keyboard::Key::Right:
+        drawer->keyCallback(RIGHT, 1);
+        break;
+    case sf::Keyboard::Key::M:
+        drawer->keyCallback(M, 1);
+        break;
+    case sf::Keyboard::Key::N:
+        drawer->keyCallback(N, 1);
+        break;
+    case sf::Keyboard::Key::Num1:
+        drawer->keyCallback(KEY_1, 1);
+        break;
+    case sf::Keyboard::Key::Num2:
+        drawer->keyCallback(KEY_2, 1);
+        break;
+    default:
+        break;
+    }
 }

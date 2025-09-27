@@ -66,7 +66,7 @@ void Client::receiveGameData()
         onerror("Error while reading from server socket");
 }
 
-void Client::sendDirection(const enum direction newDirection) const
+void Client::sendDirection(const enum actions newDirection) const
 {
     char writeBuf[2];
     writeBuf[0] = newDirection;

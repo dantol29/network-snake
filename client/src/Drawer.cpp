@@ -40,9 +40,14 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
         onerror("Failed to init lib functions");
 }
 
+void Drawer::closeDynamicLib()
+{
+    this->cleanup(this->window);
+    dlclose(this->dynamicLibrary);
+}
+
 void Drawer::switchDynamicLib()
 {
-    std::cout << "Switching library" << std::endl;
     this->loadDynamicLibrary(this->switchLibPath);
     this->switchLibPath = "";
 }
@@ -54,8 +59,7 @@ void Drawer::start()
         this->openWindow();
         this->loop(this->window);
 
-        this->cleanup(this->window);
-        dlclose(this->dynamicLibrary);
+        this->closeDynamicLib();
 
         if (this->switchLibPath.empty())
             return;
@@ -138,39 +142,34 @@ void Drawer::drawBorder(int x, int y, float windowX, float windowY, float step)
         this->drawSquare(this->window, windowX, windowY - step, step, step, rgb);
 }
 
-void Drawer::keyCallback(int key, int action)
+void Drawer::keyCallback(actions key, int action)
 {
     if (action == 1)
     {
         switch (key)
         {
-        case 265:
-            this->client->sendDirection(UP);
+        case UP:
+        case DOWN:
+        case RIGHT:
+        case LEFT:
+            this->client->sendDirection(key);
             break;
-        case 264:
-            this->client->sendDirection(DOWN);
+        case M:
+            this->screenSize = this->screenSize * 1.10 + 0.5;
             break;
-        case 263:
-            this->client->sendDirection(LEFT);
+        case N:
+            this->screenSize = this->screenSize / 1.10;
             break;
-        case 262:
-            this->client->sendDirection(RIGHT);
-            break;
-        case 49: // 1
+        case KEY_1:
             std::cout << "Changing to LIB 1" << std::endl;
             this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib1/lib1";
             this->closeWindow(this->window);
             break;
-        case 50: // 2
+        case KEY_2:
             std::cout << "Changing to LIB 2" << std::endl;
             this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2";
             this->closeWindow(this->window);
             break;
-        case 77: // M
-            this->screenSize = this->screenSize * 1.10 + 0.5;
-            break;
-        case 78: // N
-            this->screenSize = this->screenSize / 1.10;
         }
     }
 }

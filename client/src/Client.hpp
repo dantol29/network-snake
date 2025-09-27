@@ -10,7 +10,7 @@ public:
     ~Client();
 
     void start();
-    void sendDirection(const enum direction newDirection) const;
+    void sendDirection(const enum actions newDirection) const;
 
     const std::vector<std::string> &getGameField() const;
     std::mutex &getGameFieldMutex();

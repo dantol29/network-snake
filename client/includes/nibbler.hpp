@@ -29,12 +29,16 @@
 #define LIB_EXTENSION ".so"
 #endif
 
-enum direction
+enum actions
 {
     UP,
     DOWN,
     LEFT,
-    RIGHT
+    RIGHT,
+    M,
+    N,
+    KEY_1,
+    KEY_2
 };
 
 struct rgb

@@ -14,6 +14,7 @@ public:
     void display();
     void cleanScreen();
     void closeWindow();
+    void keyCallback(sf::Keyboard::Key key);
     void drawSquare(float x, float y, float width, float height, struct rgb color);
 
 private:

@@ -15,9 +15,8 @@ public:
     void start();
 
     void loadDynamicLibrary(const std::string &lib);
-    void keyCallback(int key, int action);
+    void keyCallback(actions key, int action);
     void drawGameField();
-    void switchDynamicLib();
 
 private:
     Client *client;
@@ -39,7 +38,8 @@ private:
     cleanupFunc cleanup;
 
     void openWindow();
-    void printField() const;
+    void switchDynamicLib();
+    void closeDynamicLib();
     void drawBorder(int x, int y, float windowX, float windowY, float step);
 };
 

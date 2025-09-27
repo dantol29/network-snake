@@ -70,6 +70,34 @@ void Graphics::cleanScreen()
 
 void Graphics::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
-    // TODO: convert key and actions to standard
-    drawer->keyCallback(key, action);
+    if (action == 1)
+    {
+        switch (key)
+        {
+        case 265:
+            drawer->keyCallback(UP, action);
+            break;
+        case 264:
+            drawer->keyCallback(DOWN, action);
+            break;
+        case 263:
+            drawer->keyCallback(LEFT, action);
+            break;
+        case 262:
+            drawer->keyCallback(RIGHT, action);
+            break;
+        case 49:
+            drawer->keyCallback(KEY_1, action);
+            break;
+        case 50:
+            drawer->keyCallback(KEY_2, action);
+            break;
+        case 77:
+            drawer->keyCallback(M, action);
+            break;
+        case 78:
+            drawer->keyCallback(N, action);
+            break;
+        }
+    }
 }
