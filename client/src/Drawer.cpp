@@ -4,11 +4,14 @@
 #define HEIGHT 1000
 #define SCREEN_LEN 2.0f
 
-Drawer::Drawer(Client *client) : client(client), screenSize(20), prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath("")
+Drawer::Drawer(Client *client) : client(client), screenSize(20), prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath(""), window(nullptr)
 {
 }
 
-Drawer::~Drawer() {}
+Drawer::~Drawer()
+{
+    this->closeDynamicLib();
+}
 
 void Drawer::loadDynamicLibrary(const std::string &lib)
 {
@@ -37,12 +40,21 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
 
 void Drawer::closeDynamicLib()
 {
-    this->cleanup(this->window);
-    dlclose(this->dynamicLibrary);
+    if (this->window)
+    {
+        this->cleanup(this->window);
+        this->window = nullptr;
+    }
+    if (this->dynamicLibrary)
+    {
+        dlclose(this->dynamicLibrary);
+        this->dynamicLibrary = nullptr;
+    }
 }
 
 void Drawer::switchDynamicLib()
 {
+    this->closeDynamicLib();
     this->loadDynamicLibrary(this->switchLibPath);
     this->switchLibPath = "";
 }
@@ -53,8 +65,6 @@ void Drawer::start()
     {
         this->openWindow();
         this->loop(this->window);
-
-        this->closeDynamicLib();
 
         if (this->switchLibPath.empty())
             return;

@@ -1,7 +1,7 @@
 ## TODO
 
-- [] Replace onerror() with proper exit
-- [] Add 2 dynamic libs
+- [x] Replace onerror() with proper exit
+- [x] Add 2 dynamic libs
 - [x] Check memory leaks in Server
 - [] Check memory leaks in Client
 - [x] Stop server when game is finished

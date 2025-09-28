@@ -7,40 +7,6 @@
 
 Server::Server(Game *game) : game(game)
 {
-    struct sockaddr_in serverAddr;
-
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    serverAddr.sin_port = htons(SERV_PORT);
-
-    this->tcpServerFd = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->tcpServerFd == -1)
-        onerror("Failed to create a tcp socket");
-
-    this->setupSocket();
-
-    if (bind(this->tcpServerFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
-        onerror("Failed to assign address to a tcp socket");
-
-    // make socket passive to accept incoming connection requests
-    if (listen(this->tcpServerFd, MAX_CLIENT_CONNECTIONS) == -1)
-        onerror("Failed to make tcp socket passive");
-
-    if (fcntl(this->tcpServerFd, F_SETFL, O_NONBLOCK) == -1)
-        onerror("Failed to make tcp socket non-blocking");
-
-    this->udpServerFd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (this->udpServerFd == -1)
-        onerror("Failed to create a udp socket");
-
-    if (bind(this->udpServerFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
-        onerror("Failed to assign address to a udp socket");
-
-    pollfd tcpPoll = {tcpServerFd, POLLIN, 0};
-    pollfd udpPoll = {udpServerFd, POLLIN, 0};
-    connectedClients.push_back(tcpPoll);
-    connectedClients.push_back(udpPoll);
-
     this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
     this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
 }
@@ -53,40 +19,87 @@ void Server::setupSocket()
 
 Server::~Server()
 {
-    std::cout << "Destructor called!" << std::endl;
+    std::cout << "Server Destructor called!" << std::endl;
     close(this->tcpServerFd);
     close(this->udpServerFd);
 }
 
+void Server::initConnections()
+{
+    struct sockaddr_in serverAddr;
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    serverAddr.sin_port = htons(SERV_PORT);
+
+    this->tcpServerFd = socket(AF_INET, SOCK_STREAM, 0);
+    if (this->tcpServerFd == -1)
+        throw "Failed to create a tcp socket";
+
+    this->setupSocket();
+
+    if (bind(this->tcpServerFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
+        throw "Failed to assign address to a tcp socket";
+
+    // make socket passive to accept incoming connection requests
+    if (listen(this->tcpServerFd, MAX_CLIENT_CONNECTIONS) == -1)
+        throw "Failed to make tcp socket passive";
+
+    if (fcntl(this->tcpServerFd, F_SETFL, O_NONBLOCK) == -1)
+        throw "Failed to make tcp socket non-blocking";
+
+    this->udpServerFd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (this->udpServerFd == -1)
+        throw "Failed to create a udp socket";
+
+    if (bind(this->udpServerFd, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1)
+        throw "Failed to assign address to a udp socket";
+
+    pollfd tcpPoll = {tcpServerFd, POLLIN, 0};
+    pollfd udpPoll = {udpServerFd, POLLIN, 0};
+    connectedClients.push_back(tcpPoll);
+    connectedClients.push_back(udpPoll);
+}
+
 void Server::start()
 {
-    while (!this->game->getStopFlag())
+    try
     {
-        if (poll(connectedClients.data(), connectedClients.size(), BLOCKING) < 0)
-            break;
+        this->initConnections();
 
-        bool shouldSend = this->game->getIsDataUpdated();
-        if (shouldSend)
+        while (!this->game->getStopFlag())
         {
-            this->game->setIsDataUpdated(false);
-            this->serializedGameField = serializeGameField();
-        }
+            if (poll(connectedClients.data(), connectedClients.size(), BLOCKING) < 0)
+                break;
 
-        int oldSize = connectedClients.size();
-        for (int i = 0; i < oldSize; i++)
-        {
-            if (connectedClients[i].revents & POLLIN)
-                receiveDataFromClient(connectedClients[i].fd, i);
-            else if (connectedClients[i].revents & POLLOUT && shouldSend)
-                sendGameData(connectedClients[i].fd);
-            else if (connectedClients[i].revents & (POLLERR | POLLHUP | POLLNVAL))
-                handleSocketError(connectedClients[i].fd, i);
-        }
+            bool shouldSend = this->game->getIsDataUpdated();
+            if (shouldSend)
+            {
+                this->game->setIsDataUpdated(false);
+                this->serializedGameField = serializeGameField();
+            }
 
-        removeClosedConnections();
+            int oldSize = connectedClients.size();
+            for (int i = 0; i < oldSize; i++)
+            {
+                if (connectedClients[i].revents & POLLIN)
+                    receiveDataFromClient(connectedClients[i].fd, i);
+                else if (connectedClients[i].revents & POLLOUT && shouldSend)
+                    sendGameData(connectedClients[i].fd);
+                else if (connectedClients[i].revents & (POLLERR | POLLHUP | POLLNVAL))
+                    handleSocketError(connectedClients[i].fd, i);
+            }
+
+            if (this->closedConnections.size() > 0)
+                removeClosedConnections();
+        }
+    }
+    catch (const char *msg)
+    {
+        std::cerr << msg << std::endl;
     }
 
-    onerror("Poll error");
+    this->game->stop();
 }
 
 void Server::acceptNewConnection()
@@ -98,7 +111,10 @@ void Server::acceptNewConnection()
     if (clientFd >= 0)
     {
         if (fcntl(clientFd, F_SETFL, O_NONBLOCK) == -1)
-            onerror("Failed to make client fd non-blocking");
+        {
+            std::cerr << "Failed to make client fd non-blocking" << std::endl;
+            return;
+        }
 
         struct pollfd fd;
         fd.fd = clientFd;
@@ -122,22 +138,19 @@ void Server::closeConnection(const int fd)
 
 void Server::removeClosedConnections()
 {
-    if (closedConnections.size() > 0)
+    for (auto it = closedConnections.begin(); it != closedConnections.end(); it++)
     {
-        for (auto it = closedConnections.begin(); it != closedConnections.end(); it++)
+        for (auto it2 = connectedClients.begin(); it2 != connectedClients.end(); it2++)
         {
-            for (auto it2 = connectedClients.begin(); it2 != connectedClients.end(); it2++)
+            if (it2->fd == *it)
             {
-                if (it2->fd == *it)
-                {
-                    connectedClients.erase(it2);
-                    break;
-                }
+                connectedClients.erase(it2);
+                break;
             }
         }
-
-        closedConnections.clear();
     }
+
+    closedConnections.clear();
 }
 
 // TCP
@@ -169,7 +182,7 @@ void Server::receiveDataFromClient(const int fd, const int index)
         if (n == 2)
             game->updateSnakeDirection(this->addressToFd[clientAddr.sin_addr.s_addr], (int)readBuf[0]);
         else
-            std::cout << "ERROR!" << std::endl;
+            std::cout << "Failed to receive data from client" << std::endl;
         return;
     }
 
@@ -179,7 +192,7 @@ void Server::receiveDataFromClient(const int fd, const int index)
 void Server::handleSocketError(const int fd, const int index)
 {
     if (index == 0)
-        onerror("Server socket crashed");
+        throw "Server socket crashed";
 
     std::cout << "Socket error: " << index << std::endl;
     closeConnection(fd);
