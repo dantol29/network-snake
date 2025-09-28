@@ -9,11 +9,11 @@ Drawer *drawer = nullptr;
 Graphics::Graphics(int width, int height, void *gamePointer)
 {
     if (!glfwInit())
-        return; // TODO: handle error
+        throw "Failed to init GLFW";
 
     this->window = (GLFWwindow *)glfwCreateWindow(width, height, "GLFW", NULL, NULL);
     if (!this->window)
-        return;
+        throw "Failed to create window in GLFW";
 
     glfwMakeContextCurrent(this->window); // enable openGL
     glfwSwapInterval(1);                  // wait for one monitor refresh per buffer swap
@@ -67,35 +67,42 @@ void Graphics::cleanScreen()
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Set background color to black
     glClear(GL_COLOR_BUFFER_BIT);
 }
-
 void Graphics::keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
+    (void)window;
+    (void)scancode;
+    (void)mods;
+
     if (action == 1)
     {
         switch (key)
         {
-        case 265:
+        case GLFW_KEY_W:
+        case GLFW_KEY_UP:
             drawer->keyCallback(UP, action);
             break;
-        case 264:
+        case GLFW_KEY_S:
+        case GLFW_KEY_DOWN:
             drawer->keyCallback(DOWN, action);
             break;
-        case 263:
+        case GLFW_KEY_A:
+        case GLFW_KEY_LEFT:
             drawer->keyCallback(LEFT, action);
             break;
-        case 262:
+        case GLFW_KEY_D:
+        case GLFW_KEY_RIGHT:
             drawer->keyCallback(RIGHT, action);
             break;
-        case 49:
+        case GLFW_KEY_1:
             drawer->keyCallback(KEY_1, action);
             break;
-        case 50:
+        case GLFW_KEY_2:
             drawer->keyCallback(KEY_2, action);
             break;
-        case 77:
+        case GLFW_KEY_M:
             drawer->keyCallback(M, action);
             break;
-        case 78:
+        case GLFW_KEY_N:
             drawer->keyCallback(N, action);
             break;
         }

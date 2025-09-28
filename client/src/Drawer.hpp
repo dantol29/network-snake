@@ -28,6 +28,7 @@ private:
     int prevSnakeHeadX;
     int prevSnakeHeadY;
     std::string switchLibPath;
+    struct rgb rgb;
 
     initFunc init;
     loopFunc loop;

@@ -4,13 +4,8 @@
 #define HEIGHT 1000
 #define SCREEN_LEN 2.0f
 
-Drawer::Drawer(Client *client)
+Drawer::Drawer(Client *client) : client(client), screenSize(20), prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath("")
 {
-    this->client = client;
-    this->screenSize = 20;
-    this->prevSnakeHeadX = 0;
-    this->prevSnakeHeadY = 0;
-    this->switchLibPath = "";
 }
 
 Drawer::~Drawer() {}
@@ -20,7 +15,7 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
     std::string libPath = lib + LIB_EXTENSION;
     this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
     if (!this->dynamicLibrary)
-        onerror("Failed to load dynlib");
+        throw "Failed to load dynlib";
 
     dlerror(); // clean errors
 
@@ -34,10 +29,10 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
 
     char *error = dlerror(); // check dlsym calls
     if (error != NULL)
-        onerror("Failed to find functions in dynamic lib");
+        throw "Failed to find functions in dynlib";
 
     if (!this->init || !this->loop || !this->cleanup || !this->drawSquare || !this->closeWindow || !this->display || !this->cleanScreen)
-        onerror("Failed to init lib functions");
+        throw "Failed to init dynlib functions";
 }
 
 void Drawer::closeDynamicLib()
@@ -72,20 +67,22 @@ void Drawer::openWindow()
 {
     this->window = this->init(HEIGHT, WIDTH, this);
     if (!this->window)
-        onerror("Failed to init lib");
+        throw("Failed to init lib");
 }
 
 void Drawer::drawGameField()
 {
-    struct rgb rgb;
+    if (this->client->getStopFlag())
+        throw "Client has stopped";
 
-    std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
     const int snakeHeadX = this->client->getSnakeX();
     const int snakeHeadY = this->client->getSnakeY();
     if (snakeHeadX == this->prevSnakeHeadX && snakeHeadY == this->prevSnakeHeadY)
         return;
 
+    std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
     std::lock_guard<std::mutex> lock(gameFieldMutex);
+
     const std::vector<std::string> &gameField = this->client->getGameField();
     this->height = this->client->getHeight();
     this->width = this->client->getWidth();
@@ -110,15 +107,15 @@ void Drawer::drawGameField()
 
             char tile = gameField[wy][wx];
             if (tile == 'F')
-                rgb = {0.5f, 0.1f, 0.1f};
+                this->rgb = {0.5f, 0.1f, 0.1f};
             else if (tile == 'B')
-                rgb = {0.0f, 0.6f, 0.2f};
+                this->rgb = {0.0f, 0.6f, 0.2f};
             else if (tile == 'H')
-                rgb = {0.9f, 0.3f, 0.0f};
+                this->rgb = {0.9f, 0.3f, 0.0f};
             else
                 continue;
 
-            this->drawSquare(this->window, windowX, windowY, step, step, rgb);
+            this->drawSquare(this->window, windowX, windowY, step, step, this->rgb);
         }
     }
 
@@ -130,16 +127,16 @@ void Drawer::drawGameField()
 
 void Drawer::drawBorder(int x, int y, float windowX, float windowY, float step)
 {
-    rgb rgb = {7.0f, 7.0f, 7.0f};
+    this->rgb = {7.0f, 7.0f, 7.0f};
 
     if (x == 0)
-        this->drawSquare(this->window, windowX - step, windowY, step, step, rgb);
+        this->drawSquare(this->window, windowX - step, windowY, step, step, this->rgb);
     if (x == this->width - 1)
-        this->drawSquare(this->window, windowX + step, windowY, step, step, rgb);
+        this->drawSquare(this->window, windowX + step, windowY, step, step, this->rgb);
     if (y == 0)
-        this->drawSquare(this->window, windowX, windowY + step, step, step, rgb);
+        this->drawSquare(this->window, windowX, windowY + step, step, step, this->rgb);
     if (y == this->height - 1)
-        this->drawSquare(this->window, windowX, windowY - step, step, step, rgb);
+        this->drawSquare(this->window, windowX, windowY - step, step, step, this->rgb);
 }
 
 void Drawer::keyCallback(actions key, int action)

@@ -14,13 +14,13 @@ public:
 
     const std::vector<std::string> &getGameField() const;
     std::mutex &getGameFieldMutex();
+    int getStopFlag() const;
     int getWidth() const;
     int getHeight() const;
     int getSnakeX() const;
     int getSnakeY() const;
 
     static std::string deserealizeValue(const char *readBuf, int *index);
-    static void printError(const std::string &str);
 
 private:
     int tcpSocket;
@@ -39,6 +39,7 @@ private:
     std::atomic<int> snakeX;
     std::atomic<int> snakeY;
 
+    void initConnections();
     void receiveGameData();
     void deserealizeGameData(const int bytesRead);
     void parseGameData(const char *message);

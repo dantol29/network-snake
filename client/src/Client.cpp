@@ -5,26 +5,6 @@
 
 Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), snakeX(0), snakeY(0), height(0), width(0)
 {
-    this->tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (this->tcpSocket < 0)
-        onerror("Socket init error");
-
-    this->udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
-
-    this->serverAddr.sin_family = AF_INET;
-    this->serverAddr.sin_port = htons(SERVER_PORT);
-    inet_pton(AF_INET, SERVER_IP, &this->serverAddr.sin_addr);
-
-    std::cout << "connecting..." << std::endl;
-
-    if (connect(this->tcpSocket, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr)) < 0)
-        onerror("Connect to server error");
-
-    std::cout << "connected" << std::endl;
-
-    this->serverFd.fd = this->tcpSocket;
-    this->serverFd.events = POLLIN;
-    this->serverFd.revents = 0;
 }
 
 Client::~Client()
@@ -33,17 +13,51 @@ Client::~Client()
     close(this->udpSocket);
 }
 
+void Client::initConnections()
+{
+    this->tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (this->tcpSocket < 0)
+        throw "Socket init error";
+
+    this->udpSocket = socket(AF_INET, SOCK_DGRAM, 0);
+
+    this->serverAddr.sin_family = AF_INET;
+    this->serverAddr.sin_port = htons(SERVER_PORT);
+    inet_pton(AF_INET, SERVER_IP, &this->serverAddr.sin_addr);
+
+    std::cout << "Connecting..." << std::endl;
+
+    if (connect(this->tcpSocket, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr)) < 0)
+        throw "Connect to server error";
+
+    std::cout << "Connected" << std::endl;
+
+    this->serverFd.fd = this->tcpSocket;
+    this->serverFd.events = POLLIN;
+    this->serverFd.revents = 0;
+}
+
 void Client::start()
 {
-    while (poll(&this->serverFd, 1, BLOCKING))
+    try
     {
-        if (this->serverFd.revents & POLLIN)
-            receiveGameData();
+        this->initConnections();
 
-        if (stopFlag.load())
-            return;
+        while (poll(&this->serverFd, 1, BLOCKING))
+        {
+            if (this->serverFd.revents & POLLIN)
+                receiveGameData();
+
+            if (stopFlag.load())
+                return;
+        }
     }
-    onerror("poll error");
+    catch (const char *msg)
+    {
+        std::cerr << msg << std::endl;
+    }
+
+    this->stopFlag.store(true);
 }
 
 void Client::receiveGameData()
@@ -61,9 +75,9 @@ void Client::receiveGameData()
         deserealizeGameData(bytesRead);
     }
     else if (bytesRead == 0)
-        onerror("Server closed connection");
+        throw "Server closed connection";
     else
-        onerror("Error while reading from server socket");
+        throw "Error while reading from server socket";
 }
 
 void Client::sendDirection(const enum actions newDirection) const
@@ -91,11 +105,11 @@ void Client::deserealizeGameData(const int bytesRead)
     }
     catch (const char *e)
     {
-        Client::printError("Game data processing error: " + std::string(e));
+        std::cerr << "Game data processing error: " + std::string(e) << std::endl;
     }
     catch (...)
     {
-        Client::printError("Game data processing error: unknown");
+        std::cerr << "Game data processing error: unknown" << std::endl;
     }
 
     this->buffer.erase(0, delimeterPos + 3);
@@ -113,7 +127,7 @@ void Client::parseGameData(const char *data)
     const std::string widthStr = Client::deserealizeValue(data + index, &index);
     const std::string fieldStr = Client::deserealizeValue(data + index, &index);
     if (snakeXStr.empty() || snakeYStr.empty() || heightStr.empty() || widthStr.empty() || fieldStr.empty())
-        throw("Missing required fields");
+        throw "Missing required fields";
 
     const int snakeX = std::stoi(snakeXStr);
     const int snakeY = std::stoi(snakeYStr);
@@ -121,10 +135,10 @@ void Client::parseGameData(const char *data)
     const int width = std::stoi(widthStr);
 
     if (height * width != fieldStr.size())
-        throw("Field size mismatch");
+        throw "Field size mismatch";
 
     if (height <= 0 || width <= 0 || height > 900 || width > 900)
-        throw("Invalid dimensions");
+        throw "Invalid dimensions";
 
     this->updateGameState(snakeX, snakeY, height, width, fieldStr);
 }
@@ -201,9 +215,7 @@ int Client::getSnakeY() const
     return this->snakeY.load();
 }
 
-/// UTILS
-
-void Client::printError(const std::string &str)
+int Client::getStopFlag() const
 {
-    std::cerr << str << std::endl;
+    return this->stopFlag.load();
 }
