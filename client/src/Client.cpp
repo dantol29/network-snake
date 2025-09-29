@@ -3,7 +3,7 @@
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
 
-Client::Client(std::atomic<bool> &stopFlag) : stopFlag(stopFlag), snakeX(0), snakeY(0), height(0), width(0)
+Client::Client() : stopFlag(false), isDead(false), snakeX(0), snakeY(0), height(0), width(0)
 {
 }
 
@@ -37,10 +37,17 @@ void Client::initConnections()
     this->serverFd.revents = 0;
 }
 
+void Client::stop()
+{
+    this->stopFlag.store(true);
+}
+
 void Client::start()
 {
     try
     {
+        this->isDead = false;
+        this->stopFlag = false;
         this->initConnections();
 
         while (poll(&this->serverFd, 1, BLOCKING))
@@ -57,20 +64,21 @@ void Client::start()
         std::cerr << msg << std::endl;
     }
 
-    this->stopFlag.store(true);
+    if (!this->isDead.load())
+        this->stopFlag.store(true);
 }
 
 void Client::receiveGameData()
 {
-    static auto lastReadTime = std::chrono::steady_clock::now();
+    // static auto lastReadTime = std::chrono::steady_clock::now();
 
     int bytesRead = read(this->tcpSocket, &this->readBuf, 16384);
     if (bytesRead > 0)
     {
-        auto currentTime = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastReadTime).count();
-        std::cout << "(" << elapsed << " ms)" << std::endl;
-        lastReadTime = currentTime;
+        // auto currentTime = std::chrono::steady_clock::now();
+        // auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastReadTime).count();
+        // std::cout << "(" << elapsed << " ms)" << std::endl;
+        // lastReadTime = currentTime;
 
         deserealizeGameData(bytesRead);
     }
@@ -163,6 +171,14 @@ void Client::updateGameState(int snakeX, int snakeY, int height, int width, cons
     this->snakeY.store(snakeY);
     this->height.store(height);
     this->width.store(width);
+
+    if (snakeX == 0 && snakeY == 0)
+    {
+        this->isDead.store(true);
+        close(this->tcpSocket);
+        close(this->udpSocket);
+        throw "Snake is dead";
+    }
 }
 
 // TLV format
@@ -218,4 +234,9 @@ int Client::getSnakeY() const
 int Client::getStopFlag() const
 {
     return this->stopFlag.load();
+}
+
+int Client::getIsDead() const
+{
+    return this->isDead.load();
 }

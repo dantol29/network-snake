@@ -6,15 +6,17 @@
 class Client
 {
 public:
-    Client(std::atomic<bool> &stopFlag);
+    Client();
     ~Client();
 
     void start();
+    void stop();
     void sendDirection(const enum actions newDirection) const;
 
     const std::vector<std::string> &getGameField() const;
     std::mutex &getGameFieldMutex();
     int getStopFlag() const;
+    int getIsDead() const;
     int getWidth() const;
     int getHeight() const;
     int getSnakeX() const;
@@ -33,7 +35,8 @@ private:
     // Accessed by drawer thread
     std::mutex gameFieldMutex;
     std::vector<std::string> gameField;
-    std::atomic<bool> &stopFlag;
+    std::atomic<bool> stopFlag;
+    std::atomic<bool> isDead;
     std::atomic<int> height;
     std::atomic<int> width;
     std::atomic<int> snakeX;

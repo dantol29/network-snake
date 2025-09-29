@@ -38,7 +38,4 @@ enum e_direction
     RIGHT
 };
 
-// utils
-void onerror(const char *msg);
-
 #endif

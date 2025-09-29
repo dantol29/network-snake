@@ -14,13 +14,19 @@ public:
     void display();
     void cleanScreen();
     void closeWindow();
-    void keyCallback(sf::Keyboard::Key key);
+    void drawText(float x, float y, int size, const char *text);
     void drawSquare(float x, float y, float width, float height, struct rgb color);
+    void drawButton(float x, float y, float width, float height, const char *text);
 
 private:
     sf::RenderWindow gameWindow;
+    sf::Texture tex;
+    sf::Font font;
     float windowWidth;
     float windowHeight;
+
+    void keyCallback(sf::Keyboard::Key key);
+    void onMouseUp(const sf::Mouse::Button, const sf::Vector2i position);
 };
 
 extern "C"
@@ -54,6 +60,18 @@ extern "C"
     {
         if (g)
             static_cast<Graphics *>(g)->drawSquare(x, y, width, height, color);
+    }
+
+    void drawButton(void *g, float x, float y, float width, float height, const char *text)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->drawButton(x, y, width, height, text);
+    }
+
+    void drawText(void *g, float x, float y, int size, const char *text)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->drawText(x, y, size, text);
     }
 
     void display(void *g)

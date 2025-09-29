@@ -4,6 +4,12 @@
 #include "../includes/nibbler.hpp"
 #include "Client.hpp"
 
+enum mode
+{
+    MENU,
+    GAME
+};
+
 class Client;
 
 class Drawer
@@ -17,6 +23,9 @@ public:
     void loadDynamicLibrary(const std::string &lib);
     void keyCallback(actions key, int action);
     void drawGameField();
+    void drawMenu();
+    void onEachFrame();
+    void onMouseUp(float x, float y);
 
 private:
     Client *client;
@@ -27,7 +36,10 @@ private:
     int width;
     int prevSnakeHeadX;
     int prevSnakeHeadY;
+    bool isMenuDrawn;
     std::string switchLibPath;
+    std::thread clientThread;
+    mode gameMode;
     struct rgb rgb;
 
     initFunc init;
@@ -36,10 +48,13 @@ private:
     cleanScreenFunc cleanScreen;
     closeWindowFunc closeWindow;
     drawSquareFunc drawSquare;
+    drawButtonFunc drawButton;
+    drawTextFunc drawText;
     cleanupFunc cleanup;
 
+    void stopClient();
     void openWindow();
-    void switchDynamicLib();
+    void startDynamicLib();
     void closeDynamicLib();
     void drawBorder(int x, int y, float windowX, float windowY, float step);
 };
