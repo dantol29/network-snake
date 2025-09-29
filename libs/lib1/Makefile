@@ -15,7 +15,7 @@ CFLAGS      = -O2 -Wall -Wextra -fPIC
 SOURCES     = Graphics.cpp
 OBJECTS     = $(SOURCES:.cpp=.o)
 
-GLFW_DIR    = external/glfw
+GLFW_DIR    = GLFW
 GLFW_BUILD  = $(GLFW_DIR)/build
 GLFW_LIB    = $(GLFW_BUILD)/src/libglfw3.a
 GLFW_INC    = -I$(GLFW_DIR)/include
@@ -35,6 +35,7 @@ $(GLFW_LIB):
 
 clean:
 	$(RM) $(OBJECTS)
+	$(RM) -rf $(GLFW_DIR)
 
 fclean: clean
 	$(RM) $(NAME)

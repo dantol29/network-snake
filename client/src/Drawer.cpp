@@ -228,13 +228,13 @@ void Drawer::keyCallback(actions key, int action)
             this->screenSize = this->screenSize / 1.10;
             break;
         case KEY_1:
-            std::cout << "Changing to LIB 1" << std::endl;
-            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib1/lib1";
+            std::cout << "Changing to LIB 2" << std::endl;
+            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2";
             this->closeWindow(this->window);
             break;
         case KEY_2:
-            std::cout << "Changing to LIB 2" << std::endl;
-            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2";
+            std::cout << "Changing to LIB 3" << std::endl;
+            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib3/lib3";
             this->closeWindow(this->window);
             break;
         }
