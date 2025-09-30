@@ -39,8 +39,9 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
     if (error != NULL)
         throw "Failed to find functions in dynlib";
 
-    // TODO: add draw button & text
-    if (!this->init || !this->loop || !this->cleanup || !this->drawSquare || !this->closeWindow || !this->display || !this->cleanScreen)
+    if (!this->init || !this->loop || !this->cleanup || !this->drawSquare ||
+        !this->closeWindow || !this->drawButton || !this->drawText ||
+        !this->cleanScreen || !this->display)
         throw "Failed to init dynlib functions";
 }
 
@@ -88,12 +89,12 @@ void Drawer::start()
     this->stopClient();
 }
 
-void Drawer::onEachFrame()
+void Drawer::onEachFrame(bool mandatoryDraw)
 {
     if (this->gameMode == MENU)
-        this->drawMenu();
+        this->drawMenu(mandatoryDraw);
     else
-        this->drawGameField();
+        this->drawGameField(mandatoryDraw);
 }
 
 void Drawer::openWindow()
@@ -103,9 +104,9 @@ void Drawer::openWindow()
         throw("Failed to init lib");
 }
 
-void Drawer::drawMenu()
+void Drawer::drawMenu(bool mandatoryDraw)
 {
-    if (this->isMenuDrawn)
+    if (!mandatoryDraw && this->isMenuDrawn)
         return;
 
     this->cleanScreen(this->window);
@@ -117,7 +118,7 @@ void Drawer::drawMenu()
     this->isMenuDrawn = true;
 }
 
-void Drawer::drawGameField()
+void Drawer::drawGameField(bool mandatoryDraw)
 {
     if (this->client->getIsDead())
     {
@@ -131,7 +132,7 @@ void Drawer::drawGameField()
 
     const int snakeHeadX = this->client->getSnakeX();
     const int snakeHeadY = this->client->getSnakeY();
-    if (snakeHeadX == this->prevSnakeHeadX && snakeHeadY == this->prevSnakeHeadY)
+    if (!mandatoryDraw && snakeHeadX == this->prevSnakeHeadX && snakeHeadY == this->prevSnakeHeadY)
         return;
 
     std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
@@ -235,11 +236,16 @@ void Drawer::keyCallback(actions key, int action)
             this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
             break;
         case KEY_1:
+            std::cout << "Changing to LIB 1" << std::endl;
+            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib1/lib1";
+            this->closeWindow(this->window);
+            break;
+        case KEY_2:
             std::cout << "Changing to LIB 2" << std::endl;
             this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2";
             this->closeWindow(this->window);
             break;
-        case KEY_2:
+        case KEY_3:
             std::cout << "Changing to LIB 3" << std::endl;
             this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib3/lib3";
             this->closeWindow(this->window);

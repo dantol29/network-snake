@@ -17,7 +17,10 @@ Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
         throw "Image does not exist";
 }
 
-Graphics::~Graphics() {}
+Graphics::~Graphics()
+{
+    std::cout << "Destructor SFML" << std::endl;
+}
 
 void Graphics::closeWindow()
 {
@@ -38,7 +41,7 @@ void Graphics::loop()
                 this->onMouseUp(mouseReleased->button, mouseReleased->position);
         }
 
-        drawer->onEachFrame();
+        drawer->onEachFrame(false);
     }
 
     std::cout << "Exit loop 2" << std::endl;
@@ -146,6 +149,9 @@ void Graphics::keyCallback(sf::Keyboard::Key code)
         break;
     case sf::Keyboard::Key::Num2:
         drawer->keyCallback(KEY_2, 1);
+        break;
+    case sf::Keyboard::Key::Num3:
+        drawer->keyCallback(KEY_3, 1);
         break;
     default:
         break;

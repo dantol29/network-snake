@@ -2,32 +2,39 @@
 #define GRAPHICS_HPP
 
 #include "../../client/src/Drawer.hpp"
-#include <GLFW/glfw3.h>
+#include <raylib.h>
 
 class Graphics
-
 {
-private:
-    GLFWwindow *window = nullptr;
-    static void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
-
 public:
-    Graphics(int width, int height, void *game);
+    Graphics(unsigned int height, unsigned int width, void *gamePointer);
     ~Graphics();
 
     void loop();
     void display();
     void cleanScreen();
     void closeWindow();
-    void drawSquare(GLfloat x, GLfloat y, GLfloat width, GLfloat height, struct rgb color) const;
+    void drawText(float x, float y, int size, const char *text);
+    void drawSquare(float x, float y, float width, float height, struct rgb color);
+    void drawButton(float x, float y, float width, float height, const char *text);
+
+private:
+    Font font{};
+    Texture2D tex{};
+    float windowWidth;
+    float windowHeight;
+    bool isClosed;
+
+    void checkEvents();
 };
 
 extern "C"
 {
-    Graphics *init(int height, int width, void *game)
+    Graphics *init(unsigned int height, unsigned int width, void *game)
     {
-        Graphics *graphics = new Graphics(height, width, game);
-        return graphics;
+        (void)game;
+        Graphics *g = new Graphics(height, width, game);
+        return g;
     }
 
     void cleanup(void *g)
@@ -42,6 +49,30 @@ extern "C"
             static_cast<Graphics *>(g)->loop();
     }
 
+    void closeWindow(void *g)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->closeWindow();
+    }
+
+    void drawSquare(void *g, float x, float y, float width, float height, struct rgb color)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->drawSquare(x, y, width, height, color);
+    }
+
+    void drawButton(void *g, float x, float y, float width, float height, const char *text)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->drawButton(x, y, width, height, text);
+    }
+
+    void drawText(void *g, float x, float y, int size, const char *text)
+    {
+        if (g)
+            static_cast<Graphics *>(g)->drawText(x, y, size, text);
+    }
+
     void display(void *g)
     {
         if (g)
@@ -53,18 +84,6 @@ extern "C"
         if (g)
             static_cast<Graphics *>(g)->cleanScreen();
     }
-
-    void drawSquare(void *g, float x, float y, float width, float height, struct rgb color)
-    {
-        if (g)
-            static_cast<Graphics *>(g)->drawSquare(x, y, width, height, color);
-    }
-
-    void closeWindow(void *g)
-    {
-        if (g)
-            static_cast<Graphics *>(g)->closeWindow();
-    }
-};
+}
 
 #endif

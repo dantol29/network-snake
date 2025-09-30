@@ -38,7 +38,8 @@ enum actions
     M,
     N,
     KEY_1,
-    KEY_2
+    KEY_2,
+    KEY_3
 };
 
 struct rgb

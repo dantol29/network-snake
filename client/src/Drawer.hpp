@@ -22,9 +22,9 @@ public:
 
     void loadDynamicLibrary(const std::string &lib);
     void keyCallback(actions key, int action);
-    void drawGameField();
-    void drawMenu();
-    void onEachFrame();
+    void drawGameField(bool mandatoryDraw);
+    void drawMenu(bool mandatoryDraw);
+    void onEachFrame(bool mandatoryDraw);
     void onMouseUp(float x, float y);
 
 private:
