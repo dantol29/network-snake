@@ -6,7 +6,8 @@
 
 Drawer::Drawer(Client *client) : client(client), screenSize(20), prevSnakeHeadX(0), isMenuDrawn(false),
                                  prevSnakeHeadY(0), window(nullptr), gameMode(MENU), dynamicLibrary(nullptr),
-                                 switchLibPath("/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2")
+                                 switchLibPath("/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2"),
+                                 tilePx(std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize)))
 {
 }
 
@@ -62,6 +63,7 @@ void Drawer::startDynamicLib()
     this->closeDynamicLib();
     this->loadDynamicLibrary(this->switchLibPath);
     this->switchLibPath = "";
+    this->isMenuDrawn = false;
 }
 
 void Drawer::start()
@@ -139,56 +141,59 @@ void Drawer::drawGameField()
     this->height = this->client->getHeight();
     this->width = this->client->getWidth();
     const int screenCenter = screenSize / 2;
-    const float step = SCREEN_LEN / screenSize;
+    const int originX = (WIDTH - (tilePx * screenSize)) / 2;
+    const int originY = (HEIGHT - (tilePx * screenSize)) / 2;
 
     this->cleanScreen(this->window);
 
-    for (int sy = 0; sy < this->screenSize; sy++)
+    for (int sy = 0; sy < screenSize; ++sy)
     {
         int wy = snakeHeadY + (sy - screenCenter);
-        float windowY = 1.0f - (sy + 0.5f) * step;
-        for (int sx = 0; sx < this->screenSize; sx++)
+        for (int sx = 0; sx < screenSize; ++sx)
         {
             int wx = snakeHeadX + (sx - screenCenter);
-            float windowX = -1.0f + (sx + 0.5f) * step;
-
             if (wx < 0 || wx >= width || wy < 0 || wy >= height)
                 continue;
 
-            this->drawBorder(wx, wy, windowX, windowY, step);
+            int px = originX + sx * tilePx;
+            int py = originY + sy * tilePx;
+
+            this->drawBorder(wx, wy, px, py, tilePx);
 
             char tile = gameField[wy][wx];
             if (tile == 'F')
-                this->rgb = {0.5f, 0.1f, 0.1f};
+                rgb = {0.5f, 0.1f, 0.1f};
             else if (tile == 'B')
-                this->rgb = {0.0f, 0.6f, 0.2f};
+                rgb = {0.0f, 0.6f, 0.2f};
             else if (tile == 'H')
-                this->rgb = {0.9f, 0.3f, 0.0f};
+                rgb = {0.9f, 0.3f, 0.0f};
             else
                 continue;
 
-            this->drawSquare(this->window, windowX, windowY, step, step, this->rgb);
+            this->drawSquare(this->window, px, py, tilePx, tilePx, rgb);
         }
     }
-
     this->prevSnakeHeadX = snakeHeadX;
     this->prevSnakeHeadY = snakeHeadY;
 
     this->display(this->window);
 }
 
-void Drawer::drawBorder(int x, int y, float windowX, float windowY, float step)
+void Drawer::drawBorder(int x, int y, int px, int py, int tilePx)
 {
-    this->rgb = {7.0f, 7.0f, 7.0f};
+    this->rgb = {1.0f, 1.0f, 1.0f};
 
     if (x == 0)
-        this->drawSquare(this->window, windowX - step, windowY, step, step, this->rgb);
+        this->drawSquare(this->window, px - tilePx, py, tilePx, tilePx, this->rgb);
+
     if (x == this->width - 1)
-        this->drawSquare(this->window, windowX + step, windowY, step, step, this->rgb);
+        this->drawSquare(this->window, px + tilePx, py, tilePx, tilePx, this->rgb);
+
     if (y == 0)
-        this->drawSquare(this->window, windowX, windowY + step, step, step, this->rgb);
+        this->drawSquare(this->window, px, py - tilePx, tilePx, tilePx, this->rgb);
+
     if (y == this->height - 1)
-        this->drawSquare(this->window, windowX, windowY - step, step, step, this->rgb);
+        this->drawSquare(this->window, px, py + tilePx, tilePx, tilePx, this->rgb);
 }
 
 void Drawer::stopClient()
@@ -223,9 +228,11 @@ void Drawer::keyCallback(actions key, int action)
             break;
         case M:
             this->screenSize = this->screenSize * 1.10 + 0.5;
+            this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
             break;
         case N:
             this->screenSize = this->screenSize / 1.10;
+            this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
             break;
         case KEY_1:
             std::cout << "Changing to LIB 2" << std::endl;

@@ -32,6 +32,7 @@ private:
     void *dynamicLibrary;
     void *window;
     int screenSize;
+    int tilePx;
     int height;
     int width;
     int prevSnakeHeadX;
@@ -56,7 +57,7 @@ private:
     void openWindow();
     void startDynamicLib();
     void closeDynamicLib();
-    void drawBorder(int x, int y, float windowX, float windowY, float step);
+    void drawBorder(int x, int y, int px, int py, int tilePx);
 };
 
 #endif
