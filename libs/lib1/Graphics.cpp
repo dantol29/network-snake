@@ -100,13 +100,10 @@ void Graphics::drawText(float x, float y, int size, const char *text)
 
 void Graphics::display()
 {
-    // EndDrawing();
 }
 
 void Graphics::cleanScreen()
 {
-    // BeginDrawing();
-    // ClearBackground(BLACK);
 }
 
 void Graphics::checkEvents()

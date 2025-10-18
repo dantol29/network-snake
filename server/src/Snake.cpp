@@ -4,8 +4,8 @@
 Snake::Snake(Game *game, int fd) : game(game), fd(fd)
 {
     struct coordinates c;
-    c.x = this->game->getHeight() / 2;
-    c.y = this->game->getWidth() / 2;
+    c.x = this->game->getWidth() / 2;
+    c.y = this->game->getHeight() / 2;
     this->body.push_front(c);
     c.x = this->game->getHeight() / 2;
     c.y = this->game->getWidth() / 2 + 1;

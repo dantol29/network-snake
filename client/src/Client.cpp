@@ -162,7 +162,7 @@ void Client::updateGameState(int snakeX, int snakeY, int height, int width, cons
     {
         row.clear();
         for (int x = 0; x < width; x++)
-            row += fieldStr[x + y * height];
+            row += fieldStr[x + y * width];
 
         this->gameField.push_back(row);
     }
