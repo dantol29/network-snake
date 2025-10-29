@@ -6,5 +6,6 @@ lib3.*
 lib3SDL*
 libsfml*
 SFML
+raylib/
 docs/
 .vscode/
