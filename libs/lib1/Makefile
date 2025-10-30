@@ -32,16 +32,16 @@ $(NAME): $(OBJECTS) $(RAYLIB_LIBA)
 $(RAYLIB_LIBA):
 	git clone https://github.com/raysan5/raylib.git $(RAYLIB_DIR) || true
 	mkdir -p $(RAYLIB_BUILD)                                              
-	cd $(RAYLIB_BUILD) && cmake -DBUILD_EXAMPLES=OFF -DBUILD_GAMES=OFF $(RAYLIB_CMAKE_FLAGS) .. && $(MAKE) -j
+	cd $(RAYLIB_BUILD) && cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_EXAMPLES=OFF -DBUILD_GAMES=OFF $(RAYLIB_CMAKE_FLAGS) .. && $(MAKE) -j
 
 clean:
 	$(RM) $(OBJECTS)
 
 fclean: clean
 	$(RM) $(NAME)
+	$(RM) -rf $(RAYLIB_DIR)
 
 re: fclean
-	$(RM) -rf $(RAYLIB_DIR)
 	$(MAKE) all
 
 .PHONY: all clean fclean re

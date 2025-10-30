@@ -6,7 +6,7 @@
 
 Drawer::Drawer(Client *client) : client(client), screenSize(20), prevSnakeHeadX(0), isMenuDrawn(false),
                                  prevSnakeHeadY(0), window(nullptr), gameMode(MENU), dynamicLibrary(nullptr),
-                                 switchLibPath("/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2"),
+                                 switchLibPath("../libs/lib2/lib2"),
                                  tilePx(std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize)))
 {
 }
@@ -19,6 +19,7 @@ Drawer::~Drawer()
 void Drawer::loadDynamicLibrary(const std::string &lib)
 {
     std::string libPath = lib + LIB_EXTENSION;
+    std::cout << libPath << std::endl;
     this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
     if (!this->dynamicLibrary)
         throw "Failed to load dynlib";
@@ -85,6 +86,8 @@ void Drawer::start()
     {
         std::cerr << msg << std::endl;
     }
+
+    std::cout << dlerror() << std::endl;
 
     this->stopClient();
 }
@@ -237,17 +240,17 @@ void Drawer::keyCallback(actions key, int action)
             break;
         case KEY_1:
             std::cout << "Changing to LIB 1" << std::endl;
-            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib1/lib1";
+            this->switchLibPath = "../libs/lib1/lib1";
             this->closeWindow(this->window);
             break;
         case KEY_2:
             std::cout << "Changing to LIB 2" << std::endl;
-            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2";
+            this->switchLibPath = "../libs/lib2/lib2";
             this->closeWindow(this->window);
             break;
         case KEY_3:
             std::cout << "Changing to LIB 3" << std::endl;
-            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib3/lib3";
+            this->switchLibPath = "../libs/lib3/lib3";
             this->closeWindow(this->window);
             break;
         }
