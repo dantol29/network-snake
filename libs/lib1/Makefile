@@ -11,7 +11,7 @@ else                             # Linux
 endif
 
 CC          = c++
-CFLAGS      = -O2 -Wall -Wextra -fPIC
+CFLAGS      = -O2 -Wall -Wextra -fPIC -std=c++11
 SOURCES     = Graphics.cpp
 OBJECTS     = $(SOURCES:.cpp=.o)
 
