@@ -2,5 +2,8 @@
 nibbler
 lib1.*
 lib2.*
+lib3.*
 libsfml*
 SFML
+SDL3
+raylib

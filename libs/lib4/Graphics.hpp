@@ -4,7 +4,6 @@
 #include "../../client/src/Drawer.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <SDL3_image/SDL_image.h>
 
 class Graphics
 {
@@ -24,7 +23,6 @@ private:
     SDL_Window* gameWindow = nullptr;
     SDL_Renderer* renderer = nullptr;
     TTF_Font* font = nullptr;
-    SDL_Texture* tex = nullptr;
     float windowWidth;
     float windowHeight;
 

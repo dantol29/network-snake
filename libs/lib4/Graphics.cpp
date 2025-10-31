@@ -29,20 +29,10 @@ Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
     font = TTF_OpenFont("assets/Montserrat-Bold.ttf", 24);
     if (!font)
         std::cerr << "Could not open font: " << SDL_GetError() << std::endl;
-
-    SDL_Surface* tempSurface = SDL_LoadBMP("assets/space.bmp");
-    if (!tempSurface)
-        throw std::runtime_error("Image does not exist: " + std::string(SDL_GetError()));
-
-    tex = SDL_CreateTextureFromSurface(renderer, tempSurface);
-    SDL_DestroySurface(tempSurface);
-    if (!tex)
-        throw std::runtime_error("Failed to create texture from image");
 }
 
 Graphics::~Graphics()
 {
-    if (tex) SDL_DestroyTexture(tex);
     if (font) TTF_CloseFont(font);
     if (renderer) SDL_DestroyRenderer(renderer);
     if (gameWindow) SDL_DestroyWindow(gameWindow);
@@ -75,21 +65,17 @@ void Graphics::loop()
                     break;
 
                 case SDL_EVENT_KEY_DOWN:
-                    keyCallback(event.key); // Implement key handling
+                    keyCallback(event.key);
                     break;
 
                 case SDL_EVENT_MOUSE_BUTTON_UP:
-                    onMouseUp(event.button); // Implement mouse click handling
+                    onMouseUp(event.button);
                     break;
             }
         }
 
         drawer->onEachFrame(false);
-
-        SDL_RenderPresent(renderer);
     }
-
-    std::cout << "Exit loop" << std::endl;
 }
 
 void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
@@ -183,9 +169,7 @@ void Graphics::cleanScreen()
 void Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
 {
     if (buttonEvent.button == SDL_BUTTON_LEFT)
-    {
         drawer->onMouseUp(buttonEvent.x, buttonEvent.y);
-    }
 }
 
 void Graphics::keyCallback(const SDL_KeyboardEvent &keyEvent)

@@ -10,6 +10,6 @@ sudo apt install \
 
 cd libs/lib1 && make re
 cd libs/lib2 && make re
-cd libs/lib3 && make re
+cd libs/lib4 && make re
 cd ../../client && make re
 ./client
