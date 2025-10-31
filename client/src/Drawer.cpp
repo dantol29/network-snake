@@ -209,6 +209,8 @@ void Drawer::stopClient()
 
 void Drawer::onMouseUp(float x, float y)
 {
+    (void)x;
+    (void)y;
     if (!clientThread.joinable())
     {
         std::cout << "Starting client" << std::endl;
@@ -250,7 +252,7 @@ void Drawer::keyCallback(actions key, int action)
             break;
         case KEY_3:
             std::cout << "Changing to LIB 3" << std::endl;
-            this->switchLibPath = "../libs/lib3/lib3";
+            this->switchLibPath = "../libs/lib4/lib3";
             this->closeWindow(this->window);
             break;
         }

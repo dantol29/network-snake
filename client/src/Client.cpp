@@ -3,7 +3,7 @@
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
 
-Client::Client() : stopFlag(false), isDead(false), snakeX(0), snakeY(0), height(0), width(0)
+Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0)
 {
 }
 
@@ -142,7 +142,7 @@ void Client::parseGameData(const char *data)
     const int height = std::stoi(heightStr);
     const int width = std::stoi(widthStr);
 
-    if (height * width != fieldStr.size())
+    if ((size_t)(height * width) != fieldStr.size())
         throw "Field size mismatch";
 
     if (height <= 0 || width <= 0 || height > 900 || width > 900)
