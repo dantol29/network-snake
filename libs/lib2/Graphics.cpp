@@ -4,7 +4,7 @@
 Drawer *drawer = nullptr;
 
 Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
-    : gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML")
+    : gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML"), running(true)
 {
     drawer = static_cast<Drawer *>(gamePointer);
     this->windowWidth = static_cast<float>(this->gameWindow.getSize().x);
@@ -20,21 +20,24 @@ Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
 Graphics::~Graphics()
 {
     std::cout << "Destructor SFML" << std::endl;
+
+    if (this->gameWindow.isOpen())
+        this->gameWindow.close();
 }
 
-void Graphics::closeWindow()
+void Graphics::stopLibrary()
 {
-    this->gameWindow.close();
+    this->running = false;
 }
 
 void Graphics::loop()
 {
-    while (this->gameWindow.isOpen())
+    while (running && this->gameWindow.isOpen())
     {
         while (const std::optional event = this->gameWindow.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
-                return this->gameWindow.close();
+                return this->stopLibrary();
             else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
                 this->keyCallback(keyPressed->code);
             else if (const auto *mouseReleased = event->getIf<sf::Event::MouseButtonReleased>())

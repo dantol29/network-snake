@@ -14,7 +14,7 @@ public:
     void loop();
     void display();
     void cleanScreen();
-    void closeWindow();
+    void stopLibrary();
     void drawText(float x, float y, int size, const char *text);
     void drawSquare(float x, float y, float width, float height, struct rgb color);
     void drawButton(float x, float y, float width, float height, const char *text);
@@ -25,6 +25,7 @@ private:
     TTF_Font* font = nullptr;
     float windowWidth;
     float windowHeight;
+    bool running;
 
     void keyCallback(const SDL_KeyboardEvent& keyEvent);
     void onMouseUp(const SDL_MouseButtonEvent& buttonEvent);
@@ -51,10 +52,10 @@ extern "C"
             static_cast<Graphics *>(g)->loop();
     }
 
-    void closeWindow(void *g)
+    void stopLibrary(void *g)
     {
         if (g)
-            static_cast<Graphics *>(g)->closeWindow();
+            static_cast<Graphics *>(g)->stopLibrary();
     }
 
     void drawSquare(void *g, float x, float y, float width, float height, struct rgb color)

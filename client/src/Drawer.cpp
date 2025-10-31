@@ -29,7 +29,7 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
     this->init = (initFunc)dlsym(this->dynamicLibrary, "init");
     this->loop = (loopFunc)dlsym(this->dynamicLibrary, "loop");
     this->cleanup = (cleanupFunc)dlsym(this->dynamicLibrary, "cleanup");
-    this->closeWindow = (closeWindowFunc)dlsym(this->dynamicLibrary, "closeWindow");
+    this->stopLibrary = (stopLibraryFunc)dlsym(this->dynamicLibrary, "stopLibrary");
     this->drawSquare = (drawSquareFunc)dlsym(this->dynamicLibrary, "drawSquare");
     this->drawButton = (drawButtonFunc)dlsym(this->dynamicLibrary, "drawButton");
     this->drawText = (drawTextFunc)dlsym(this->dynamicLibrary, "drawText");
@@ -41,7 +41,7 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
         throw "Failed to find functions in dynlib";
 
     if (!this->init || !this->loop || !this->cleanup || !this->drawSquare ||
-        !this->closeWindow || !this->drawButton || !this->drawText ||
+        !this->stopLibrary || !this->drawButton || !this->drawText ||
         !this->cleanScreen || !this->display)
         throw "Failed to init dynlib functions";
 }
@@ -240,15 +240,15 @@ void Drawer::keyCallback(actions key, int action)
             break;
         case KEY_1:
             this->switchLibPath = "../libs/lib1/lib1";
-            this->closeWindow(this->window);
+            this->stopLibrary(this->window);
             break;
         case KEY_2:
             this->switchLibPath = "../libs/lib2/lib2";
-            this->closeWindow(this->window);
+            this->stopLibrary(this->window);
             break;
         case KEY_3:
             this->switchLibPath = "../libs/lib4/lib3";
-            this->closeWindow(this->window);
+            this->stopLibrary(this->window);
             break;
         }
     }

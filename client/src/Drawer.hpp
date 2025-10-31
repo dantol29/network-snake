@@ -47,7 +47,7 @@ private:
     loopFunc loop;
     displayFunc display;
     cleanScreenFunc cleanScreen;
-    closeWindowFunc closeWindow;
+    stopLibraryFunc stopLibrary;
     drawSquareFunc drawSquare;
     drawButtonFunc drawButton;
     drawTextFunc drawText;

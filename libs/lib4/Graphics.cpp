@@ -4,7 +4,7 @@
 
 Drawer *drawer = nullptr;
 
-Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
+Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : running(true)
 {
     drawer = static_cast<Drawer *>(gamePointer);
     windowWidth = static_cast<float>(width);
@@ -42,25 +42,23 @@ Graphics::~Graphics()
     SDL_Quit();
 }
 
-void Graphics::closeWindow()
+void Graphics::stopLibrary()
 {
-    if (gameWindow)
-        SDL_DestroyWindow(gameWindow);
-    gameWindow = nullptr;
+    this->running = false;
 }
 
 void Graphics::loop()
 {
     SDL_Event event;
 
-    while (gameWindow)
+    while (running)
     {
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
                 case SDL_EVENT_QUIT:
-                    this->closeWindow();
+                    this->stopLibrary();
                     break;
 
                 case SDL_EVENT_KEY_DOWN:
@@ -155,16 +153,13 @@ void Graphics::drawButton(float x, float y, float width, float height, const cha
 
 void Graphics::display()
 {
-    if (gameWindow)
-        SDL_RenderPresent(renderer);
+    SDL_RenderPresent(renderer);
 }
 
 void Graphics::cleanScreen()
 {
-    if (gameWindow) {
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-    }
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 }
 
 void Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
