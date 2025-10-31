@@ -1,8 +1,13 @@
 *.o
 nibbler
+client/client
 lib1.*
 lib2.*
 lib3.*
-lib3SDL*
 libsfml*
 SFML
+SDL3
+docs/
+.vscode/
+libs/lib1/raylib/
+raylib
