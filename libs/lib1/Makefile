@@ -26,13 +26,17 @@ all: $(NAME)
 $(NAME): $(OBJECTS) $(RAYLIB_LIBA)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) $(RAYLIB_LIBA) $(SYSLIBS) -o $@
 
+# Rebuild without recloning/rebuilding raylib from scratch
+rebuild: $(OBJECTS) $(RAYLIB_LIBA)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) $(RAYLIB_LIBA) $(SYSLIBS) -o $(NAME)
+
 %.o: %.cpp $(RAYLIB_LIBA)
 	$(CC) $(CFLAGS) $(RAYLIB_INC) -c $< -o $@ 
 
 $(RAYLIB_LIBA):
 	git clone https://github.com/raysan5/raylib.git $(RAYLIB_DIR) || true
 	mkdir -p $(RAYLIB_BUILD)                                              
-	cd $(RAYLIB_BUILD) && cmake -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_EXAMPLES=OFF -DBUILD_GAMES=OFF $(RAYLIB_CMAKE_FLAGS) .. && $(MAKE) -j
+	cd $(RAYLIB_BUILD) && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_EXAMPLES=OFF -DBUILD_GAMES=OFF $(RAYLIB_CMAKE_FLAGS) .. && $(MAKE) -j
 
 clean:
 	$(RM) $(OBJECTS)
@@ -44,4 +48,4 @@ fclean: clean
 re: fclean
 	$(MAKE) all
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re rebuild

@@ -7,7 +7,14 @@ SOURCES_M := src/main.cpp src/Client.cpp src/Drawer.cpp
 OBJECTS := $(SOURCES_M:.cpp=.o)
 
 $(NAME): $(OBJECTS)
+	$(CC) $(CFLAGS) $(OBJECTS) -o $(NAME)
+
+# Debug build with thread sanitizer (for testing only, not compatible with OpenGL)
+sanitize: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) $(FSANITIZE) -o $(NAME)
+
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
 
 all: $(NAME)
 

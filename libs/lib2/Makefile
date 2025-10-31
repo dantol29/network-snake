@@ -38,13 +38,13 @@ $(SFML_INSTALL):
 
 copy_deps:
 ifeq ($(UNAME_S), Darwin)
-	@cp $(SFML_DIR)/_install/lib/libsfml-graphics.3.1.dylib .
-	@cp $(SFML_DIR)/_install/lib/libsfml-window.3.1.dylib .
-	@cp $(SFML_DIR)/_install/lib/libsfml-system.3.1.dylib .
+	@cp $(SFML_LIBDIR)/libsfml-graphics.3.1.dylib .
+	@cp $(SFML_LIBDIR)/libsfml-window.3.1.dylib .
+	@cp $(SFML_LIBDIR)/libsfml-system.3.1.dylib .
 else
-	@cp $(SFML_DIR)/_install/lib/libsfml-graphics.3.1.so .
-	@cp $(SFML_DIR)/_install/lib/libsfml-window.3.1.so .
-	@cp $(SFML_DIR)/_install/lib/libsfml-system.3.1.so .
+	@cp $(SFML_LIBDIR)/libsfml-graphics.3.1.so .
+	@cp $(SFML_LIBDIR)/libsfml-window.3.1.so .
+	@cp $(SFML_LIBDIR)/libsfml-system.3.1.so .
 endif
 
 clean:
