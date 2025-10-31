@@ -250,7 +250,7 @@ void Drawer::keyCallback(actions key, int action)
             break;
         case KEY_3:
             std::cout << "Changing to LIB 3" << std::endl;
-            this->switchLibPath = "../libs/lib3/lib3";
+            this->switchLibPath = "../libs/lib4/lib4";
             this->closeWindow(this->window);
             break;
         }
