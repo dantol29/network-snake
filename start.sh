@@ -8,8 +8,8 @@ sudo apt install \
     libopenal-dev libpthread-stubs0-dev \
     libx11-xcb-dev
 
-cd libs/lib1 && make re
-cd libs/lib2 && make re
-cd libs/lib4 && make re
-cd ../../client && make re
-./client
+(cd libs/lib1 && make re)
+(cd libs/lib2 && make re)
+(cd libs/lib4 && make re) || true
+(cd client && make re)
+(cd client && ./client)
