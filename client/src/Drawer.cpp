@@ -4,10 +4,9 @@
 #define HEIGHT 1000
 #define SCREEN_LEN 2.0f
 
-Drawer::Drawer(Client *client) : client(client), screenSize(20), prevSnakeHeadX(0), isMenuDrawn(false),
-                                 prevSnakeHeadY(0), window(nullptr), gameMode(MENU), dynamicLibrary(nullptr),
-                                 switchLibPath("../libs/lib2/lib2"),
-                                 tilePx(std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize)))
+Drawer::Drawer(Client *client) : client(client), dynamicLibrary(nullptr), window(nullptr), screenSize(20), 
+tilePx(std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize))), prevSnakeHeadX(0), prevSnakeHeadY(0), 
+isMenuDrawn(false), switchLibPath("../libs/lib2/lib2"), gameMode(MENU)                                 
 {
 }
 

@@ -19,9 +19,6 @@
 #define TILE_SIZE 0.05f
 #define SCALE 20.0f
 #define FLOOR_SYMBOL '.'
-#define SERVER_PORT 8080
-// #define SERVER_IP "165.22.79.64"
-#define SERVER_IP "127.0.0.1"
 
 #ifdef __APPLE__
 #define LIB_EXTENSION ".dylib"
