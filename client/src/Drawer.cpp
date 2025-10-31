@@ -87,8 +87,6 @@ void Drawer::start()
         std::cerr << msg << std::endl;
     }
 
-    std::cout << dlerror() << std::endl;
-
     this->stopClient();
 }
 
@@ -239,17 +237,14 @@ void Drawer::keyCallback(actions key, int action)
             this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
             break;
         case KEY_1:
-            std::cout << "Changing to LIB 1" << std::endl;
             this->switchLibPath = "../libs/lib1/lib1";
             this->closeWindow(this->window);
             break;
         case KEY_2:
-            std::cout << "Changing to LIB 2" << std::endl;
             this->switchLibPath = "../libs/lib2/lib2";
             this->closeWindow(this->window);
             break;
         case KEY_3:
-            std::cout << "Changing to LIB 3" << std::endl;
             this->switchLibPath = "../libs/lib4/lib3";
             this->closeWindow(this->window);
             break;

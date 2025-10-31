@@ -34,7 +34,7 @@ void Graphics::loop()
         while (const std::optional event = this->gameWindow.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
-                this->gameWindow.close();
+                return this->gameWindow.close();
             else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
                 this->keyCallback(keyPressed->code);
             else if (const auto *mouseReleased = event->getIf<sf::Event::MouseButtonReleased>())
@@ -95,12 +95,14 @@ void Graphics::drawText(float x, float y, int size, const char *text)
 
 void Graphics::display()
 {
-    this->gameWindow.display();
+    if (this->gameWindow.isOpen())
+        this->gameWindow.display();
 }
 
 void Graphics::cleanScreen()
 {
-    this->gameWindow.clear();
+    if (this->gameWindow.isOpen())
+        this->gameWindow.clear();
 }
 
 void Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i position)
