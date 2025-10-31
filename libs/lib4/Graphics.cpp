@@ -34,13 +34,12 @@ Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
 Graphics::~Graphics()
 {
     std::cout << "Destructor SDL " << std::endl;
-    
+
     if (font) TTF_CloseFont(font);
     if (renderer) SDL_DestroyRenderer(renderer);
     if (gameWindow) SDL_DestroyWindow(gameWindow);
     TTF_Quit();
     SDL_Quit();
-
 }
 
 void Graphics::closeWindow()
@@ -54,7 +53,7 @@ void Graphics::loop()
 {
     SDL_Event event;
 
-    while (gameWindow != nullptr)
+    while (gameWindow)
     {
         while (SDL_PollEvent(&event))
         {
@@ -156,13 +155,16 @@ void Graphics::drawButton(float x, float y, float width, float height, const cha
 
 void Graphics::display()
 {
-    SDL_RenderPresent(renderer);
+    if (gameWindow)
+        SDL_RenderPresent(renderer);
 }
 
 void Graphics::cleanScreen()
 {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
+    if (gameWindow) {
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+    }
 }
 
 void Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)

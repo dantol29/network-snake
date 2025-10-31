@@ -10,6 +10,6 @@ sudo apt install \
 
 (cd libs/lib1 && make re)
 (cd libs/lib2 && make re)
-(cd libs/lib3 && make re) || true
+(cd libs/lib4 && make re) || true
 (cd client && make re)
 (cd client && ./client)
