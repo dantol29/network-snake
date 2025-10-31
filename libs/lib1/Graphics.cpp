@@ -68,8 +68,6 @@ void Graphics::loop()
         if (!this->isClosed)
             EndDrawing();
     }
-
-    std::cout << "Exit loop 1" << std::endl;
 }
 
 void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)

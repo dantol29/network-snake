@@ -33,13 +33,14 @@ Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
 
 Graphics::~Graphics()
 {
+    std::cout << "Destructor SDL " << std::endl;
+    
     if (font) TTF_CloseFont(font);
     if (renderer) SDL_DestroyRenderer(renderer);
     if (gameWindow) SDL_DestroyWindow(gameWindow);
     TTF_Quit();
     SDL_Quit();
 
-    std::cout << "SDL3 resources cleaned up." << std::endl;
 }
 
 void Graphics::closeWindow()
@@ -51,17 +52,16 @@ void Graphics::closeWindow()
 
 void Graphics::loop()
 {
-    bool running = true;
     SDL_Event event;
 
-    while (running)
+    while (gameWindow != nullptr)
     {
         while (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
                 case SDL_EVENT_QUIT:
-                    running = false;
+                    this->closeWindow();
                     break;
 
                 case SDL_EVENT_KEY_DOWN:
@@ -73,7 +73,6 @@ void Graphics::loop()
                     break;
             }
         }
-
         drawer->onEachFrame(false);
     }
 }
