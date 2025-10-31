@@ -43,8 +43,6 @@ void Graphics::loop()
 
         drawer->onEachFrame(false);
     }
-
-    std::cout << "Exit loop 2" << std::endl;
 }
 
 void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
@@ -111,8 +109,6 @@ void Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i posi
     {
     case sf::Mouse::Button::Left:
         drawer->onMouseUp(position.x, position.y);
-        break;
-
     default:
         break;
     }
