@@ -42,9 +42,9 @@ ifeq ($(UNAME_S), Darwin)
 	@cp $(SFML_LIBDIR)/libsfml-window.3.1.dylib .
 	@cp $(SFML_LIBDIR)/libsfml-system.3.1.dylib .
 else
-	@cp $(SFML_LIBDIR)/libsfml-graphics.3.1.so .
-	@cp $(SFML_LIBDIR)/libsfml-window.3.1.so .
-	@cp $(SFML_LIBDIR)/libsfml-system.3.1.so .
+	@cp $(SFML_LIBDIR)/libsfml-graphics.so.3.1 .
+	@cp $(SFML_LIBDIR)/libsfml-window.so.3.1 .
+	@cp $(SFML_LIBDIR)/libsfml-system.so.3.1 .
 endif
 
 clean:
