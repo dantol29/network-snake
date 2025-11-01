@@ -50,3 +50,11 @@ clean:
 	rm -f $(OBJECTS) $(NAME)
 	rm -rf $(SDL_BUILD_CORE) $(SDL_BUILD_TTF)
 
+fclean: clean
+	rm -f $(NAME)
+	rm -rf $(SDL_INSTALL)
+
+re: fclean all
+
+.PHONY: all clean fclean re
+
