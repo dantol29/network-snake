@@ -1,3 +1,5 @@
+UNAME_S := $(shell uname)
+
 NAME = client
 CC = c++
 CFLAGS = -O2 -Wall -Wextra -std=c++17 -pthread
@@ -6,12 +8,23 @@ SOURCES_M := src/main.cpp src/Client.cpp src/Drawer.cpp
 
 OBJECTS := $(SOURCES_M:.cpp=.o)
 
+# Platform-specific linker flags
+ifeq ($(UNAME_S),Darwin)
+    # macOS: libraries use -undefined dynamic_lookup, so no -rdynamic needed here
+    # dlopen/dlsym are in system libraries, no -ldl needed
+    LDFLAGS =
+else
+    # Linux: need -rdynamic to export symbols for dynamically loaded libraries
+    # dlopen/dlsym require -ldl
+    LDFLAGS = -rdynamic -ldl
+endif
+
 $(NAME): $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) -o $(NAME)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) -o $(NAME)
 
 # Debug build with thread sanitizer (for testing only, not compatible with OpenGL)
 sanitize: $(OBJECTS)
-	$(CC) $(CFLAGS) $(OBJECTS) $(FSANITIZE) -o $(NAME)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) $(FSANITIZE) -o $(NAME)
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@

@@ -12,9 +12,8 @@ if [[ "$(uname)" == "Linux" ]]; then
 fi
 
 {
-(cd libs/lib1 && make re)
-(cd libs/lib2 && make re)
-(cd libs/lib4 && make re) || true
+# Build all libraries using centralized CMake (top-level Makefile bootstraps CMake 3.29.6)
+make libs
 (cd client && make re)
 (cd client && ./client)
 } 2>&1 | tee log.txt

@@ -33,10 +33,13 @@ rebuild: $(OBJECTS) $(RAYLIB_LIBA)
 %.o: %.cpp $(RAYLIB_LIBA)
 	$(CC) $(CFLAGS) $(RAYLIB_INC) -c $< -o $@ 
 
-$(RAYLIB_LIBA):
+# Use centralized CMake if available, otherwise fall back to system cmake
+CMAKE ?= cmake
+
+$(RAYLIB_LIBA): $(CMAKE)
 	git clone https://github.com/raysan5/raylib.git $(RAYLIB_DIR) || true
 	mkdir -p $(RAYLIB_BUILD)                                              
-	cd $(RAYLIB_BUILD) && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_EXAMPLES=OFF -DBUILD_GAMES=OFF $(RAYLIB_CMAKE_FLAGS) .. && $(MAKE) -j
+	cd $(RAYLIB_BUILD) && $(CMAKE) -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_EXAMPLES=OFF -DBUILD_GAMES=OFF $(RAYLIB_CMAKE_FLAGS) .. && $(MAKE) -j
 
 clean:
 	$(RM) $(OBJECTS)
