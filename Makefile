@@ -102,9 +102,9 @@ valgrind: server client
 		echo "Using defaults: HEIGHT=$$HEIGHT WIDTH=$$WIDTH"; \
 	else \
 		HEIGHT=$(HEIGHT); WIDTH=$(WIDTH); \
-	fi
-	@echo "Starting server with valgrind (size $$HEIGHTx$$WIDTH)..."
-	@cd server && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+	fi; \
+	echo "Starting server with valgrind (size $$HEIGHTx$$WIDTH)..."; \
+	cd server && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
 		--log-file=../valgrind-server.log ./nibbler $$HEIGHT $$WIDTH & \
 	SERVER_PID=$$!; \
 	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
