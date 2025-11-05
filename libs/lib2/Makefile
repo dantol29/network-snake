@@ -33,6 +33,8 @@ SFML_CMAKE_FLAGS = -DSFML_BUILD_EXAMPLES=OFF -DSFML_BUILD_DOC=OFF -DSFML_BUILD_A
                    -DCMAKE_BUILD_TYPE=Release \
                    -DCMAKE_INSTALL_PREFIX=$(abspath $(SFML_INSTALL)) -DBUILD_SHARED_LIBS=ON
 
+# Use centralized CMake if available, otherwise fall back to system cmake
+CMAKE ?= cmake
 
 all: $(NAME) copy_deps
 
@@ -42,11 +44,11 @@ $(NAME): $(OBJECTS) $(SFML_BUILT)
 %.o: %.cpp $(SFML_BUILT)
 	$(CC) $(CFLAGS) $(SFML_INC) -c $< -o $@
 
-$(SFML_BUILT):
+$(SFML_BUILT): $(CMAKE)
 	# git clone https://github.com/SFML/SFML.git $(SFML_DIR) || true
 	git clone --depth=1 --branch 2.6.1 https://github.com/SFML/SFML.git $(SFML_DIR) || true
 	mkdir -p $(SFML_BUILD) $(SFML_INSTALL)
-	cd $(SFML_BUILD) && cmake $(SFML_CMAKE_FLAGS) .. && $(MAKE) -j1 && $(MAKE) install
+	cd $(SFML_BUILD) && $(CMAKE) $(SFML_CMAKE_FLAGS) .. && $(MAKE) -j1 && $(MAKE) install
 	touch $(SFML_BUILT)
 
 copy_deps: $(SFML_BUILT)
