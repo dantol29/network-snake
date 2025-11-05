@@ -41,17 +41,17 @@ export CMAKE := $(CMAKE_BIN)
 # Build all libraries
 libs: $(CMAKE_BIN)
 	@echo "Building all libraries..."
-	$(MAKE) -C libs/lib1 re
-	$(MAKE) -C libs/lib2 re
-	$(MAKE) -C libs/lib4 re || true
+	$(MAKE) -C libs/lib1
+	$(MAKE) -C libs/lib2
+	$(MAKE) -C libs/lib4 || true
 
 # Build client
 client: $(CMAKE_BIN) libs
-	$(MAKE) -C client re
+	$(MAKE) -C client
 
 # Build server
 server: $(CMAKE_BIN)
-	$(MAKE) -C server re
+	$(MAKE) -C server
 
 # Build everything (default target)
 all: libs client server

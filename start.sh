@@ -2,7 +2,7 @@
 if [[ "$(uname)" == "Linux" ]]; then
     sudo apt install \
         build-essential cmake git \
-        libx11-dev libxrandr-dev libxcb1-dev libxcb-image0-dev libxcb-shm0-dev \
+        libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libxcb1-dev libxcb-image0-dev libxcb-shm0-dev \
         libxcb-keysyms1-dev libxcb-icccm4-dev libxcb-util-dev libxcb-cursor-dev \
         libudev-dev libgl1-mesa-dev libopengl-dev \
         libfreetype6-dev libharfbuzz-dev \
