@@ -16,6 +16,7 @@ fi
 {
 # Install system dependencies (Linux only)
 # Then build everything and start server + client using the top-level Makefile
+mkdir -p logs
 make all
 make run-game HEIGHT=20 WIDTH=30
-} 2>&1 | tee log.txt
+} 2>&1 | tee logs/start.log

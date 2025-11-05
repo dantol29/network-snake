@@ -103,17 +103,18 @@ valgrind: server client
 	else \
 		HEIGHT=$(HEIGHT); WIDTH=$(WIDTH); \
 	fi; \
+	mkdir -p logs; \
 	echo "Starting server with valgrind (size $$HEIGHTx$$WIDTH)..."; \
 	cd server && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-		--log-file=../valgrind-server.log ./nibbler $$HEIGHT $$WIDTH & \
+		--log-file=../logs/valgrind-server.log ./nibbler $$HEIGHT $$WIDTH & \
 	SERVER_PID=$$!; \
 	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
 	sleep 2; \
 	echo "Starting client with valgrind..."; \
 	cd client && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-		--log-file=valgrind-client.log ./client || true; \
+		--log-file=../logs/valgrind-client.log ./client || true; \
 	kill $$SERVER_PID 2>/dev/null || true; \
-	echo "Valgrind logs saved to valgrind-server.log and valgrind-client.log"
+	echo "Valgrind logs saved to logs/valgrind-server.log and logs/valgrind-client.log"
 
 # Clean all build artifacts
 clean:
