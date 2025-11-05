@@ -8,7 +8,8 @@ if [[ "$(uname)" == "Linux" ]]; then
         libfreetype6-dev libharfbuzz-dev \
         libjpeg-dev libflac-dev libogg-dev libvorbis-dev libvorbisenc2 libvorbisfile3 \
         libopenal-dev libpthread-stubs0-dev \
-        libx11-xcb-dev
+        libx11-xcb-dev \
+        libasound2-dev libdbus-1-dev libwayland-dev libxss-dev libxkbcommon-dev
 fi
 
 {
