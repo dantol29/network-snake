@@ -98,8 +98,8 @@ valgrind: server client
 		exit 1; \
 	fi
 	@if [ -z "$(HEIGHT)" ] || [ -z "$(WIDTH)" ]; then \
-		echo "Using defaults: HEIGHT=20 WIDTH=30"; \
 		HEIGHT=20; WIDTH=30; \
+		echo "Using defaults: HEIGHT=$$HEIGHT WIDTH=$$WIDTH"; \
 	else \
 		HEIGHT=$(HEIGHT); WIDTH=$(WIDTH); \
 	fi
@@ -110,8 +110,8 @@ valgrind: server client
 	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
 	sleep 2; \
 	echo "Starting client with valgrind..."; \
-	cd ../client && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-		--log-file=../valgrind-client.log ./client || true; \
+	cd client && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+		--log-file=valgrind-client.log ./client || true; \
 	kill $$SERVER_PID 2>/dev/null || true; \
 	echo "Valgrind logs saved to valgrind-server.log and valgrind-client.log"
 
