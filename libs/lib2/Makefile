@@ -45,8 +45,7 @@ $(NAME): $(OBJECTS) $(SFML_BUILT)
 	$(CC) $(CFLAGS) $(SFML_INC) -c $< -o $@
 
 $(SFML_BUILT): $(CMAKE)
-	# git clone https://github.com/SFML/SFML.git $(SFML_DIR) || true
-	git clone --depth=1 --branch 2.6.1 https://github.com/SFML/SFML.git $(SFML_DIR) || true
+	git clone --depth=1 https://github.com/SFML/SFML.git $(SFML_DIR) || true
 	mkdir -p $(SFML_BUILD) $(SFML_INSTALL)
 	cd $(SFML_BUILD) && $(CMAKE) $(SFML_CMAKE_FLAGS) .. && $(MAKE) -j1 && $(MAKE) install
 	touch $(SFML_BUILT)
