@@ -4,10 +4,9 @@
 #define HEIGHT 1000
 #define SCREEN_LEN 2.0f
 
-Drawer::Drawer(Client *client) : client(client), screenSize(20), prevSnakeHeadX(0), isMenuDrawn(false),
-                                 prevSnakeHeadY(0), window(nullptr), gameMode(MENU), dynamicLibrary(nullptr),
-                                 switchLibPath("/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2"),
-                                 tilePx(std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize)))
+Drawer::Drawer(Client *client) : client(client), dynamicLibrary(nullptr), window(nullptr), screenSize(20), 
+tilePx(std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize))), prevSnakeHeadX(0), prevSnakeHeadY(0), 
+isMenuDrawn(false), switchLibPath("../libs/lib2/lib2"), gameMode(MENU)                                 
 {
 }
 
@@ -19,6 +18,7 @@ Drawer::~Drawer()
 void Drawer::loadDynamicLibrary(const std::string &lib)
 {
     std::string libPath = lib + LIB_EXTENSION;
+    std::cout << libPath << std::endl;
     this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
     if (!this->dynamicLibrary)
         throw "Failed to load dynlib";
@@ -28,7 +28,7 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
     this->init = (initFunc)dlsym(this->dynamicLibrary, "init");
     this->loop = (loopFunc)dlsym(this->dynamicLibrary, "loop");
     this->cleanup = (cleanupFunc)dlsym(this->dynamicLibrary, "cleanup");
-    this->closeWindow = (closeWindowFunc)dlsym(this->dynamicLibrary, "closeWindow");
+    this->stopLibrary = (stopLibraryFunc)dlsym(this->dynamicLibrary, "stopLibrary");
     this->drawSquare = (drawSquareFunc)dlsym(this->dynamicLibrary, "drawSquare");
     this->drawButton = (drawButtonFunc)dlsym(this->dynamicLibrary, "drawButton");
     this->drawText = (drawTextFunc)dlsym(this->dynamicLibrary, "drawText");
@@ -40,7 +40,7 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
         throw "Failed to find functions in dynlib";
 
     if (!this->init || !this->loop || !this->cleanup || !this->drawSquare ||
-        !this->closeWindow || !this->drawButton || !this->drawText ||
+        !this->stopLibrary || !this->drawButton || !this->drawText ||
         !this->cleanScreen || !this->display)
         throw "Failed to init dynlib functions";
 }
@@ -206,6 +206,8 @@ void Drawer::stopClient()
 
 void Drawer::onMouseUp(float x, float y)
 {
+    (void)x;
+    (void)y;
     if (!clientThread.joinable())
     {
         std::cout << "Starting client" << std::endl;
@@ -236,19 +238,16 @@ void Drawer::keyCallback(actions key, int action)
             this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
             break;
         case KEY_1:
-            std::cout << "Changing to LIB 1" << std::endl;
-            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib1/lib1";
-            this->closeWindow(this->window);
+            this->switchLibPath = "../libs/lib1/lib1";
+            this->stopLibrary(this->window);
             break;
         case KEY_2:
-            std::cout << "Changing to LIB 2" << std::endl;
-            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib2/lib2";
-            this->closeWindow(this->window);
+            this->switchLibPath = "../libs/lib2/lib2";
+            this->stopLibrary(this->window);
             break;
         case KEY_3:
-            std::cout << "Changing to LIB 3" << std::endl;
-            this->switchLibPath = "/Users/tolmadan/Desktop/42/nibbler/libs/lib3/lib3";
-            this->closeWindow(this->window);
+            this->switchLibPath = "../libs/lib4/lib3";
+            this->stopLibrary(this->window);
             break;
         }
     }

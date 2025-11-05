@@ -2,7 +2,8 @@
 #define GRAPHICS_HPP
 
 #include "../../client/src/Drawer.hpp"
-#include <SFML/Graphics.hpp>
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 class Graphics
 {
@@ -19,15 +20,15 @@ public:
     void drawButton(float x, float y, float width, float height, const char *text);
 
 private:
-    sf::RenderWindow gameWindow;
-    sf::Texture tex;
-    sf::Font font;
+    SDL_Window* gameWindow = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    TTF_Font* font = nullptr;
     float windowWidth;
     float windowHeight;
     bool running;
 
-    void keyCallback(sf::Keyboard::Key key);
-    void onMouseUp(const sf::Mouse::Button, const sf::Vector2i position);
+    void keyCallback(const SDL_KeyboardEvent& keyEvent);
+    void onMouseUp(const SDL_MouseButtonEvent& buttonEvent);
 };
 
 extern "C"

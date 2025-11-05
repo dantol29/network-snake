@@ -2,8 +2,12 @@
 
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
+#define SERVER_PORT 8080
+#define SERVER_IP "159.65.186.248"
+// #define SERVER_IP "127.0.0.1"
 
-Client::Client() : stopFlag(false), isDead(false), snakeX(0), snakeY(0), height(0), width(0)
+
+Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0)
 {
 }
 
@@ -25,7 +29,7 @@ void Client::initConnections()
     this->serverAddr.sin_port = htons(SERVER_PORT);
     inet_pton(AF_INET, SERVER_IP, &this->serverAddr.sin_addr);
 
-    std::cout << "Connecting..." << std::endl;
+    std::cout << "Connecting: " << SERVER_IP << std::endl;
 
     if (connect(this->tcpSocket, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr)) < 0)
         throw "Connect to server error";
@@ -142,7 +146,7 @@ void Client::parseGameData(const char *data)
     const int height = std::stoi(heightStr);
     const int width = std::stoi(widthStr);
 
-    if (height * width != fieldStr.size())
+    if ((size_t)(height * width) != fieldStr.size())
         throw "Field size mismatch";
 
     if (height <= 0 || width <= 0 || height > 900 || width > 900)

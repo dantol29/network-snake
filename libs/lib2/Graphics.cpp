@@ -4,7 +4,7 @@
 Drawer *drawer = nullptr;
 
 Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
-    : gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML")
+    : gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML"), running(true)
 {
     drawer = static_cast<Drawer *>(gamePointer);
     this->windowWidth = static_cast<float>(this->gameWindow.getSize().x);
@@ -20,21 +20,24 @@ Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
 Graphics::~Graphics()
 {
     std::cout << "Destructor SFML" << std::endl;
+
+    if (this->gameWindow.isOpen())
+        this->gameWindow.close();
 }
 
-void Graphics::closeWindow()
+void Graphics::stopLibrary()
 {
-    this->gameWindow.close();
+    this->running = false;
 }
 
 void Graphics::loop()
 {
-    while (this->gameWindow.isOpen())
+    while (running && this->gameWindow.isOpen())
     {
         while (const std::optional event = this->gameWindow.pollEvent())
         {
             if (event->is<sf::Event::Closed>())
-                this->gameWindow.close();
+                return this->stopLibrary();
             else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
                 this->keyCallback(keyPressed->code);
             else if (const auto *mouseReleased = event->getIf<sf::Event::MouseButtonReleased>())
@@ -43,8 +46,6 @@ void Graphics::loop()
 
         drawer->onEachFrame(false);
     }
-
-    std::cout << "Exit loop 2" << std::endl;
 }
 
 void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
@@ -97,12 +98,14 @@ void Graphics::drawText(float x, float y, int size, const char *text)
 
 void Graphics::display()
 {
-    this->gameWindow.display();
+    if (this->gameWindow.isOpen())
+        this->gameWindow.display();
 }
 
 void Graphics::cleanScreen()
 {
-    this->gameWindow.clear();
+    if (this->gameWindow.isOpen())
+        this->gameWindow.clear();
 }
 
 void Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i position)
@@ -111,8 +114,6 @@ void Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i posi
     {
     case sf::Mouse::Button::Left:
         drawer->onMouseUp(position.x, position.y);
-        break;
-
     default:
         break;
     }

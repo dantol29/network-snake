@@ -8,7 +8,7 @@ else                            # Linux
     SOFLAGS  = -shared -Wl,-rpath,'$$ORIGIN'
 endif
 
-CC      = clang++
+CC      = g++
 CFLAGS  = -std=c++17 -Wall -Wextra -Werror -O2 -fPIC
 
 SOURCES = Graphics.cpp
@@ -16,13 +16,10 @@ OBJECTS = $(SOURCES:.cpp=.o)
 
 SFML_DIR        = SFML
 SFML_BUILD      = $(SFML_DIR)/build
-SFML_INSTALL    = $(SFML_DIR)/_install
-
+SFML_INSTALL    = $(SFML_DIR)
 SFML_INC        = -I$(SFML_INSTALL)/include
 SFML_LIBDIR     = $(SFML_INSTALL)/lib
-
 SFML_LIBS       = -L$(SFML_LIBDIR) -lsfml-graphics -lsfml-window -lsfml-system
-
 SFML_CMAKE_FLAGS = -DSFML_BUILD_EXAMPLES=OFF -DSFML_BUILD_DOC=OFF -DCMAKE_BUILD_TYPE=Release \
                    -DCMAKE_INSTALL_PREFIX=$(abspath $(SFML_INSTALL)) -DBUILD_SHARED_LIBS=ON
 
@@ -37,17 +34,17 @@ $(NAME): $(OBJECTS) $(SFML_INSTALL)
 $(SFML_INSTALL):
 	git clone https://github.com/SFML/SFML.git $(SFML_DIR) || true
 	mkdir -p $(SFML_BUILD) $(SFML_INSTALL)
-	cd $(SFML_BUILD) && cmake $(SFML_CMAKE_FLAGS) .. && $(MAKE) -j && $(MAKE) install
+	cd $(SFML_BUILD) && cmake $(SFML_CMAKE_FLAGS) .. && $(MAKE) -j1 && $(MAKE) install
 
 copy_deps:
 ifeq ($(UNAME_S), Darwin)
-	@cp $(SFML_DIR)/_install/lib/libsfml-graphics.3.1.dylib .
-	@cp $(SFML_DIR)/_install/lib/libsfml-window.3.1.dylib .
-	@cp $(SFML_DIR)/_install/lib/libsfml-system.3.1.dylib .
+	@cp $(SFML_LIBDIR)/libsfml-graphics.3.1.dylib .
+	@cp $(SFML_LIBDIR)/libsfml-window.3.1.dylib .
+	@cp $(SFML_LIBDIR)/libsfml-system.3.1.dylib .
 else
-	@cp $(SFML_DIR)/_install/lib/libsfml-graphics.3.1.so .
-	@cp $(SFML_DIR)/_install/lib/libsfml-window.3.1.so .
-	@cp $(SFML_DIR)/_install/lib/libsfml-system.3.1.so .
+	@cp $(SFML_LIBDIR)/libsfml-graphics.so.3.1 .
+	@cp $(SFML_LIBDIR)/libsfml-window.so.3.1 .
+	@cp $(SFML_LIBDIR)/libsfml-system.so.3.1 .
 endif
 
 clean:

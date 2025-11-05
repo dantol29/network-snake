@@ -13,7 +13,7 @@ public:
     void loop();
     void display();
     void cleanScreen();
-    void closeWindow();
+    void stopLibrary();
     void drawText(float x, float y, int size, const char *text);
     void drawSquare(float x, float y, float width, float height, struct rgb color);
     void drawButton(float x, float y, float width, float height, const char *text);
@@ -23,7 +23,7 @@ private:
     Texture2D tex{};
     float windowWidth;
     float windowHeight;
-    bool isClosed;
+    bool running;
 
     void checkEvents();
 };
@@ -49,10 +49,10 @@ extern "C"
             static_cast<Graphics *>(g)->loop();
     }
 
-    void closeWindow(void *g)
+    void stopLibrary(void *g)
     {
         if (g)
-            static_cast<Graphics *>(g)->closeWindow();
+            static_cast<Graphics *>(g)->stopLibrary();
     }
 
     void drawSquare(void *g, float x, float y, float width, float height, struct rgb color)

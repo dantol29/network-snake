@@ -12,7 +12,7 @@ static Color toColor(rgb c)
 
 Drawer *drawer = nullptr;
 
-Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : isClosed(false)
+Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : running(true)
 {
     InitWindow((int)width, (int)height, "raylib");
     SetTargetFPS(60);
@@ -49,15 +49,14 @@ Graphics::~Graphics()
         CloseWindow();
 }
 
-void Graphics::closeWindow()
+void Graphics::stopLibrary()
 {
-    CloseWindow();
-    this->isClosed = true;
+    this->running = false;
 }
 
 void Graphics::loop()
 {
-    while (!WindowShouldClose())
+    while (running && !WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(BLACK);
@@ -65,11 +64,8 @@ void Graphics::loop()
         drawer->onEachFrame(true);
         this->checkEvents();
 
-        if (!this->isClosed)
-            EndDrawing();
+        EndDrawing();
     }
-
-    std::cout << "Exit loop 1" << std::endl;
 }
 
 void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)

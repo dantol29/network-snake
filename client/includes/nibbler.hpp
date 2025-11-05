@@ -19,9 +19,6 @@
 #define TILE_SIZE 0.05f
 #define SCALE 20.0f
 #define FLOOR_SYMBOL '.'
-#define SERVER_PORT 8080
-// #define SERVER_IP "165.22.79.64"
-#define SERVER_IP "127.0.0.1"
 
 #ifdef __APPLE__
 #define LIB_EXTENSION ".dylib"
@@ -54,7 +51,7 @@ typedef void (*loopFunc)(void *);
 typedef void (*displayFunc)(void *);
 typedef void (*cleanScreenFunc)(void *);
 typedef void (*cleanupFunc)(void *);
-typedef void (*closeWindowFunc)(void *);
+typedef void (*stopLibraryFunc)(void *);
 typedef void (*drawTextFunc)(void *, float, float, int, const char *);
 typedef void (*drawSquareFunc)(void *, float, float, float, float, struct rgb);
 typedef void (*drawButtonFunc)(void *, float, float, float, float, const char *);
