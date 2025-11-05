@@ -90,6 +90,32 @@ run-game: server client
 	cd client && ./client || true; \
 	kill $$SERVER_PID 2>/dev/null || true
 
+# Run with valgrind to check for memory leaks
+# Usage: make valgrind HEIGHT=20 WIDTH=30
+valgrind: server client
+	@if ! command -v valgrind >/dev/null 2>&1; then \
+		echo "Error: valgrind is not installed. Install with: sudo apt install valgrind"; \
+		exit 1; \
+	fi
+	@if [ -z "$(HEIGHT)" ] || [ -z "$(WIDTH)" ]; then \
+		HEIGHT=20; WIDTH=30; \
+		echo "Using defaults: HEIGHT=$$HEIGHT WIDTH=$$WIDTH"; \
+	else \
+		HEIGHT=$(HEIGHT); WIDTH=$(WIDTH); \
+	fi; \
+	mkdir -p logs; \
+	echo "Starting server with valgrind (size $$HEIGHTx$$WIDTH)..."; \
+	cd server && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+		--log-file=../logs/valgrind-server.log ./nibbler $$HEIGHT $$WIDTH & \
+	SERVER_PID=$$!; \
+	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
+	sleep 2; \
+	echo "Starting client with valgrind..."; \
+	cd client && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
+		--log-file=../logs/valgrind-client.log ./client || true; \
+	kill $$SERVER_PID 2>/dev/null || true; \
+	echo "Valgrind logs saved to logs/valgrind-server.log and logs/valgrind-client.log"
+
 # Clean all build artifacts
 clean:
 	$(MAKE) -C libs/lib1 clean || true
@@ -109,5 +135,5 @@ fclean: clean
 # Rebuild everything
 re: fclean all
 
-.PHONY: all libs client server run run-server run-game clean fclean re
+.PHONY: all libs client server run run-server run-game valgrind clean fclean re
 
