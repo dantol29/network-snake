@@ -76,7 +76,6 @@ run-server: server
 # Usage: make run-game HEIGHT=20 WIDTH=30
 run-game: server client
 	@if [ -z "$(HEIGHT)" ] || [ -z "$(WIDTH)" ]; then \
-		echo "Usage: make run-game HEIGHT=20 WIDTH=30"; \
 		echo "Using defaults: HEIGHT=20 WIDTH=30"; \
 		HEIGHT=20; WIDTH=30; \
 	else \
@@ -88,7 +87,7 @@ run-game: server client
 	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
 	sleep 1; \
 	echo "Starting client..."; \
-	cd ../client && ./client || true; \
+	cd client && ./client || true; \
 	kill $$SERVER_PID 2>/dev/null || true
 
 # Clean all build artifacts
