@@ -38,10 +38,6 @@ $(CMAKE_BIN):
 # Export CMAKE for child Makefiles (will be used by lib Makefiles via CMAKE ?= cmake)
 export CMAKE := $(CMAKE_BIN)
 
-# Default target: ensure CMake is available
-all: $(CMAKE_BIN)
-	@echo "CMake $(CMAKE_VERSION) is available at $(CMAKE_BIN)"
-
 # Build all libraries
 libs: $(CMAKE_BIN)
 	@echo "Building all libraries..."
@@ -50,15 +46,50 @@ libs: $(CMAKE_BIN)
 	$(MAKE) -C libs/lib4 re || true
 
 # Build client
-client: $(CMAKE_BIN)
+client: $(CMAKE_BIN) libs
 	$(MAKE) -C client re
 
 # Build server
 server: $(CMAKE_BIN)
 	$(MAKE) -C server re
 
-# Build everything
-build: libs client server
+# Build everything (default target)
+all: libs client server
+	@echo "Build complete!"
 
-.PHONY: all libs client server build
+# Run client (assumes server is running separately)
+run: client
+	@echo "Starting client..."
+	cd client && ./client
+
+# Run server (requires height and width arguments)
+# Usage: make run-server HEIGHT=20 WIDTH=30
+run-server: server
+	@if [ -z "$(HEIGHT)" ] || [ -z "$(WIDTH)" ]; then \
+		echo "Usage: make run-server HEIGHT=20 WIDTH=30"; \
+		exit 1; \
+	fi
+	@echo "Starting server with size $(HEIGHT)x$(WIDTH)..."
+	cd server && ./nibbler $(HEIGHT) $(WIDTH)
+
+# Clean all build artifacts
+clean:
+	$(MAKE) -C libs/lib1 clean || true
+	$(MAKE) -C libs/lib2 clean || true
+	$(MAKE) -C libs/lib4 clean || true
+	$(MAKE) -C client clean || true
+	$(MAKE) -C server clean || true
+
+# Full clean (removes all build artifacts and dependencies)
+fclean: clean
+	$(MAKE) -C libs/lib1 fclean || true
+	$(MAKE) -C libs/lib2 fclean || true
+	$(MAKE) -C libs/lib4 fclean || true
+	$(MAKE) -C client fclean || true
+	$(MAKE) -C server fclean || true
+
+# Rebuild everything
+re: fclean all
+
+.PHONY: all libs client server run run-server clean fclean re
 
