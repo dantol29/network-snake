@@ -72,6 +72,25 @@ run-server: server
 	@echo "Starting server with size $(HEIGHT)x$(WIDTH)..."
 	cd server && ./nibbler $(HEIGHT) $(WIDTH)
 
+# Run both server and client together
+# Usage: make run-game HEIGHT=20 WIDTH=30
+run-game: server client
+	@if [ -z "$(HEIGHT)" ] || [ -z "$(WIDTH)" ]; then \
+		echo "Usage: make run-game HEIGHT=20 WIDTH=30"; \
+		echo "Using defaults: HEIGHT=20 WIDTH=30"; \
+		HEIGHT=20; WIDTH=30; \
+	else \
+		HEIGHT=$(HEIGHT); WIDTH=$(WIDTH); \
+	fi
+	@echo "Starting server with size $$HEIGHTx$$WIDTH..."
+	@cd server && ./nibbler $$HEIGHT $$WIDTH & \
+	SERVER_PID=$$!; \
+	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
+	sleep 1; \
+	echo "Starting client..."; \
+	cd ../client && ./client || true; \
+	kill $$SERVER_PID 2>/dev/null || true
+
 # Clean all build artifacts
 clean:
 	$(MAKE) -C libs/lib1 clean || true
@@ -91,5 +110,5 @@ fclean: clean
 # Rebuild everything
 re: fclean all
 
-.PHONY: all libs client server run run-server clean fclean re
+.PHONY: all libs client server run run-server run-game clean fclean re
 
