@@ -14,12 +14,9 @@ Game::Game(const int height, const int width) : height(height), width(width), st
     for (int i = 0; i < height; i++)
     {
         std::string row(width, FLOOR_SYMBOL);
-        this->gameFieldA.push_back(row);
-        this->gameFieldB.push_back(row);
+        this->readableField.push_back(row);
+        this->writableField.push_back(row);
     }
-
-    this->readableField = &this->gameFieldA;
-    this->writableField = &this->gameFieldB;
 
     this->foodCount = 0;
 
@@ -51,7 +48,7 @@ void Game::start()
             this->moveSnakes();
             this->spawnFood();
 
-            this->swapBuffers();
+            this->updateReadableField();
             this->setIsDataUpdated(true);
             nextMoveTime = now + std::chrono::milliseconds(SNAKE_SPEED);
         }
@@ -72,9 +69,9 @@ void Game::spawnFood()
         int x = r1 % (this->width - 1);
         int y = r2 % (this->height - 1);
 
-        if ((*this->writableField)[y][x] == FLOOR_SYMBOL)
+        if (this->writableField[y][x] == FLOOR_SYMBOL)
         {
-            (*this->writableField)[y][x] = 'F';
+            this->writableField[y][x] = 'F';
             ++this->foodCount;
             return;
         }
@@ -86,10 +83,10 @@ void Game::moveSnakes()
     std::lock_guard<std::mutex> lock(this->snakesMutex);
     for (auto it = this->snakes.begin(); it != this->snakes.end();)
     {
-        it->second->moveSnake(this->writableField);
+        it->second->moveSnake(&this->writableField);
         if (it->second->getIsDead())
         {
-            it->second->cleanup(writableField);
+            it->second->cleanup(&writableField);
             delete it->second;
             it = snakes.erase(it);
             --this->snakeCount;
@@ -115,23 +112,18 @@ void Game::removeSnake(int fd)
     auto snake = this->snakes.find(fd);
     if (snake != this->snakes.end() && snake->second)
     {
-        snake->second->cleanup(this->writableField);
+        snake->second->cleanup(&this->writableField);
         delete snake->second;
         this->snakes.erase(snake);
         --this->snakeCount;
     }
 }
 
-void Game::swapBuffers()
+void Game::updateReadableField()
 {
     std::lock_guard<std::mutex> lock(this->readableFieldMutex);
 
-    auto oldReadable = this->readableField;
-
     this->readableField = this->writableField;
-    this->writableField = oldReadable;
-
-    *this->writableField = *this->readableField;
 }
 
 void Game::updateSnakeDirection(const int fd, const int dir)
@@ -195,10 +187,9 @@ std::string Game::fieldToString()
     std::lock_guard<std::mutex> lock(this->readableFieldMutex);
 
     std::string data;
-    const std::vector<std::string> &gameField = *readableField;
 
-    for (int i = 0; i < gameField.size(); i++)
-        data += gameField[i];
+    for (int i = 0; i < readableField.size(); i++)
+        data += readableField[i];
 
     return data;
 }
@@ -207,10 +198,8 @@ void Game::printField()
 {
     std::lock_guard<std::mutex> lock(this->readableFieldMutex);
 
-    const std::vector<std::string> &gameField = *readableField;
-
     printf("\n\n");
-    for (int i = 0; i < gameField.size(); i++)
-        printf("%3d:%s\n", i, gameField[i].c_str());
+    for (int i = 0; i < readableField.size(); i++)
+        printf("%3d:%s\n", i, readableField[i].c_str());
     printf("\n\n");
 }
