@@ -3,8 +3,8 @@
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
 #define SERVER_PORT 8080
-#define SERVER_IP "127.0.0.1"
-// #define SERVER_IP "159.65.186.248"
+// #define SERVER_IP "127.0.0.1"
+#define SERVER_IP "159.65.186.248"
 
 
 Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0)
@@ -41,17 +41,12 @@ void Client::initConnections()
     this->serverFd.revents = 0;
 }
 
-void Client::stop()
-{
-    this->stopFlag.store(true);
-}
-
 void Client::start()
 {
     try
     {
-        this->isDead = false;
-        this->stopFlag = false;
+        this->isDead.store(false);
+        this->stopFlag.store(false);
         this->initConnections();
 
         while (poll(&this->serverFd, 1, BLOCKING))
@@ -60,7 +55,7 @@ void Client::start()
                 receiveGameData();
 
             if (stopFlag.load())
-                return;
+                throw "Stop flag is set";
         }
     }
     catch (const char *msg)
@@ -68,8 +63,9 @@ void Client::start()
         std::cerr << msg << std::endl;
     }
 
-    if (!this->isDead.load())
-        this->stopFlag.store(true);
+    this->stopFlag.store(true);
+
+    std::cout << "Client has stopped" << std::endl;
 }
 
 void Client::receiveGameData()
@@ -243,4 +239,12 @@ int Client::getStopFlag() const
 int Client::getIsDead() const
 {
     return this->isDead.load();
+}
+
+void Client::setIsDead(bool value) {
+    this->isDead.store(value);
+}
+
+void Client::setStopFlag(bool value) {
+    this->stopFlag.store(value);
 }

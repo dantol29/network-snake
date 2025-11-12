@@ -20,8 +20,9 @@
 - [] Data races in Client
 - [x] When player quits and rejoins - do not increase game field
 - [x] Send snakes coordinates, so that client knows which snake to follow
-- [] Think about mutexes, might be a better way 
-
+- [x] Think about mutexes, might be a better way 
+- [] Create an abstract class for graphic libs
+- [] move loop logic to the main executable
 ## Features
 
 - [x] Scale game field when new player is joining
