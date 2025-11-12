@@ -1,3 +1,4 @@
+#include "../IGraphics.hpp"
 #include "Graphics.hpp"
 #include <iostream>
 
@@ -10,16 +11,14 @@ static Color toColor(rgb c)
         255};
 }
 
-Drawer *drawer = nullptr;
-
-Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : running(true)
+Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : IGraphics(height, width, gamePointer)
 {
     InitWindow((int)width, (int)height, "raylib");
     SetTargetFPS(60);
     SetTraceLogLevel(LOG_NONE);
 
-    windowWidth = (float)GetScreenWidth();
-    windowHeight = (float)GetScreenHeight();
+    this->windowWidth = (float)GetScreenWidth();
+    this->windowHeight = (float)GetScreenHeight();
 
     this->font = GetFontDefault();
 
@@ -34,8 +33,6 @@ Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) :
     UnloadImage(img);
     if (this->tex.id == 0)
         throw "Image does not exist 3";
-
-    drawer = static_cast<Drawer *>(gamePointer);
 }
 
 Graphics::~Graphics()
