@@ -2,14 +2,8 @@
 #include <iostream>
 #include <optional>
 
-Drawer *drawer = nullptr;
-
-Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : running(true)
+Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : IGraphics(height, width, gamePointer)
 {
-    drawer = static_cast<Drawer *>(gamePointer);
-    windowWidth = static_cast<float>(width);
-    windowHeight = static_cast<float>(height);
-
     if (!SDL_Init(SDL_INIT_VIDEO))
         throw std::runtime_error(SDL_GetError());
 

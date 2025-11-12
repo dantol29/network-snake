@@ -120,15 +120,12 @@ void Drawer::drawMenu(bool mandatoryDraw)
 
 void Drawer::drawGameField(bool mandatoryDraw)
 {
-    if (this->client->getIsDead())
+    if (this->client->getIsDead() || this->client->getStopFlag())
     {
         this->stopClient();
         this->gameMode = MENU;
         return;
     }
-
-    if (this->client->getStopFlag())
-        throw "Client has stopped";
 
     const int snakeHeadX = this->client->getSnakeX();
     const int snakeHeadY = this->client->getSnakeY();
@@ -199,7 +196,7 @@ void Drawer::drawBorder(int x, int y, int px, int py, int tilePx)
 
 void Drawer::stopClient()
 {
-    this->client->stop();
+    this->client->setStopFlag(true);
     if (this->clientThread.joinable())
         this->clientThread.join();
 }
@@ -210,6 +207,8 @@ void Drawer::onMouseUp(float x, float y)
     (void)y;
     if (!clientThread.joinable())
     {
+        this->client->setIsDead(false);
+        this->client->setStopFlag(false);
         std::cout << "Starting client" << std::endl;
         this->clientThread = std::thread(&Client::start, this->client);
         this->gameMode = GAME;
