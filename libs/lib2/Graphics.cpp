@@ -1,12 +1,9 @@
 #include "Graphics.hpp"
 #include <iostream>
 
-Drawer *drawer = nullptr;
-
 Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
-    : gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML"), running(true)
+    : IGraphics(height, width, gamePointer), gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML")
 {
-    drawer = static_cast<Drawer *>(gamePointer);
     this->windowWidth = static_cast<float>(this->gameWindow.getSize().x);
     this->windowHeight = static_cast<float>(this->gameWindow.getSize().y);
 

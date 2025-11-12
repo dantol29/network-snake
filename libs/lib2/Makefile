@@ -13,7 +13,7 @@ SOFLAGS += -Wl,-rpath,'$$ORIGIN/SFML/lib'
 CC      = g++
 CFLAGS  = -std=c++17 -Wall -Wextra -Werror -O2 -fPIC
 
-SOURCES = Graphics.cpp
+SOURCES = Graphics.cpp ../IGraphics.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 SFML_DIR        = SFML
@@ -44,7 +44,7 @@ $(NAME): $(OBJECTS) $(SFML_BUILT)
 %.o: %.cpp $(SFML_BUILT)
 	$(CC) $(CFLAGS) $(SFML_INC) -c $< -o $@
 
-$(SFML_BUILT): $(CMAKE)
+$(SFML_BUILT):
 	git clone --depth=1 https://github.com/SFML/SFML.git $(SFML_DIR) || true
 	mkdir -p $(SFML_BUILD) $(SFML_INSTALL)
 	cd $(SFML_BUILD) && $(CMAKE) $(SFML_CMAKE_FLAGS) .. && $(MAKE) -j1 && $(MAKE) install
