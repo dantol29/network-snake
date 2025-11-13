@@ -1,11 +1,16 @@
 #include "IGraphics.hpp"
 
-IGraphics::IGraphics(unsigned int height, unsigned int width, void *gamePointer) {
-    drawer = static_cast<Drawer *>(gamePointer);
+IGraphics::IGraphics(unsigned int height, unsigned int width)
+{
     windowWidth = static_cast<float>(width);
     windowHeight = static_cast<float>(height);
-    running = true;
+    shouldUpdateScreen = false;
 };
+
+void IGraphics::setShouldUpdateScreen(bool value) 
+{
+    shouldUpdateScreen = value;
+}
 
 void cleanup(void *g)
 {
@@ -13,16 +18,9 @@ void cleanup(void *g)
         delete static_cast<IGraphics *>(g);
 }
 
-void loop(void *g)
+t_event checkEvents(void *g)
 {
-    if (g)
-        static_cast<IGraphics *>(g)->loop();
-}
-
-void stopLibrary(void *g)
-{
-    if (g)
-        static_cast<IGraphics *>(g)->stopLibrary();
+    return static_cast<IGraphics *>(g)->checkEvents();
 }
 
 void drawSquare(void *g, float x, float y, float width, float height, struct rgb color)
@@ -43,14 +41,20 @@ void drawText(void *g, float x, float y, int size, const char *text)
         static_cast<IGraphics *>(g)->drawText(x, y, size, text);
 }
 
-void display(void *g)
+void beginFrame(void *g)
 {
     if (g)
-        static_cast<IGraphics *>(g)->display();
+        static_cast<IGraphics *>(g)->beginFrame();
 }
 
-void cleanScreen(void *g)
+void endFrame(void *g)
 {
     if (g)
-        static_cast<IGraphics *>(g)->cleanScreen();
+        static_cast<IGraphics *>(g)->endFrame();
+}
+
+void setShouldUpdateScreen(void *g, bool value)
+{
+    if (g)
+        static_cast<IGraphics *>(g)->setShouldUpdateScreen(value);
 }

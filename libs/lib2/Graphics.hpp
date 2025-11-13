@@ -7,13 +7,12 @@
 class Graphics: public IGraphics
 {
 public:
-    Graphics(unsigned int height, unsigned int width, void *gamePointer);
+    Graphics(unsigned int height, unsigned int width);
     ~Graphics();
 
-    void loop() override;
-    void display() override;
-    void cleanScreen() override;
-    void stopLibrary() override;
+    t_event checkEvents() override;
+    void beginFrame() override;
+    void endFrame() override;
     void drawText(float x, float y, int size, const char *text) override;
     void drawSquare(float x, float y, float width, float height, struct rgb color) override;
     void drawButton(float x, float y, float width, float height, const char *text) override;
@@ -23,13 +22,13 @@ private:
     sf::Texture tex;
     sf::Font font;
 
-    void keyCallback(sf::Keyboard::Key key);
-    void onMouseUp(const sf::Mouse::Button, const sf::Vector2i position);
+    t_event onKeyPress(sf::Keyboard::Key key);
+    t_event onMouseUp(const sf::Mouse::Button, const sf::Vector2i position);
 };
 
-extern "C" IGraphics *init(unsigned int height, unsigned int width, void *game)
+extern "C" IGraphics *init(unsigned int height, unsigned int width)
 {
-    return new Graphics(height, width, game);
+    return new Graphics(height, width);
 }
 
 #endif

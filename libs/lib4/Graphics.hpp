@@ -8,13 +8,12 @@
 class Graphics : public IGraphics
 {
 public:
-    Graphics(unsigned int height, unsigned int width, void *gamePointer);
+    Graphics(unsigned int height, unsigned int width);
     ~Graphics();
 
-    void loop() override;
-    void display() override;
-    void cleanScreen() override;
-    void stopLibrary() override;
+    t_event checkEvents() override;
+    void beginFrame() override;
+    void endFrame() override;
     void drawText(float x, float y, int size, const char *text) override;
     void drawSquare(float x, float y, float width, float height, struct rgb color) override;
     void drawButton(float x, float y, float width, float height, const char *text) override;
@@ -24,13 +23,13 @@ private:
     SDL_Renderer* renderer = nullptr;
     TTF_Font* font = nullptr;
 
-    void keyCallback(const SDL_KeyboardEvent& keyEvent);
-    void onMouseUp(const SDL_MouseButtonEvent& buttonEvent);
+    t_event onKeyPress(const SDL_KeyboardEvent& keyEvent);
+    t_event onMouseUp(const SDL_MouseButtonEvent& buttonEvent);
 };
 
-extern "C" IGraphics *init(unsigned int height, unsigned int width, void *game)
+extern "C" IGraphics *init(unsigned int height, unsigned int width)
 {
-    return new Graphics(height, width, game);
+    return new Graphics(height, width);
 }
 
 #endif
