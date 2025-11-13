@@ -6,7 +6,7 @@
 
 Drawer::Drawer(Client *client) : client(client), dynamicLibrary(nullptr), window(nullptr), screenSize(20), 
 tilePx(std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize))), prevSnakeHeadX(0), prevSnakeHeadY(0), 
-isMenuDrawn(false), switchLibPath("../libs/lib2/lib2"), gameMode(MENU)                                 
+gameRunning(true), isMenuDrawn(false), switchLibPath("../libs/lib2/lib2"), gameMode(MENU)                                 
 {
 }
 
@@ -26,22 +26,22 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
     dlerror(); // clean errors
 
     this->init = (initFunc)dlsym(this->dynamicLibrary, "init");
-    this->loop = (loopFunc)dlsym(this->dynamicLibrary, "loop");
     this->cleanup = (cleanupFunc)dlsym(this->dynamicLibrary, "cleanup");
-    this->stopLibrary = (stopLibraryFunc)dlsym(this->dynamicLibrary, "stopLibrary");
+    this->setShouldUpdateScreen = (setShouldUpdateScreenFunc)dlsym(this->dynamicLibrary, "setShouldUpdateScreen");
     this->drawSquare = (drawSquareFunc)dlsym(this->dynamicLibrary, "drawSquare");
     this->drawButton = (drawButtonFunc)dlsym(this->dynamicLibrary, "drawButton");
     this->drawText = (drawTextFunc)dlsym(this->dynamicLibrary, "drawText");
-    this->display = (displayFunc)dlsym(this->dynamicLibrary, "display");
-    this->cleanScreen = (cleanScreenFunc)dlsym(this->dynamicLibrary, "cleanScreen");
+    this->beginFrame = (beginFrameFunc)dlsym(this->dynamicLibrary, "beginFrame");
+    this->endFrame = (endFrameFunc)dlsym(this->dynamicLibrary, "endFrame");
+    this->checkEvents = (checkEventsFunc)dlsym(this->dynamicLibrary, "checkEvents");
 
     char *error = dlerror(); // check dlsym calls
     if (error != NULL)
         throw "Failed to find functions in dynlib";
 
-    if (!this->init || !this->loop || !this->cleanup || !this->drawSquare ||
-        !this->stopLibrary || !this->drawButton || !this->drawText ||
-        !this->cleanScreen || !this->display)
+    if (!this->init || !this->cleanup || !this->drawSquare ||
+        !this->setShouldUpdateScreen || !this->drawButton || !this->drawText ||
+        !this->endFrame || !this->beginFrame || !this->checkEvents)
         throw "Failed to init dynlib functions";
 }
 
@@ -75,7 +75,34 @@ void Drawer::start()
         {
             this->startDynamicLib();
             this->openWindow();
-            this->loop(this->window);
+            gameRunning = true;
+
+            while (gameRunning)
+            {
+                this->beginFrame(this->window);
+
+                t_event event = this->checkEvents(this->window);
+                switch (event.type) {
+                    case EXIT:
+                        gameRunning = false;
+                        break;
+                    case KEY:
+                        onKeyPress(event.a);
+                        break;
+                    case MOUSE:
+                        onMouseUp(event.a, event.b);
+                        break;
+                    default:
+                        break;
+                }
+
+                if (this->gameMode == GAME)
+                    this->drawGameField();
+                else
+                    this->drawMenu();
+
+                this->endFrame(this->window);
+            }
 
             if (this->switchLibPath.empty())
                 break;
@@ -89,14 +116,6 @@ void Drawer::start()
     this->stopClient();
 }
 
-void Drawer::onEachFrame(bool mandatoryDraw)
-{
-    if (this->gameMode == MENU)
-        this->drawMenu(mandatoryDraw);
-    else
-        this->drawGameField(mandatoryDraw);
-}
-
 void Drawer::openWindow()
 {
     this->window = this->init(HEIGHT, WIDTH, this);
@@ -104,21 +123,21 @@ void Drawer::openWindow()
         throw("Failed to init lib");
 }
 
-void Drawer::drawMenu(bool mandatoryDraw)
+void Drawer::drawMenu()
 {
-    if (!mandatoryDraw && this->isMenuDrawn)
+    // TODO: raylib requires to draw on every frame, but it is not needed for other libs
+    if (this->isMenuDrawn)
         return;
 
-    this->cleanScreen(this->window);
     this->drawText(this->window, 380, 200, 40, "42 SNAKES");
     this->drawButton(this->window, 400, 300, 200, 60, "Multiplayer");
     this->drawButton(this->window, 400, 400, 200, 60, "Single-player");
-    this->display(this->window);
-
+    
+    this->setShouldUpdateScreen(this->window, true);
     this->isMenuDrawn = true;
 }
 
-void Drawer::drawGameField(bool mandatoryDraw)
+void Drawer::drawGameField()
 {
     if (this->client->getIsDead() || this->client->getStopFlag())
     {
@@ -129,7 +148,9 @@ void Drawer::drawGameField(bool mandatoryDraw)
 
     const int snakeHeadX = this->client->getSnakeX();
     const int snakeHeadY = this->client->getSnakeY();
-    if (!mandatoryDraw && snakeHeadX == this->prevSnakeHeadX && snakeHeadY == this->prevSnakeHeadY)
+
+    // TODO: raylib requires to draw on every frame, but it is not needed for other libs
+    if (snakeHeadX == this->prevSnakeHeadX && snakeHeadY == this->prevSnakeHeadY)
         return;
 
     std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
@@ -141,8 +162,6 @@ void Drawer::drawGameField(bool mandatoryDraw)
     const int screenCenter = screenSize / 2;
     const int originX = (WIDTH - (tilePx * screenSize)) / 2;
     const int originY = (HEIGHT - (tilePx * screenSize)) / 2;
-
-    this->cleanScreen(this->window);
 
     for (int sy = 0; sy < screenSize; ++sy)
     {
@@ -174,7 +193,7 @@ void Drawer::drawGameField(bool mandatoryDraw)
     this->prevSnakeHeadX = snakeHeadX;
     this->prevSnakeHeadY = snakeHeadY;
 
-    this->display(this->window);
+    this->setShouldUpdateScreen(this->window, true);
 }
 
 void Drawer::drawBorder(int x, int y, int px, int py, int tilePx)
@@ -216,38 +235,37 @@ void Drawer::onMouseUp(float x, float y)
     }
 }
 
-void Drawer::keyCallback(actions key, int action)
+void Drawer::onKeyPress(int key)
 {
-    if (action == 1)
+    actions action = (actions)key;
+
+    switch (action)
     {
-        switch (key)
-        {
-        case UP:
-        case DOWN:
-        case RIGHT:
-        case LEFT:
-            this->client->sendDirection(key);
-            break;
-        case M:
-            this->screenSize = this->screenSize * 1.10 + 0.5;
-            this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-            break;
-        case N:
-            this->screenSize = this->screenSize / 1.10;
-            this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-            break;
-        case KEY_1:
-            this->switchLibPath = "../libs/lib1/lib1";
-            this->stopLibrary(this->window);
-            break;
-        case KEY_2:
-            this->switchLibPath = "../libs/lib2/lib2";
-            this->stopLibrary(this->window);
-            break;
-        case KEY_3:
-            this->switchLibPath = "../libs/lib4/lib3";
-            this->stopLibrary(this->window);
-            break;
-        }
+    case UP:
+    case DOWN:
+    case RIGHT:
+    case LEFT:
+        this->client->sendDirection(action);
+        break;
+    case M:
+        this->screenSize = this->screenSize * 1.10 + 0.5;
+        this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+        break;
+    case N:
+        this->screenSize = this->screenSize / 1.10;
+        this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+        break;
+    case KEY_1:
+        this->switchLibPath = "../libs/lib1/lib1";
+        this->gameRunning = false;
+        break;
+    case KEY_2:
+        this->switchLibPath = "../libs/lib2/lib2";
+        this->gameRunning = false;
+        break;
+    case KEY_3:
+        this->switchLibPath = "../libs/lib4/lib3";
+        this->gameRunning = false;
+        break;
     }
 }

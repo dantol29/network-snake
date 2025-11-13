@@ -2,7 +2,7 @@
 #include <iostream>
 #include <optional>
 
-Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : IGraphics(height, width, gamePointer)
+Graphics::Graphics(unsigned int height, unsigned int width) : IGraphics(height, width)
 {
     if (!SDL_Init(SDL_INIT_VIDEO))
         throw std::runtime_error(SDL_GetError());
@@ -34,38 +34,6 @@ Graphics::~Graphics()
     if (gameWindow) SDL_DestroyWindow(gameWindow);
     TTF_Quit();
     SDL_Quit();
-}
-
-void Graphics::stopLibrary()
-{
-    this->running = false;
-}
-
-void Graphics::loop()
-{
-    SDL_Event event;
-
-    while (running)
-    {
-        while (SDL_PollEvent(&event))
-        {
-            switch (event.type)
-            {
-                case SDL_EVENT_QUIT:
-                    this->stopLibrary();
-                    break;
-
-                case SDL_EVENT_KEY_DOWN:
-                    keyCallback(event.key);
-                    break;
-
-                case SDL_EVENT_MOUSE_BUTTON_UP:
-                    onMouseUp(event.button);
-                    break;
-            }
-        }
-        drawer->onEachFrame(false);
-    }
 }
 
 void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
@@ -145,62 +113,108 @@ void Graphics::drawButton(float x, float y, float width, float height, const cha
     SDL_DestroyTexture(texture);
 }
 
-void Graphics::display()
+void Graphics::beginFrame() 
 {
-    SDL_RenderPresent(renderer);
+    if (this->shouldUpdateScreen) 
+    {
+        this->shouldUpdateScreen = false;
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+    }
 }
 
-void Graphics::cleanScreen()
+void Graphics::endFrame() 
 {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
+    if (this->shouldUpdateScreen)
+        SDL_RenderPresent(renderer);
 }
 
-void Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
+t_event Graphics::checkEvents() 
 {
-    if (buttonEvent.button == SDL_BUTTON_LEFT)
-        drawer->onMouseUp(buttonEvent.x, buttonEvent.y);
+    t_event e;
+    e.type = EMPTY;
+
+    SDL_Event event;
+
+    while (SDL_PollEvent(&event))
+    {
+        switch (event.type)
+        {
+            case SDL_EVENT_QUIT:
+                e.type = EXIT;
+                return e;
+
+            case SDL_EVENT_KEY_DOWN:
+                return onKeyPress(event.key);
+
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                return onMouseUp(event.button);
+        }
+    }
+
+    return e;
 }
 
-void Graphics::keyCallback(const SDL_KeyboardEvent &keyEvent)
+t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
 {
+    t_event event;
+    event.type = EMPTY;
+
+    if (buttonEvent.button == SDL_BUTTON_LEFT) 
+    {
+        event.a = buttonEvent.x;
+        event.b = buttonEvent.y;
+        event.type = MOUSE;
+    }
+
+    return event;
+}
+
+t_event Graphics::onKeyPress(const SDL_KeyboardEvent &keyEvent)
+{
+    t_event event;
+    event.type = KEY;
+
     SDL_Keycode code = keyEvent.key;
 
     switch (code)
     {
     case SDLK_W:
     case SDLK_UP:
-        drawer->keyCallback(UP, 1);
+        event.a = UP;
         break;
     case SDLK_S:
     case SDLK_DOWN:
-        drawer->keyCallback(DOWN, 1);
+        event.a = DOWN;
         break;
     case SDLK_A:
     case SDLK_LEFT:
-        drawer->keyCallback(LEFT, 1);
+        event.a = LEFT;
         break;
     case SDLK_D:
     case SDLK_RIGHT:
-        drawer->keyCallback(RIGHT, 1);
+        event.a = RIGHT;
         break;
     case SDLK_M:
-        drawer->keyCallback(M, 1);
+        event.a = M;
         break;
     case SDLK_N:
-        drawer->keyCallback(N, 1);
+        event.a = N;
         break;
     case SDLK_1:
-        drawer->keyCallback(KEY_1, 1);
+        event.a = KEY_1;
         break;
     case SDLK_2:
-        drawer->keyCallback(KEY_2, 1);
+        event.a = KEY_2;
         break;
     case SDLK_3:
-        drawer->keyCallback(KEY_3, 1);
+        event.a = KEY_3;
         break;
     default:
+        event.type = EMPTY;
         break;
     }
+
+    return event;
 }
 

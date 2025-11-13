@@ -20,13 +20,6 @@ public:
 
     void start();
 
-    void loadDynamicLibrary(const std::string &lib);
-    void keyCallback(actions key, int action);
-    void drawGameField(bool mandatoryDraw);
-    void drawMenu(bool mandatoryDraw);
-    void onEachFrame(bool mandatoryDraw);
-    void onMouseUp(float x, float y);
-
 private:
     Client *client;
     void *dynamicLibrary;
@@ -37,27 +30,33 @@ private:
     int width;
     int prevSnakeHeadX;
     int prevSnakeHeadY;
+    bool gameRunning;
     bool isMenuDrawn;
     std::string switchLibPath;
     std::thread clientThread;
     mode gameMode;
     struct rgb rgb;
-
+    
     initFunc init;
-    loopFunc loop;
-    displayFunc display;
-    cleanScreenFunc cleanScreen;
-    stopLibraryFunc stopLibrary;
+    checkEventsFunc checkEvents;
+    beginFrameFunc beginFrame;
+    endFrameFunc endFrame;
+    setShouldUpdateScreenFunc setShouldUpdateScreen;
     drawSquareFunc drawSquare;
     drawButtonFunc drawButton;
     drawTextFunc drawText;
     cleanupFunc cleanup;
-
+    
     void stopClient();
     void openWindow();
     void startDynamicLib();
     void closeDynamicLib();
+    void onMouseUp(float x, float y);
+    void onKeyPress(int action);
+    void loadDynamicLibrary(const std::string &lib);
     void drawBorder(int x, int y, int px, int py, int tilePx);
+    void drawGameField();
+    void drawMenu();
 };
 
 #endif
