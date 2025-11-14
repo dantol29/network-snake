@@ -7,11 +7,14 @@ class Client
 {
 public:
     Client();
+    Client(const Client& obj) = delete;
+    Client& operator=(const Client& obj) = delete;
     ~Client();
 
     void start();
-    void stop();
     void sendDirection(const enum actions newDirection) const;
+    void setIsDead(bool value);
+    void setStopFlag(bool value);
 
     const std::vector<std::string> &getGameField() const;
     std::mutex &getGameFieldMutex();

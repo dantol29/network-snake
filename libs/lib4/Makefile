@@ -13,7 +13,7 @@ endif
 CC      = g++
 CFLAGS  = -std=c++17 -Wall -Wextra -Werror -O2 -fPIC
 
-SOURCES = Graphics.cpp
+SOURCES = Graphics.cpp ../IGraphics.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
 SDL_INSTALL       = SDL3
@@ -30,6 +30,9 @@ SDL_LIBS       = -L$(SDL_LIBDIR) -lSDL3 -lSDL3_ttf
 SDL3_CMAKE_FLAGS = -DSDL_STATIC=OFF -DSDL_SHARED=ON -DSDL_TEST=OFF \
                    -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(abspath $(SDL_INSTALL))
 
+# Use centralized CMake if available, otherwise fall back to system cmake
+CMAKE ?= cmake
+
 all: $(NAME)
 
 $(NAME): $(OBJECTS)
@@ -41,12 +44,12 @@ $(NAME): $(OBJECTS)
 $(SDL_LIBDIR)/libSDL3$(LIB_EXT):
 	@if [ ! -d "$(SDL_CORE_DIR)" ]; then git clone https://github.com/libsdl-org/SDL.git $(SDL_CORE_DIR); fi
 	@mkdir -p $(SDL_BUILD_CORE)
-	@cd $(SDL_BUILD_CORE) && cmake $(SDL3_CMAKE_FLAGS) .. && $(MAKE) -j1 && $(MAKE) install
+	@cd $(SDL_BUILD_CORE) && $(CMAKE) $(SDL3_CMAKE_FLAGS) .. && $(MAKE) -j1 && $(MAKE) install
 
 $(SDL_LIBDIR)/libSDL3_ttf$(LIB_EXT): $(SDL_LIBDIR)/libSDL3$(LIB_EXT)
 	@if [ ! -d "$(SDL_TTF_DIR)" ]; then git clone https://github.com/libsdl-org/SDL_ttf.git $(SDL_TTF_DIR); fi
 	@mkdir -p $(SDL_BUILD_TTF)
-	@cd $(SDL_BUILD_TTF) && cmake -DSDL3TTF_SHARED=ON -DCMAKE_INSTALL_PREFIX=$(abspath $(SDL_INSTALL)) .. && $(MAKE) -j1 && $(MAKE) install
+	@cd $(SDL_BUILD_TTF) && $(CMAKE) -DSDL3TTF_SHARED=ON -DCMAKE_INSTALL_PREFIX=$(abspath $(SDL_INSTALL)) .. && $(MAKE) -j1 && $(MAKE) install
 
 clean:
 	rm -f $(OBJECTS) $(NAME)

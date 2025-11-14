@@ -8,11 +8,11 @@
 - [x] Scale game based on width and height
 - [x] Draw borders
 - [x] Spawn more food if more players
-- [] Add canonical form for classes
+- [x] Add canonical form for classes
 - [x] Accept both game width and height
 - [x] Parse args - too big, too small
 - [x] The edges of the plane can’t be passed through
-- [] The snake starts with a size of 4 squares in the middle of the game area.
+- [x] The snake starts with a size of 4 squares in the middle of the game area.
 - [x] Single player mode must remain available
 - [x] Add const
 - [] If game field is not square - it is not rendered correctly
@@ -20,8 +20,9 @@
 - [] Data races in Client
 - [x] When player quits and rejoins - do not increase game field
 - [x] Send snakes coordinates, so that client knows which snake to follow
-- [] Think about mutexes, might be a better way 
-
+- [x] Think about mutexes, might be a better way 
+- [x] Create an abstract class for graphic libs
+- [x] move loop logic to the main executable
 ## Features
 
 - [x] Scale game field when new player is joining

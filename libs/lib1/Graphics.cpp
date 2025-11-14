@@ -1,3 +1,4 @@
+#include "../IGraphics.hpp"
 #include "Graphics.hpp"
 #include <iostream>
 
@@ -10,16 +11,14 @@ static Color toColor(rgb c)
         255};
 }
 
-Drawer *drawer = nullptr;
-
-Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) : running(true)
+Graphics::Graphics(unsigned int height, unsigned int width) : IGraphics(height, width)
 {
     InitWindow((int)width, (int)height, "raylib");
     SetTargetFPS(60);
     SetTraceLogLevel(LOG_NONE);
 
-    windowWidth = (float)GetScreenWidth();
-    windowHeight = (float)GetScreenHeight();
+    this->windowWidth = (float)GetScreenWidth();
+    this->windowHeight = (float)GetScreenHeight();
 
     this->font = GetFontDefault();
 
@@ -34,8 +33,6 @@ Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer) :
     UnloadImage(img);
     if (this->tex.id == 0)
         throw "Image does not exist 3";
-
-    drawer = static_cast<Drawer *>(gamePointer);
 }
 
 Graphics::~Graphics()
@@ -47,25 +44,6 @@ Graphics::~Graphics()
     UnloadFont(font);
     if (!WindowShouldClose())
         CloseWindow();
-}
-
-void Graphics::stopLibrary()
-{
-    this->running = false;
-}
-
-void Graphics::loop()
-{
-    while (running && !WindowShouldClose())
-    {
-        BeginDrawing();
-        ClearBackground(BLACK);
-
-        drawer->onEachFrame(true);
-        this->checkEvents();
-
-        EndDrawing();
-    }
 }
 
 void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
@@ -94,38 +72,51 @@ void Graphics::drawText(float x, float y, int size, const char *text)
     DrawTextEx(font, text, {x, y}, (float)size, 4.0f, WHITE);
 }
 
-void Graphics::display()
+void Graphics::beginFrame() 
 {
+    BeginDrawing();
+    ClearBackground(BLACK);
 }
 
-void Graphics::cleanScreen()
+void Graphics::endFrame() 
 {
+    EndDrawing();
 }
 
-void Graphics::checkEvents()
+t_event Graphics::checkEvents()
 {
-    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+    t_event event;
+    event.type = KEY;
+
+    if (WindowShouldClose()) 
+        event.type = EXIT;
+    else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
     {
         Vector2 mp = GetMousePosition();
-        drawer->onMouseUp((int)mp.x, (int)mp.y);
+        event.type = MOUSE;
+        event.a = (int)mp.x;
+        event.b = (int)mp.y;
     }
+    else if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
+        event.a = UP;
+    else if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
+        event.a = DOWN;
+    else if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
+        event.a = LEFT;
+    else if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
+        event.a = RIGHT;
+    else if (IsKeyPressed(KEY_M))
+        event.a = M;
+    else if (IsKeyPressed(KEY_N))
+        event.a = N;
+    else if (IsKeyPressed(KEY_ONE))
+        event.a = KEY_1;
+    else if (IsKeyPressed(KEY_TWO))
+        event.a = KEY_2;
+    else if (IsKeyPressed(KEY_THREE))
+        event.a = KEY_3;
+    else
+        event.type = EMPTY;
 
-    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
-        drawer->keyCallback(UP, 1);
-    if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
-        drawer->keyCallback(DOWN, 1);
-    if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
-        drawer->keyCallback(LEFT, 1);
-    if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
-        drawer->keyCallback(RIGHT, 1);
-    if (IsKeyPressed(KEY_M))
-        drawer->keyCallback(M, 1);
-    if (IsKeyPressed(KEY_N))
-        drawer->keyCallback(N, 1);
-    if (IsKeyPressed(KEY_ONE))
-        drawer->keyCallback(KEY_1, 1);
-    if (IsKeyPressed(KEY_TWO))
-        drawer->keyCallback(KEY_2, 1);
-    if (IsKeyPressed(KEY_THREE))
-        drawer->keyCallback(KEY_3, 1);
+    return event;
 }

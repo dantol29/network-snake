@@ -21,7 +21,7 @@
 #include <list>
 
 #define FLOOR_SYMBOL '.'
-#define SNAKE_SPEED 150
+#define SNAKE_SPEED 1000
 #define MAX_PLAYERS 100
 
 struct coordinates

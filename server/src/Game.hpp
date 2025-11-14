@@ -10,6 +10,8 @@ class Game
 {
 public:
     Game(const int height, const int width);
+    Game(const Game& obj) = delete;
+    Game& operator=(const Game& obj) = delete;
     ~Game();
 
     void start();
@@ -37,18 +39,17 @@ private:
     std::atomic<int> snakeCount;
     std::atomic<bool> stopFlag;
     std::atomic<bool> isDataUpdated;
+    
     std::mutex snakesMutex;
     std::unordered_map<int, Snake *> snakes;
 
     std::mutex readableFieldMutex;
-    std::vector<std::string> gameFieldA;
-    std::vector<std::string> gameFieldB;
-    std::vector<std::string> *readableField;
-    std::vector<std::string> *writableField;
+    std::vector<std::string> readableField;
+    std::vector<std::string> writableField;
 
     void spawnFood();
     void moveSnakes();
-    void swapBuffers();
+    void updateReadableField();
     void printField();
 };
 

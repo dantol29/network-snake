@@ -16,48 +16,49 @@ class Drawer
 {
 public:
     Drawer(Client *client);
+    Drawer(const Drawer &obj) = delete;
+    Drawer& operator=(const Drawer& obj) = delete;
     ~Drawer();
 
     void start();
 
-    void loadDynamicLibrary(const std::string &lib);
-    void keyCallback(actions key, int action);
-    void drawGameField(bool mandatoryDraw);
-    void drawMenu(bool mandatoryDraw);
-    void onEachFrame(bool mandatoryDraw);
-    void onMouseUp(float x, float y);
-
 private:
     Client *client;
-    void *dynamicLibrary;
-    void *window;
+    void *dynamicLibrary = nullptr;
+    void *window = nullptr;
     int screenSize;
     int tilePx;
     int height;
     int width;
     int prevSnakeHeadX;
     int prevSnakeHeadY;
-    bool isMenuDrawn;
+    bool gameRunning = true;
+    bool isMenuDrawn = false;
     std::string switchLibPath;
     std::thread clientThread;
     mode gameMode;
     struct rgb rgb;
-
+    
     initFunc init;
-    loopFunc loop;
-    displayFunc display;
-    cleanScreenFunc cleanScreen;
-    stopLibraryFunc stopLibrary;
+    checkEventsFunc checkEvents;
+    beginFrameFunc beginFrame;
+    endFrameFunc endFrame;
+    setShouldUpdateScreenFunc setShouldUpdateScreen;
     drawSquareFunc drawSquare;
     drawButtonFunc drawButton;
     drawTextFunc drawText;
     cleanupFunc cleanup;
-
+    
     void stopClient();
     void openWindow();
     void startDynamicLib();
     void closeDynamicLib();
+    void onMouseUp(float x, float y);
+    void onKeyPress(int action);
+    void loadDynamicLibrary(const std::string &lib);
     void drawBorder(int x, int y, int px, int py, int tilePx);
+    void drawGameField();
+    void drawMenu();
 };
 
 #endif

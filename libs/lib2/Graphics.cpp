@@ -1,12 +1,9 @@
 #include "Graphics.hpp"
 #include <iostream>
 
-Drawer *drawer = nullptr;
-
-Graphics::Graphics(unsigned int height, unsigned int width, void *gamePointer)
-    : gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML"), running(true)
+Graphics::Graphics(unsigned int height, unsigned int width)
+    : IGraphics(height, width), gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML")
 {
-    drawer = static_cast<Drawer *>(gamePointer);
     this->windowWidth = static_cast<float>(this->gameWindow.getSize().x);
     this->windowHeight = static_cast<float>(this->gameWindow.getSize().y);
 
@@ -23,29 +20,6 @@ Graphics::~Graphics()
 
     if (this->gameWindow.isOpen())
         this->gameWindow.close();
-}
-
-void Graphics::stopLibrary()
-{
-    this->running = false;
-}
-
-void Graphics::loop()
-{
-    while (running && this->gameWindow.isOpen())
-    {
-        while (const std::optional event = this->gameWindow.pollEvent())
-        {
-            if (event->is<sf::Event::Closed>())
-                return this->stopLibrary();
-            else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
-                this->keyCallback(keyPressed->code);
-            else if (const auto *mouseReleased = event->getIf<sf::Event::MouseButtonReleased>())
-                this->onMouseUp(mouseReleased->button, mouseReleased->position);
-        }
-
-        drawer->onEachFrame(false);
-    }
 }
 
 void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
@@ -96,65 +70,102 @@ void Graphics::drawText(float x, float y, int size, const char *text)
     this->gameWindow.draw(label);
 }
 
-void Graphics::display()
+void Graphics::endFrame()
 {
-    if (this->gameWindow.isOpen())
+    if (this->shouldUpdateScreen && this->gameWindow.isOpen()) 
         this->gameWindow.display();
 }
 
-void Graphics::cleanScreen()
+void Graphics::beginFrame()
 {
-    if (this->gameWindow.isOpen())
-        this->gameWindow.clear();
-}
-
-void Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i position)
-{
-    switch (button)
+    if (this->shouldUpdateScreen && this->gameWindow.isOpen())
     {
-    case sf::Mouse::Button::Left:
-        drawer->onMouseUp(position.x, position.y);
-    default:
-        break;
+        this->shouldUpdateScreen = false;
+        this->gameWindow.clear();
     }
 }
 
-void Graphics::keyCallback(sf::Keyboard::Key code)
+t_event Graphics::checkEvents() {
+    t_event e;
+    e.type = EMPTY;
+
+    while (const std::optional event = this->gameWindow.pollEvent())
+    {
+        if (event->is<sf::Event::Closed>())
+        {
+            e.type = EXIT;
+            return e;
+        }
+        else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
+            return this->onKeyPress(keyPressed->code);
+        else if (const auto *mouseReleased = event->getIf<sf::Event::MouseButtonReleased>())
+            return this->onMouseUp(mouseReleased->button, mouseReleased->position);
+    }
+
+    return e;
+}
+
+t_event Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i position)
 {
+    t_event event;
+    event.type = MOUSE;
+
+    switch (button)
+    {
+    case sf::Mouse::Button::Left:
+        event.a = position.x;
+        event.b = position.y;
+        break;
+    default:
+        event.type = EMPTY;
+        break;
+    }
+
+    return event;
+}
+
+t_event Graphics::onKeyPress(sf::Keyboard::Key code)
+{
+    t_event event;
+    event.type = KEY;
+
     switch (code)
     {
     case sf::Keyboard::Key::W:
     case sf::Keyboard::Key::Up:
-        drawer->keyCallback(UP, 1);
+        event.a = UP;
         break;
     case sf::Keyboard::Key::S:
     case sf::Keyboard::Key::Down:
-        drawer->keyCallback(DOWN, 1);
+        event.a = DOWN;
         break;
     case sf::Keyboard::Key::A:
     case sf::Keyboard::Key::Left:
-        drawer->keyCallback(LEFT, 1);
+        event.a = LEFT;
         break;
     case sf::Keyboard::Key::D:
     case sf::Keyboard::Key::Right:
-        drawer->keyCallback(RIGHT, 1);
+        event.a = RIGHT;
         break;
     case sf::Keyboard::Key::M:
-        drawer->keyCallback(M, 1);
+        event.a = M;
         break;
     case sf::Keyboard::Key::N:
-        drawer->keyCallback(N, 1);
+        event.a = N;
         break;
     case sf::Keyboard::Key::Num1:
-        drawer->keyCallback(KEY_1, 1);
+        event.a = KEY_1;
         break;
     case sf::Keyboard::Key::Num2:
-        drawer->keyCallback(KEY_2, 1);
+        event.a = KEY_2;
         break;
     case sf::Keyboard::Key::Num3:
-        drawer->keyCallback(KEY_3, 1);
+        event.a = KEY_3;
         break;
     default:
+        event.type = EMPTY;
         break;
     }
+
+    return event;
 }
