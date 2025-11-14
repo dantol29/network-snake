@@ -8,6 +8,8 @@ class Graphics: public IGraphics
 {
 public:
     Graphics(unsigned int height, unsigned int width);
+    Graphics(const Graphics& obj) = delete;
+    Graphics& operator=(const Graphics& obj) = delete;
     ~Graphics();
 
     t_event checkEvents() override;

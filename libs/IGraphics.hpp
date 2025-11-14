@@ -7,6 +7,8 @@ class IGraphics
 {
 public:
     IGraphics(unsigned int height, unsigned int width);
+    IGraphics(const IGraphics& obj) = delete;
+    IGraphics& operator=(const IGraphics& obj) = delete;
     virtual ~IGraphics() = default;
 
     virtual t_event checkEvents() = 0;

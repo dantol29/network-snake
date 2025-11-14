@@ -16,22 +16,24 @@ class Drawer
 {
 public:
     Drawer(Client *client);
+    Drawer(const Drawer &obj) = delete;
+    Drawer& operator=(const Drawer& obj) = delete;
     ~Drawer();
 
     void start();
 
 private:
     Client *client;
-    void *dynamicLibrary;
-    void *window;
+    void *dynamicLibrary = nullptr;
+    void *window = nullptr;
     int screenSize;
     int tilePx;
     int height;
     int width;
     int prevSnakeHeadX;
     int prevSnakeHeadY;
-    bool gameRunning;
-    bool isMenuDrawn;
+    bool gameRunning = true;
+    bool isMenuDrawn = false;
     std::string switchLibPath;
     std::thread clientThread;
     mode gameMode;

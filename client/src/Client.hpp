@@ -7,6 +7,8 @@ class Client
 {
 public:
     Client();
+    Client(const Client& obj) = delete;
+    Client& operator=(const Client& obj) = delete;
     ~Client();
 
     void start();

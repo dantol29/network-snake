@@ -7,8 +7,11 @@ Snake::Snake(Game *game, int fd) : game(game), fd(fd)
     c.x = this->game->getWidth() / 2;
     c.y = this->game->getHeight() / 2;
     this->body.push_front(c);
-    c.x = this->game->getHeight() / 2;
     c.y = this->game->getWidth() / 2 + 1;
+    this->body.push_back(c);
+    c.y = this->game->getWidth() / 2 + 2;
+    this->body.push_back(c);
+    c.y = this->game->getWidth() / 2 + 3;
     this->body.push_back(c);
 
     this->direction = UP;

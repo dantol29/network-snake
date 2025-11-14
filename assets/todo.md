@@ -8,11 +8,11 @@
 - [x] Scale game based on width and height
 - [x] Draw borders
 - [x] Spawn more food if more players
-- [] Add canonical form for classes
+- [x] Add canonical form for classes
 - [x] Accept both game width and height
 - [x] Parse args - too big, too small
 - [x] The edges of the plane can’t be passed through
-- [] The snake starts with a size of 4 squares in the middle of the game area.
+- [x] The snake starts with a size of 4 squares in the middle of the game area.
 - [x] Single player mode must remain available
 - [x] Add const
 - [] If game field is not square - it is not rendered correctly

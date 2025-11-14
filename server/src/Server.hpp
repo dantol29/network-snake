@@ -11,6 +11,8 @@ class Server
 {
 public:
     Server(Game *game);
+    Server(const Server& obj) = delete;
+    Server& operator=(const Server& obj) = delete;
     ~Server();
 
     void start();

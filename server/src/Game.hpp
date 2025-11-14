@@ -10,6 +10,8 @@ class Game
 {
 public:
     Game(const int height, const int width);
+    Game(const Game& obj) = delete;
+    Game& operator=(const Game& obj) = delete;
     ~Game();
 
     void start();

@@ -7,9 +7,7 @@
 #define SERVER_IP "159.65.186.248"
 
 
-Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0)
-{
-}
+Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0) {}
 
 Client::~Client()
 {
