@@ -12,3 +12,5 @@ docs/
 libs/lib1/raylib/
 raylib
 log.txt
+.DS_Store
+libs/.DS_Store

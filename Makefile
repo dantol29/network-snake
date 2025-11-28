@@ -11,12 +11,12 @@ UNAME_S := $(shell uname)
 ifeq ($(UNAME_S),Darwin)
     CMAKE_HOME := $(HOME)/cmake-$(CMAKE_VERSION)-macos-universal
     CMAKE_ARCHIVE := cmake-$(CMAKE_VERSION)-macos-universal.tar.gz
+    CMAKE_BIN := $(CMAKE_HOME)/CMake.app/Contents/bin/cmake
 else
     CMAKE_HOME := $(HOME)/cmake-$(CMAKE_VERSION)-linux-x86_64
     CMAKE_ARCHIVE := cmake-$(CMAKE_VERSION)-linux-x86_64.tar.gz
+    CMAKE_BIN := $(CMAKE_HOME)/bin/cmake
 endif
-
-CMAKE_BIN := $(CMAKE_HOME)/bin/cmake
 
 # Per-lib CMake minimum versions (for reference/future-proofing)
 LIB1_CMAKE_MIN := 3.25
