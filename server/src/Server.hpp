@@ -1,9 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "../includes/nibbler.hpp"
 #include "Game.hpp"
-#include "unistd.h"
 
 class Game;
 
