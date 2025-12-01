@@ -4,6 +4,8 @@
 #define HEIGHT 1000
 #define INITIAL_SCREEN_SIZE 20
 #define SCREEN_LEN 2.0f
+#define DEFAULT_GAME_HEIGHT 20
+#define DEFAULT_GAME_WIDTH 30
 
 struct Button {
     float x;
@@ -264,10 +266,13 @@ void Drawer::onMouseUp(float x, float y)
     {
         if (isSinglePlayer)
         {
-            // Single-player: Start local server (for now, just log)
-            std::cout << "Single-player mode selected - Local server should start here" << std::endl;
-            // TODO: Implement local server spawning
-            // this->startLocalServer();
+            // Single-player: Start local server and connect
+            std::cout << "Single-player mode selected - Starting local server" << std::endl;
+            this->client->setIsDead(false);
+            this->client->setStopFlag(false);
+            this->clientThread = std::thread(&Client::start, this->client, std::string(LOCAL_SERVER_IP), true);
+            this->gameMode = GAME;
+            this->isMenuDrawn = false;
         }
         else
         {
@@ -275,7 +280,7 @@ void Drawer::onMouseUp(float x, float y)
             this->client->setIsDead(false);
             this->client->setStopFlag(false);
             std::cout << "Starting client (Multiplayer mode)" << std::endl;
-            this->clientThread = std::thread(&Client::start, this->client);
+            this->clientThread = std::thread(&Client::start, this->client, std::string(REMOTE_SERVER_IP), false);
             this->gameMode = GAME;
             this->isMenuDrawn = false;
         }

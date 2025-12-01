@@ -15,10 +15,16 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <sys/wait.h>
+#include <signal.h>
+#include <unistd.h>
+#include <cstdlib>
 
 #define TILE_SIZE 0.05f
 #define SCALE 20.0f
 #define FLOOR_SYMBOL '.'
+#define LOCAL_SERVER_IP "127.0.0.1"
+#define REMOTE_SERVER_IP "159.65.186.248"
 
 #ifdef __APPLE__
 #define LIB_EXTENSION ".dylib"

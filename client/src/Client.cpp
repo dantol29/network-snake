@@ -1,13 +1,15 @@
 #include "Client.hpp"
+#include <chrono>
+#include <thread>
 
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
 #define SERVER_PORT 8080
-// #define SERVER_IP "127.0.0.1"
-#define SERVER_IP "159.65.186.248"
+#define DEFAULT_GAME_HEIGHT 20
+#define DEFAULT_GAME_WIDTH 30
 
 
-Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0) {}
+Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0), localServerPid(0) {}
 
 Client::~Client()
 {
@@ -15,7 +17,7 @@ Client::~Client()
     close(this->udpSocket);
 }
 
-void Client::initConnections()
+void Client::initConnections(const std::string& serverIP)
 {
     this->tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (this->tcpSocket < 0)
@@ -25,9 +27,9 @@ void Client::initConnections()
 
     this->serverAddr.sin_family = AF_INET;
     this->serverAddr.sin_port = htons(SERVER_PORT);
-    inet_pton(AF_INET, SERVER_IP, &this->serverAddr.sin_addr);
+    inet_pton(AF_INET, serverIP.c_str(), &this->serverAddr.sin_addr);
 
-    std::cout << "Connecting: " << SERVER_IP << std::endl;
+    std::cout << "Connecting: " << serverIP << std::endl;
 
     if (connect(this->tcpSocket, (struct sockaddr *)&this->serverAddr, sizeof(this->serverAddr)) < 0)
         throw "Connect to server error";
@@ -39,13 +41,20 @@ void Client::initConnections()
     this->serverFd.revents = 0;
 }
 
-void Client::start()
+void Client::start(const std::string& serverIP, bool isSinglePlayer)
 {
     try
     {
         this->isDead.store(false);
         this->stopFlag.store(false);
-        this->initConnections();
+        
+        if (isSinglePlayer)
+        {
+            this->startLocalServer();
+            this->waitForServer(serverIP);
+        }
+        
+        this->initConnections(serverIP);
 
         while (poll(&this->serverFd, 1, BLOCKING))
         {
@@ -62,6 +71,11 @@ void Client::start()
     }
 
     this->stopFlag.store(true);
+    
+    if (isSinglePlayer)
+    {
+        this->stopLocalServer();
+    }
 
     std::cout << "Client has stopped" << std::endl;
 }
@@ -243,6 +257,78 @@ void Client::setIsDead(bool value) {
     this->isDead.store(value);
 }
 
+void Client::startLocalServer()
+{
+    // Fork to create child process
+    pid_t pid = fork();
+    if (pid < 0)
+    {
+        throw "Failed to fork local server process";
+    }
+    else if (pid == 0)
+    {
+        // Child process: exec the server
+        // Change to server directory and run ./nibbler with default dimensions
+        chdir("../server");
+        execl("./nibbler", "nibbler", std::to_string(DEFAULT_GAME_HEIGHT).c_str(), 
+              std::to_string(DEFAULT_GAME_WIDTH).c_str(), (char*)nullptr);
+        // If execl fails
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        // Parent process: store the PID
+        this->localServerPid = pid;
+        std::cout << "Local server started with PID: " << pid << std::endl;
+    }
+}
+
+void Client::stopLocalServer()
+{
+    if (this->localServerPid > 0)
+    {
+        std::cout << "Stopping local server (PID: " << this->localServerPid << ")" << std::endl;
+        kill(this->localServerPid, SIGTERM);
+        waitpid(this->localServerPid, nullptr, 0);
+        this->localServerPid = 0;
+    }
+}
+
 void Client::setStopFlag(bool value) {
     this->stopFlag.store(value);
+}
+
+void Client::waitForServer(const std::string& serverIP)
+{
+    const int maxRetries = 20;
+    const int retryDelayMs = 100;
+    
+    sockaddr_in testAddr;
+    testAddr.sin_family = AF_INET;
+    testAddr.sin_port = htons(SERVER_PORT);
+    inet_pton(AF_INET, serverIP.c_str(), &testAddr.sin_addr);
+    
+    for (int i = 0; i < maxRetries; ++i)
+    {
+        int testSocket = socket(AF_INET, SOCK_STREAM, 0);
+        if (testSocket < 0)
+        {
+            throw "Failed to create test socket";
+        }
+        
+        // Try to connect (non-blocking check)
+        int result = connect(testSocket, (struct sockaddr *)&testAddr, sizeof(testAddr));
+        close(testSocket);
+        
+        if (result == 0)
+        {
+            std::cout << "Server is ready" << std::endl;
+            return;
+        }
+        
+        // Server not ready yet, wait and retry
+        std::this_thread::sleep_for(std::chrono::milliseconds(retryDelayMs));
+    }
+    
+    throw "Server failed to start within timeout";
 }
