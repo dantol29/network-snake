@@ -5,6 +5,15 @@
 #define INITIAL_SCREEN_SIZE 20
 #define SCREEN_LEN 2.0f
 
+struct Button {
+    float x;
+    float y;
+    float width;
+    float height;
+    std::string label;
+    enum { MULTIPLAYER, SINGLE_PLAYER } type;
+};
+
 Drawer::Drawer(Client *client) : client(client), screenSize(INITIAL_SCREEN_SIZE), 
 prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath("../libs/lib2/lib2"), gameMode(MENU)                                 
 {
@@ -130,9 +139,15 @@ void Drawer::drawMenu()
     if (this->isMenuDrawn)
         return;
 
+    // Button definitions
+    static const Button multiplayerButton = {400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER};
+    static const Button singlePlayerButton = {400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER};
+
     this->drawText(this->window, 380, 200, 40, "42 SNAKES");
-    this->drawButton(this->window, 400, 300, 200, 60, "Multiplayer");
-    this->drawButton(this->window, 400, 400, 200, 60, "Single-player");
+    this->drawButton(this->window, multiplayerButton.x, multiplayerButton.y, 
+                     multiplayerButton.width, multiplayerButton.height, multiplayerButton.label.c_str());
+    this->drawButton(this->window, singlePlayerButton.x, singlePlayerButton.y, 
+                     singlePlayerButton.width, singlePlayerButton.height, singlePlayerButton.label.c_str());
     
     this->setShouldUpdateScreen(this->window, true);
     this->isMenuDrawn = true;
@@ -223,16 +238,47 @@ void Drawer::stopClient()
 
 void Drawer::onMouseUp(float x, float y)
 {
-    (void)x;
-    (void)y;
+    // Button definitions (same as in drawMenu)
+    static const Button multiplayerButton = {400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER};
+    static const Button singlePlayerButton = {400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER};
+    
+    // Check which button was clicked
+    bool isSinglePlayer = false;
+    
+    if (x >= multiplayerButton.x && x <= multiplayerButton.x + multiplayerButton.width &&
+        y >= multiplayerButton.y && y <= multiplayerButton.y + multiplayerButton.height)
+    {
+        isSinglePlayer = false;
+    }
+    else if (x >= singlePlayerButton.x && x <= singlePlayerButton.x + singlePlayerButton.width &&
+             y >= singlePlayerButton.y && y <= singlePlayerButton.y + singlePlayerButton.height)
+    {
+        isSinglePlayer = true;
+    }
+    else
+    {
+        return; // No button clicked
+    }
+    
     if (!clientThread.joinable())
     {
-        this->client->setIsDead(false);
-        this->client->setStopFlag(false);
-        std::cout << "Starting client" << std::endl;
-        this->clientThread = std::thread(&Client::start, this->client);
-        this->gameMode = GAME;
-        this->isMenuDrawn = false;
+        if (isSinglePlayer)
+        {
+            // Single-player: Start local server (for now, just log)
+            std::cout << "Single-player mode selected - Local server should start here" << std::endl;
+            // TODO: Implement local server spawning
+            // this->startLocalServer();
+        }
+        else
+        {
+            // Multiplayer: Connect to remote server (existing behavior)
+            this->client->setIsDead(false);
+            this->client->setStopFlag(false);
+            std::cout << "Starting client (Multiplayer mode)" << std::endl;
+            this->clientThread = std::thread(&Client::start, this->client);
+            this->gameMode = GAME;
+            this->isMenuDrawn = false;
+        }
     }
 }
 
