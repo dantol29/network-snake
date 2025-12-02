@@ -60,7 +60,7 @@ all: libs client server
 # Run client (assumes server is running separately)
 run: client
 	@echo "Starting client..."
-	cd client && ./client
+	cd client && ./nibbler_client
 
 # Run server (requires height and width arguments)
 # Usage: make run-server HEIGHT=20 WIDTH=30
@@ -70,7 +70,7 @@ run-server: server
 		exit 1; \
 	fi
 	@echo "Starting server with size $(HEIGHT)x$(WIDTH)..."
-	cd server && ./nibbler $(HEIGHT) $(WIDTH)
+	cd server && ./nibbler_server $(HEIGHT) $(WIDTH)
 
 # Run both server and client together
 # Usage: make run-game HEIGHT=20 WIDTH=30
@@ -82,12 +82,12 @@ run-game: server client
 		HEIGHT=$(HEIGHT); WIDTH=$(WIDTH); \
 	fi
 	@echo "Starting server with size $$HEIGHTx$$WIDTH..."
-	@cd server && ./nibbler $$HEIGHT $$WIDTH & \
+	@cd server && ./nibbler_server $$HEIGHT $$WIDTH & \
 	SERVER_PID=$$!; \
 	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
 	sleep 1; \
 	echo "Starting client..."; \
-	cd client && ./client || true; \
+	cd client && ./nibbler_client || true; \
 	kill $$SERVER_PID 2>/dev/null || true
 
 # Run with valgrind to check for memory leaks
@@ -106,13 +106,13 @@ valgrind: server client
 	mkdir -p logs; \
 	echo "Starting server with valgrind (size $$HEIGHTx$$WIDTH)..."; \
 	cd server && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-		--log-file=../logs/valgrind-server.log ./nibbler $$HEIGHT $$WIDTH & \
+		--log-file=../logs/valgrind-server.log ./nibbler_server $$HEIGHT $$WIDTH & \
 	SERVER_PID=$$!; \
 	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
 	sleep 2; \
 	echo "Starting client with valgrind..."; \
 	cd client && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-		--log-file=../logs/valgrind-client.log ./client || true; \
+		--log-file=../logs/valgrind-client.log ./nibbler_client || true; \
 	kill $$SERVER_PID 2>/dev/null || true; \
 	echo "Valgrind logs saved to logs/valgrind-server.log and logs/valgrind-client.log"
 

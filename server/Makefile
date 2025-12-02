@@ -1,4 +1,4 @@
-NAME = nibbler
+NAME = nibbler_server
 CC = c++
 CFLAGS = -g -Wall -Wextra -Werror -std=c++17
 FSANITIZE = -fsanitize=address

@@ -269,11 +269,11 @@ void Client::startLocalServer()
     else if (pid == 0)
     {
         chdir("../server");
-        if (execl("./nibbler", "nibbler", std::to_string(DEFAULT_GAME_HEIGHT).c_str(), 
+        if (execl("./nibbler_server", "nibbler_server", std::to_string(DEFAULT_GAME_HEIGHT).c_str(), 
               std::to_string(DEFAULT_GAME_WIDTH).c_str(), (char*)nullptr) == -1)
         {
             std::cerr << "Failed to execute local server: " << strerror(errno) << std::endl;
-            exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
         }
     }
     else
