@@ -9,8 +9,6 @@
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
 #define SERVER_PORT 8080
-#define DEFAULT_GAME_HEIGHT 20
-#define DEFAULT_GAME_WIDTH 30
 
 
 Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0), localServerPid(0), serverClientPipe{-1, -1}, clientServerPipe{-1, -1} {}

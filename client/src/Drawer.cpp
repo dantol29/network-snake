@@ -4,8 +4,6 @@
 #define HEIGHT 1000
 #define INITIAL_SCREEN_SIZE 20
 #define SCREEN_LEN 2.0f
-#define DEFAULT_GAME_HEIGHT 20
-#define DEFAULT_GAME_WIDTH 30
 
 struct Button {
     float x;
