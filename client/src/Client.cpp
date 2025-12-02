@@ -1,6 +1,7 @@
 #include "Client.hpp"
 #include <chrono>
 #include <thread>
+#include <errno.h>
 
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
@@ -67,6 +68,7 @@ void Client::start(const std::string& serverIP, bool isSinglePlayer)
     }
     catch (const char *msg)
     {
+        // TODO: Show errors in game UI instead of just logging to stderr - display user-friendly messages on screen and return to menu
         std::cerr << msg << std::endl;
     }
 
@@ -259,7 +261,6 @@ void Client::setIsDead(bool value) {
 
 void Client::startLocalServer()
 {
-    // Fork to create child process
     pid_t pid = fork();
     if (pid < 0)
     {
@@ -267,17 +268,23 @@ void Client::startLocalServer()
     }
     else if (pid == 0)
     {
-        // Child process: exec the server
-        // Change to server directory and run ./nibbler with default dimensions
         chdir("../server");
-        execl("./nibbler", "nibbler", std::to_string(DEFAULT_GAME_HEIGHT).c_str(), 
-              std::to_string(DEFAULT_GAME_WIDTH).c_str(), (char*)nullptr);
-        // If execl fails
-        exit(EXIT_FAILURE);
+        if (execl("./nibbler", "nibbler", std::to_string(DEFAULT_GAME_HEIGHT).c_str(), 
+              std::to_string(DEFAULT_GAME_WIDTH).c_str(), (char*)nullptr) == -1)
+        {
+            std::cerr << "Failed to execute local server: " << strerror(errno) << std::endl;
+            exit(EXIT_FAILURE);
+        }
     }
     else
     {
-        // Parent process: store the PID
+        int status;
+        pid_t waited = waitpid(pid, &status, WNOHANG);
+        if (waited == pid && WIFEXITED(status) && WEXITSTATUS(status) != 0)
+        {
+            throw "Local server failed to start";
+        }
+        
         this->localServerPid = pid;
         std::cout << "Local server started with PID: " << pid << std::endl;
     }
@@ -316,7 +323,6 @@ void Client::waitForServer(const std::string& serverIP)
             throw "Failed to create test socket";
         }
         
-        // Try to connect (non-blocking check)
         int result = connect(testSocket, (struct sockaddr *)&testAddr, sizeof(testAddr));
         close(testSocket);
         
@@ -326,7 +332,6 @@ void Client::waitForServer(const std::string& serverIP)
             return;
         }
         
-        // Server not ready yet, wait and retry
         std::this_thread::sleep_for(std::chrono::milliseconds(retryDelayMs));
     }
     
