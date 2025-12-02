@@ -45,6 +45,8 @@ private:
     std::atomic<int> snakeX;
     std::atomic<int> snakeY;
     pid_t localServerPid;
+    int serverClientPipe[2];
+    int clientServerPipe[2];  
 
     void initConnections(const std::string& serverIP);
     void startLocalServer();

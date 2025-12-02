@@ -2,6 +2,8 @@
 #include <chrono>
 #include <thread>
 #include <errno.h>
+#include <unistd.h>
+#include <cstring>
 
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
@@ -10,12 +12,16 @@
 #define DEFAULT_GAME_WIDTH 30
 
 
-Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0), localServerPid(0) {}
+Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0), localServerPid(0), serverClientPipe{-1, -1}, clientServerPipe{-1, -1} {}
 
 Client::~Client()
 {
     close(this->tcpSocket);
     close(this->udpSocket);
+    if (this->serverClientPipe[0] != -1) close(this->serverClientPipe[0]);
+    if (this->serverClientPipe[1] != -1) close(this->serverClientPipe[1]);
+    if (this->clientServerPipe[0] != -1) close(this->clientServerPipe[0]);
+    if (this->clientServerPipe[1] != -1) close(this->clientServerPipe[1]);
 }
 
 void Client::initConnections(const std::string& serverIP)
@@ -261,27 +267,65 @@ void Client::setIsDead(bool value) {
 
 void Client::startLocalServer()
 {
+    if (pipe(this->serverClientPipe) == -1)
+    {
+        throw "Failed to create server-client pipe";
+    }
+    if (pipe(this->clientServerPipe) == -1)
+    {
+        close(this->serverClientPipe[0]);
+        close(this->serverClientPipe[1]);
+        throw "Failed to create client-server pipe";
+    }
+
     pid_t pid = fork();
     if (pid < 0)
     {
+        close(this->serverClientPipe[0]);
+        close(this->serverClientPipe[1]);
+        close(this->clientServerPipe[0]);
+        close(this->clientServerPipe[1]);
         throw "Failed to fork local server process";
     }
     else if (pid == 0)
     {
+        close(this->serverClientPipe[0]);      
+        close(this->clientServerPipe[1]);
+        
+        if (dup2(this->serverClientPipe[1], STDERR_FILENO) == -1)
+        {
+            std::cerr << "Failed to redirect STDERR" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        close(this->serverClientPipe[1]);
+        
+        if (dup2(this->clientServerPipe[0], STDIN_FILENO) == -1)
+        {
+            std::cerr << "Failed to redirect STDIN" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        close(this->clientServerPipe[0]);  
+        
         chdir("../server");
         if (execl("./nibbler_server", "nibbler_server", std::to_string(DEFAULT_GAME_HEIGHT).c_str(), 
               std::to_string(DEFAULT_GAME_WIDTH).c_str(), (char*)nullptr) == -1)
         {
             std::cerr << "Failed to execute local server: " << strerror(errno) << std::endl;
-        exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
         }
     }
     else
     {
+        close(this->serverClientPipe[1]);
+        close(this->clientServerPipe[0]);
+        
         int status;
         pid_t waited = waitpid(pid, &status, WNOHANG);
         if (waited == pid && WIFEXITED(status) && WEXITSTATUS(status) != 0)
         {
+            // TODO: Read error from serverClientPipe[0] and show user-friendly error in GUI
+            close(this->serverClientPipe[0]);
+            close(this->clientServerPipe[1]);
             throw "Local server failed to start";
         }
         
@@ -295,8 +339,23 @@ void Client::stopLocalServer()
     if (this->localServerPid > 0)
     {
         std::cout << "Stopping local server (PID: " << this->localServerPid << ")" << std::endl;
-        kill(this->localServerPid, SIGTERM);
+        
+        if (this->clientServerPipe[1] != -1)
+        {
+            const char* shutdownMsg = "shutdown\n";
+            write(this->clientServerPipe[1], shutdownMsg, strlen(shutdownMsg));
+            close(this->clientServerPipe[1]);
+            this->clientServerPipe[1] = -1;
+        }
+        
         waitpid(this->localServerPid, nullptr, 0);
+        
+        if (this->serverClientPipe[0] != -1)
+        {
+            close(this->serverClientPipe[0]);
+            this->serverClientPipe[0] = -1;
+        }
+        
         this->localServerPid = 0;
     }
 }
