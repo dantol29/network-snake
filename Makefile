@@ -4,6 +4,8 @@
 # - lib2 (SFML 3.x): CMake ≥ 3.28
 # - lib4 (SDL3): works with 3.22, but we use 3.29.6 for all
 
+.DEFAULT_GOAL := all
+
 CMAKE_VERSION := 3.29.6
 UNAME_S := $(shell uname)
 
