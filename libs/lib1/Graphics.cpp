@@ -94,27 +94,27 @@ t_event Graphics::checkEvents()
     {
         Vector2 mp = GetMousePosition();
         event.type = MOUSE;
-        event.a = (int)mp.x;
-        event.b = (int)mp.y;
+        event.mouse.x = (int)mp.x;
+        event.mouse.y = (int)mp.y;
     }
     else if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
-        event.a = UP;
+        event.keyCode = UP;
     else if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
-        event.a = DOWN;
+        event.keyCode = DOWN;
     else if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
-        event.a = LEFT;
+        event.keyCode = LEFT;
     else if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
-        event.a = RIGHT;
+        event.keyCode = RIGHT;
     else if (IsKeyPressed(KEY_M))
-        event.a = M;
+        event.keyCode = M;
     else if (IsKeyPressed(KEY_N))
-        event.a = N;
+        event.keyCode = N;
     else if (IsKeyPressed(KEY_ONE))
-        event.a = KEY_1;
+        event.keyCode = KEY_1;
     else if (IsKeyPressed(KEY_TWO))
-        event.a = KEY_2;
+        event.keyCode = KEY_2;
     else if (IsKeyPressed(KEY_THREE))
-        event.a = KEY_3;
+        event.keyCode = KEY_3;
     else
         event.type = EMPTY;
 

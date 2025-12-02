@@ -63,8 +63,12 @@ enum type {
 
 typedef struct s_event {
     type type;
-    int a;
-    int b;
+    union {
+        int keyCode;        // When type == KEY: key code (UP, DOWN, LEFT, RIGHT, M, N, KEY_1, KEY_2, KEY_3)
+        struct {
+            int x, y;       // When type == MOUSE: mouse coordinates
+        } mouse;
+    };
 } t_event;
 
 typedef void *(*initFunc)(int, int, void *);

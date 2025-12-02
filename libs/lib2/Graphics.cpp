@@ -113,8 +113,8 @@ t_event Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i p
     switch (button)
     {
     case sf::Mouse::Button::Left:
-        event.a = position.x;
-        event.b = position.y;
+        event.mouse.x = position.x;
+        event.mouse.y = position.y;
         break;
     default:
         event.type = EMPTY;
@@ -133,34 +133,34 @@ t_event Graphics::onKeyPress(sf::Keyboard::Key code)
     {
     case sf::Keyboard::Key::W:
     case sf::Keyboard::Key::Up:
-        event.a = UP;
+        event.keyCode = UP;
         break;
     case sf::Keyboard::Key::S:
     case sf::Keyboard::Key::Down:
-        event.a = DOWN;
+        event.keyCode = DOWN;
         break;
     case sf::Keyboard::Key::A:
     case sf::Keyboard::Key::Left:
-        event.a = LEFT;
+        event.keyCode = LEFT;
         break;
     case sf::Keyboard::Key::D:
     case sf::Keyboard::Key::Right:
-        event.a = RIGHT;
+        event.keyCode = RIGHT;
         break;
     case sf::Keyboard::Key::M:
-        event.a = M;
+        event.keyCode = M;
         break;
     case sf::Keyboard::Key::N:
-        event.a = N;
+        event.keyCode = N;
         break;
     case sf::Keyboard::Key::Num1:
-        event.a = KEY_1;
+        event.keyCode = KEY_1;
         break;
     case sf::Keyboard::Key::Num2:
-        event.a = KEY_2;
+        event.keyCode = KEY_2;
         break;
     case sf::Keyboard::Key::Num3:
-        event.a = KEY_3;
+        event.keyCode = KEY_3;
         break;
     default:
         event.type = EMPTY;

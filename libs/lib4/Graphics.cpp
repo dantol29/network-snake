@@ -162,8 +162,8 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
 
     if (buttonEvent.button == SDL_BUTTON_LEFT) 
     {
-        event.a = buttonEvent.x;
-        event.b = buttonEvent.y;
+        event.mouse.x = buttonEvent.x;
+        event.mouse.y = buttonEvent.y;
         event.type = MOUSE;
     }
 
@@ -181,34 +181,34 @@ t_event Graphics::onKeyPress(const SDL_KeyboardEvent &keyEvent)
     {
     case SDLK_W:
     case SDLK_UP:
-        event.a = UP;
+        event.keyCode = UP;
         break;
     case SDLK_S:
     case SDLK_DOWN:
-        event.a = DOWN;
+        event.keyCode = DOWN;
         break;
     case SDLK_A:
     case SDLK_LEFT:
-        event.a = LEFT;
+        event.keyCode = LEFT;
         break;
     case SDLK_D:
     case SDLK_RIGHT:
-        event.a = RIGHT;
+        event.keyCode = RIGHT;
         break;
     case SDLK_M:
-        event.a = M;
+        event.keyCode = M;
         break;
     case SDLK_N:
-        event.a = N;
+        event.keyCode = N;
         break;
     case SDLK_1:
-        event.a = KEY_1;
+        event.keyCode = KEY_1;
         break;
     case SDLK_2:
-        event.a = KEY_2;
+        event.keyCode = KEY_2;
         break;
     case SDLK_3:
-        event.a = KEY_3;
+        event.keyCode = KEY_3;
         break;
     default:
         event.type = EMPTY;

@@ -90,10 +90,10 @@ void Drawer::start()
                         gameRunning = false;
                         break;
                     case KEY:
-                        onKeyPress(event.a);
+                        onKeyPress(event.keyCode);
                         break;
                     case MOUSE:
-                        onMouseUp(event.a, event.b);
+                        onMouseUp(event.mouse.x, event.mouse.y);
                         break;
                     default:
                         break;
