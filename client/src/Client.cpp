@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <cstring>
+#include <string>
 
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
@@ -73,6 +74,11 @@ void Client::start(const std::string& serverIP, bool isSinglePlayer)
         }
     }
     catch (const char *msg)
+    {
+        // TODO: Show errors in game UI instead of just logging to stderr - display user-friendly messages on screen and return to menu
+        std::cerr << msg << std::endl;
+    }
+    catch (const std::string& msg)
     {
         // TODO: Show errors in game UI instead of just logging to stderr - display user-friendly messages on screen and return to menu
         std::cerr << msg << std::endl;
@@ -379,7 +385,8 @@ void Client::waitForServer(const std::string& serverIP)
         int testSocket = socket(AF_INET, SOCK_STREAM, 0);
         if (testSocket < 0)
         {
-            throw "Failed to create test socket";
+            std::string error = "Failed to create test socket: " + std::string(strerror(errno));
+            throw error;
         }
         
         int result = connect(testSocket, (struct sockaddr *)&testAddr, sizeof(testAddr));
