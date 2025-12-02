@@ -247,26 +247,20 @@ void Drawer::onMouseUp(float x, float y)
     
     if (!clientThread.joinable())
     {
+        // TODO: Drawer manages input events and starts server owned by client - refactor!
+        const std::string serverIP = isSinglePlayer ? LOCAL_SERVER_IP : REMOTE_SERVER_IP;
+        const std::string modeName = isSinglePlayer ? "Single-player" : "Multiplayer";
+        
+        std::cout << modeName << " mode selected";
         if (isSinglePlayer)
-        {
-            // Single-player: Start local server and connect
-            std::cout << "Single-player mode selected - Starting local server" << std::endl;
-            this->client->setIsDead(false);
-            this->client->setStopFlag(false);
-            this->clientThread = std::thread(&Client::start, this->client, std::string(LOCAL_SERVER_IP), true);
-            this->gameMode = GAME;
-            this->isMenuDrawn = false;
-        }
-        else
-        {
-            // Multiplayer: Connect to remote server (existing behavior)
-            this->client->setIsDead(false);
-            this->client->setStopFlag(false);
-            std::cout << "Starting client (Multiplayer mode)" << std::endl;
-            this->clientThread = std::thread(&Client::start, this->client, std::string(REMOTE_SERVER_IP), false);
-            this->gameMode = GAME;
-            this->isMenuDrawn = false;
-        }
+            std::cout << " - Starting local server";
+        std::cout << std::endl;
+        
+        this->client->setIsDead(false);
+        this->client->setStopFlag(false);
+        this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
+        this->gameMode = GAME;
+        this->isMenuDrawn = false;
     }
 }
 
