@@ -2,7 +2,6 @@
 #define GAME_HPP
 
 #include "../includes/nibbler.hpp"
-#include "Snake.hpp"
 
 class Snake;
 

@@ -5,8 +5,10 @@
 #define INITIAL_SCREEN_SIZE 20
 #define SCREEN_LEN 2.0f
 
-Drawer::Drawer(Client *client) : client(client), screenSize(INITIAL_SCREEN_SIZE),
-                                 prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath("../libs/lib2/lib2"), gameMode(MENU)
+Drawer::Drawer(Client *client) : client(client), screenSize(INITIAL_SCREEN_SIZE), 
+prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath("../libs/lib2/lib2"), gameMode(MENU),
+multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
+singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
 {
     tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 
@@ -141,8 +143,13 @@ void Drawer::openWindow()
 void Drawer::drawMenu()
 {
     this->drawText(this->window, 380, 200, 40, "42 SNAKES");
-    this->drawButton(this->window, 400, 300, 200, 60, "Multiplayer");
-    this->drawButton(this->window, 400, 400, 200, 60, "Single-player");
+    this->drawButton(this->window, this->multiplayerButton.x, this->multiplayerButton.y, 
+                     this->multiplayerButton.width, this->multiplayerButton.height, this->multiplayerButton.label.c_str());
+    this->drawButton(this->window, this->singlePlayerButton.x, this->singlePlayerButton.y, 
+                     this->singlePlayerButton.width, this->singlePlayerButton.height, this->singlePlayerButton.label.c_str());
+    
+    this->setShouldUpdateScreen(this->window, true);
+    this->isMenuDrawn = true;
 }
 
 void Drawer::drawGameField()
@@ -220,14 +227,38 @@ void Drawer::stopClient()
 
 void Drawer::onMouseUp(float x, float y)
 {
-    (void)x;
-    (void)y;
+    // Check which button was clicked
+    bool isSinglePlayer = false;
+    
+    if (x >= this->multiplayerButton.x && x <= this->multiplayerButton.x + this->multiplayerButton.width &&
+        y >= this->multiplayerButton.y && y <= this->multiplayerButton.y + this->multiplayerButton.height)
+    {
+        isSinglePlayer = false;
+    }
+    else if (x >= this->singlePlayerButton.x && x <= this->singlePlayerButton.x + this->singlePlayerButton.width &&
+             y >= this->singlePlayerButton.y && y <= this->singlePlayerButton.y + this->singlePlayerButton.height)
+    {
+        isSinglePlayer = true;
+    }
+    else
+    {
+        return; // No button clicked
+    }
+    
     if (!clientThread.joinable())
     {
+        // TODO: Drawer manages input events and starts server owned by client - refactor!
+        const std::string serverIP = isSinglePlayer ? LOCAL_SERVER_IP : REMOTE_SERVER_IP;
+        const std::string modeName = isSinglePlayer ? "Single-player" : "Multiplayer";
+        
+        std::cout << modeName << " mode selected";
+        if (isSinglePlayer)
+            std::cout << " - Starting local server";
+        std::cout << std::endl;
+        
         this->client->setIsDead(false);
         this->client->setStopFlag(false);
-        std::cout << "Starting client" << std::endl;
-        this->clientThread = std::thread(&Client::start, this->client);
+        this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
         this->gameMode = GAME;
     }
 }

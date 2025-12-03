@@ -10,6 +10,15 @@ enum mode
     GAME
 };
 
+struct Button {
+    float x;
+    float y;
+    float width;
+    float height;
+    std::string label;
+    enum { MULTIPLAYER, SINGLE_PLAYER } type;
+};
+
 class Client;
 
 class Drawer
@@ -37,6 +46,8 @@ private:
     std::thread clientThread;
     mode gameMode;
     char **assets;
+    const Button multiplayerButton;
+    const Button singlePlayerButton;
     
     initFunc init;
     checkEventsFunc checkEvents;
