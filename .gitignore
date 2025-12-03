@@ -1,5 +1,7 @@
 *.o
 nibbler
+nibbler_server
+nibbler_client
 client/client
 lib1.*
 lib2.*

@@ -1,4 +1,5 @@
 #include "Game.hpp"
+#include "Snake.hpp"
 #include <chrono>
 
 #define MAX_FOOD_SPAWN_TRIES 50

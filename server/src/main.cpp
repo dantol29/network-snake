@@ -11,7 +11,7 @@ void onerror(const char *msg)
 int main(int argc, char **argv)
 {
     if (argc != 3)
-        onerror("Usage: ./nibbler height width");
+        onerror("Usage: ./nibbler_server height width");
 
     int height = atoi(argv[1]);
     int width = atoi(argv[2]);

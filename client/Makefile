@@ -1,6 +1,6 @@
 UNAME_S := $(shell uname)
 
-NAME = client
+NAME = nibbler_client
 CC = c++
 CFLAGS = -O2 -Wall -Wextra -std=c++17 -pthread
 FSANITIZE = -fsanitize=thread

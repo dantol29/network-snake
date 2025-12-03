@@ -11,7 +11,7 @@ public:
     Client& operator=(const Client& obj) = delete;
     ~Client();
 
-    void start();
+    void start(const std::string& serverIP, bool isSinglePlayer = false);
     void sendDirection(const enum actions newDirection) const;
     void setIsDead(bool value);
     void setStopFlag(bool value);
@@ -44,8 +44,14 @@ private:
     std::atomic<int> width;
     std::atomic<int> snakeX;
     std::atomic<int> snakeY;
+    pid_t localServerPid;
+    int serverClientPipe[2];
+    int clientServerPipe[2];  
 
-    void initConnections();
+    void initConnections(const std::string& serverIP);
+    void startLocalServer();
+    void stopLocalServer();
+    void waitForServer(const std::string& serverIP);
     void receiveGameData();
     void deserealizeGameData(const int bytesRead);
     void parseGameData(const char *message);
