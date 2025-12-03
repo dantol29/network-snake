@@ -16,7 +16,7 @@ singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
     // Initialize EventManager
     eventManager = new EventManager();
     
-    // Register movement callbacks (arrow keys and WASD)
+    // Register movement callbacks (arrow keys and WASD) - only active in Game state
     eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
     eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
     eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
@@ -26,8 +26,15 @@ singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
     eventManager->AddCallback(StateType::Game, "Key_S", &Drawer::MoveDown, this);
     eventManager->AddCallback(StateType::Game, "Key_D", &Drawer::MoveRight, this);
     
-    // Set initial state
-    eventManager->SetCurrentState(StateType::Game);
+    // Register zoom callbacks
+    eventManager->AddCallback(StateType::Game, "Key_M", &Drawer::ZoomIn, this);
+    eventManager->AddCallback(StateType::Game, "Key_N", &Drawer::ZoomOut, this);
+    
+    // Register mouse callback - only active in Menu state (not during gameplay)
+    eventManager->AddCallback(StateType::Menu, "Mouse_Left", &Drawer::OnMouseClick, this);
+    
+    // Set initial state to Menu (since we start with the menu)
+    eventManager->SetCurrentState(StateType::Menu);
 }
 
 Drawer::~Drawer()
@@ -104,14 +111,27 @@ void Drawer::start()
 
                 t_event event = this->checkEvents(this->window);
                 
-                // Handle CLOSED event directly
-                if (event.type == CLOSED) {
-                    gameRunning = false;
+                // Debug: log all events
+                if (event.type != EMPTY) {
+                    std::cout << "[Drawer] Event received: type=" << static_cast<int>(event.type);
+                    if (event.type == MOUSE_BUTTON_PRESSED || event.type == MOUSE_BUTTON_RELEASED) {
+                        std::cout << " mouse button=" << event.mouse.button << " at (" << event.mouse.x << ", " << event.mouse.y << ")";
+                    } else if (event.type == KEY_PRESSED || event.type == KEY_RELEASED) {
+                        std::cout << " keyCode=" << event.keyCode;
+                    }
+                    std::cout << std::endl;
                 }
                 
-                // Pass event to EventManager
-                eventManager->HandleEvent(event);
-                eventManager->Update();
+                // Handle CLOSED event directly
+                if (event.type == CLOSED) {
+                        gameRunning = false;
+                }
+                
+                // Pass event to EventManager (only if not EMPTY)
+                if (event.type != EMPTY) {
+                    eventManager->HandleEvent(event);
+                    eventManager->Update();
+                }
 
                 if (this->gameMode == GAME)
                     this->drawGameField();
@@ -270,11 +290,12 @@ void Drawer::onMouseUp(float x, float y)
             std::cout << " - Starting local server";
         std::cout << std::endl;
         
-        this->client->setIsDead(false);
-        this->client->setStopFlag(false);
+            this->client->setIsDead(false);
+            this->client->setStopFlag(false);
         this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
-        this->gameMode = GAME;
-        this->isMenuDrawn = false;
+            this->gameMode = GAME;
+            this->isMenuDrawn = false;
+        eventManager->SetCurrentState(StateType::Game);
     }
 }
 
@@ -322,7 +343,7 @@ void Drawer::MoveUp(EventDetails* l_details)
 }
 
 void Drawer::MoveDown(EventDetails* l_details)
-{
+    {
     (void)l_details;
     this->client->sendDirection(DOWN);
 }
@@ -342,34 +363,45 @@ void Drawer::MoveRight(EventDetails* l_details)
 void Drawer::ZoomIn(EventDetails* l_details)
 {
     (void)l_details;
-    this->screenSize = this->screenSize * 1.10 + 0.5;
-    this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+        this->screenSize = this->screenSize * 1.10 + 0.5;
+        this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
 void Drawer::ZoomOut(EventDetails* l_details)
 {
     (void)l_details;
-    this->screenSize = this->screenSize / 1.10;
-    this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+        this->screenSize = this->screenSize / 1.10;
+        this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
 void Drawer::SwitchLib1(EventDetails* l_details)
 {
     (void)l_details;
-    this->switchLibPath = "../libs/lib1/lib1";
-    this->gameRunning = false;
+        this->switchLibPath = "../libs/lib1/lib1";
+        this->gameRunning = false;
 }
 
 void Drawer::SwitchLib2(EventDetails* l_details)
 {
     (void)l_details;
-    this->switchLibPath = "../libs/lib2/lib2";
-    this->gameRunning = false;
+        this->switchLibPath = "../libs/lib2/lib2";
+        this->gameRunning = false;
 }
 
 void Drawer::SwitchLib3(EventDetails* l_details)
 {
     (void)l_details;
-    this->switchLibPath = "../libs/lib4/lib3";
-    this->gameRunning = false;
+        this->switchLibPath = "../libs/lib4/lib3";
+        this->gameRunning = false;
+}
+
+void Drawer::OnMouseClick(EventDetails* l_details)
+{
+    // Only process mouse clicks when in menu mode
+    if (this->gameMode != MENU) {
+        return;
+    }
+    std::cout << "[Drawer::OnMouseClick] Mouse clicked at (" << l_details->m_mouse.x << ", " << l_details->m_mouse.y << ")" << std::endl;
+    // Extract mouse coordinates from EventDetails
+    onMouseUp(l_details->m_mouse.x, l_details->m_mouse.y);
 }

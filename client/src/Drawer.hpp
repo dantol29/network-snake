@@ -80,6 +80,7 @@ private:
     void SwitchLib1(EventDetails* l_details);
     void SwitchLib2(EventDetails* l_details);
     void SwitchLib3(EventDetails* l_details);
+    void OnMouseClick(EventDetails* l_details);
     
     void loadDynamicLibrary(const std::string &lib);
     void drawBorder(int x, int y, int px, int py, int tilePx);

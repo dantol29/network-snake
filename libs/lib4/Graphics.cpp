@@ -164,7 +164,8 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
     {
         event.mouse.x = buttonEvent.x;
         event.mouse.y = buttonEvent.y;
-        event.type = MOUSE_BUTTON_PRESSED;
+        event.mouse.button = 0;  // Left button = 0 (matches keys.cfg)
+        event.type = MOUSE_BUTTON_RELEASED;  // Changed to RELEASED to match keys.cfg (9:0)
     }
 
     return event;
@@ -177,38 +178,49 @@ t_event Graphics::onKeyPress(const SDL_KeyboardEvent &keyEvent)
 
     SDL_Keycode code = keyEvent.key;
 
+    // Map SDL key codes to SFML key codes (to match keys.cfg)
+    // SDL: SDLK_W=119, SDLK_A=97, SDLK_S=115, SDLK_D=100, SDLK_UP=1073741906, SDLK_DOWN=1073741905, SDLK_LEFT=1073741904, SDLK_RIGHT=1073741903
+    // SFML: W=22, A=0, S=18, D=3, Up=73, Down=74, Left=71, Right=72
     switch (code)
     {
     case SDLK_W:
+        event.keyCode = 22;  // SFML W
+        break;
     case SDLK_UP:
-        event.keyCode = UP;
+        event.keyCode = 73;  // SFML Up
         break;
     case SDLK_S:
+        event.keyCode = 18;  // SFML S
+        break;
     case SDLK_DOWN:
-        event.keyCode = DOWN;
+        event.keyCode = 74;  // SFML Down
         break;
     case SDLK_A:
+        event.keyCode = 0;   // SFML A
+        break;
     case SDLK_LEFT:
-        event.keyCode = LEFT;
+        event.keyCode = 71;  // SFML Left
         break;
     case SDLK_D:
+        event.keyCode = 3;   // SFML D
+        break;
     case SDLK_RIGHT:
-        event.keyCode = RIGHT;
+        event.keyCode = 72;  // SFML Right
         break;
     case SDLK_M:
-        event.keyCode = M;
+        event.keyCode = 12;  // SFML M (approximate)
         break;
     case SDLK_N:
-        event.keyCode = N;
+        event.keyCode = 13;  // SFML N (approximate)
         break;
     case SDLK_1:
-        event.keyCode = KEY_1;
+        event.keyCode = 27;  // SFML Num1 (approximate)
         break;
     case SDLK_2:
-        event.keyCode = KEY_2;
+        event.keyCode = 28;  // SFML Num2 (approximate)
         break;
     case SDLK_3:
-        event.keyCode = KEY_3;
+        event.keyCode = 29;  // SFML Num3 (approximate)
         break;
     default:
         event.type = EMPTY;

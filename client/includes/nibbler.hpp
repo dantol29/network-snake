@@ -67,7 +67,6 @@ enum type {
     // KEY,           // Replaced by KEY_PRESSED/KEY_RELEASED
     // MOUSE,         // Replaced by MOUSE_BUTTON_PRESSED/MOUSE_BUTTON_RELEASED
     // EXIT,          // Replaced by CLOSED
-    // EMPTY,         // Not needed - just don't process if type doesn't match
     
     // Match EventManager's EventType enum
     CLOSED = 0,                    // Window closed (was EXIT)
@@ -83,7 +82,8 @@ enum type {
     MOUSE_MOVED = 10,               // Mouse moved
     MOUSE_MOVED_RAW = 11,           // Mouse moved (raw)
     MOUSE_ENTERED = 12,             // Mouse entered window
-    MOUSE_LEFT = 13                 // Mouse left window
+    MOUSE_LEFT = 13,                // Mouse left window
+    EMPTY = 99                      // No event (used by graphics libraries for polling)
 };
 
 typedef struct s_event {

@@ -72,6 +72,13 @@ void EventManager::HandleEvent(t_event& l_event) {
         return; // Unknown event type
     }
     
+    // Debug: log mouse events (key events logged only on match)
+    if (eventType == EventType::MouseButtonPressed || eventType == EventType::MouseButtonReleased) {
+        std::cout << "[EventManager::HandleEvent] Mouse event type=" << static_cast<int>(eventType) 
+                  << " button=" << l_event.mouse.button 
+                  << " at (" << l_event.mouse.x << ", " << l_event.mouse.y << ")" << std::endl;
+    }
+    
     for (auto& b_itr : m_bindings) {
         Binding* bind = b_itr.second;
         for (auto& e_itr : bind->m_events) {
@@ -81,18 +88,19 @@ void EventManager::HandleEvent(t_event& l_event) {
             if (eventType == EventType::KeyPressed ||
                 eventType == EventType::KeyReleased) {
                 if (e_itr.second.m_code == l_event.keyCode) {
-                    if (bind->m_details.m_keyCode != -1) {
-                        bind->m_details.m_keyCode = l_event.keyCode;
-                    }
+                    std::cout << "[EventManager::HandleEvent] Match! Key code " << l_event.keyCode << " matches binding '" << bind->m_name << "'" << std::endl;
+                    bind->m_details.m_keyCode = l_event.keyCode;
                     ++(bind->c);
                     break;
                 }
             } else if (eventType == EventType::MouseButtonPressed ||
                        eventType == EventType::MouseButtonReleased) {
-                std::cout << "Mouse button " << (eventType == EventType::MouseButtonPressed ? "pressed" : "released")
-                          << ": button=" << l_event.mouse.button 
-                          << " at (" << l_event.mouse.x << ", " << l_event.mouse.y << ")" << std::endl;
+                std::cout << "[EventManager] Checking binding '" << bind->m_name 
+                          << "' for mouse button " << l_event.mouse.button 
+                          << " (binding expects " << e_itr.second.m_code << ")" << std::endl;
                 if (e_itr.second.m_code == l_event.mouse.button) {
+                    std::cout << "[EventManager] Match! Setting mouse coords to (" 
+                              << l_event.mouse.x << ", " << l_event.mouse.y << ")" << std::endl;
                     bind->m_details.m_mouse.x = l_event.mouse.x;
                     bind->m_details.m_mouse.y = l_event.mouse.y;
                     if (bind->m_details.m_keyCode != -1) {
@@ -156,22 +164,31 @@ void EventManager::Update() {
             }
         }
         if (static_cast<int>(bind->m_events.size()) == bind->c) {
-            std::cout << "Binding '" << bind->m_name << "' triggered! All " << bind->c << " events matched." << std::endl;
+            std::cout << "[EventManager::Update] Binding '" << bind->m_name << "' triggered! All " << bind->c << " events matched." << std::endl;
+            std::cout << "[EventManager::Update] Current state: " << static_cast<int>(m_currentState) << std::endl;
             
             // Check callbacks for current state
             auto stateCallbacks = m_callbacks.find(m_currentState);
             if (stateCallbacks != m_callbacks.end()) {
+                std::cout << "[EventManager::Update] Found callbacks for current state, looking for '" << bind->m_name << "'" << std::endl;
                 auto callItr = stateCallbacks->second.find(bind->m_name);
                 if (callItr != stateCallbacks->second.end()) {
+                    std::cout << "[EventManager::Update] Calling callback for '" << bind->m_name << "'" << std::endl;
                     callItr->second(&bind->m_details);
+                } else {
+                    std::cout << "[EventManager::Update] No callback found for '" << bind->m_name << "' in current state" << std::endl;
                 }
+            } else {
+                std::cout << "[EventManager::Update] No callbacks registered for current state" << std::endl;
             }
             
             // Check global callbacks (StateType(0) - always active regardless of state)
             auto otherCallbacks = m_callbacks.find(StateType(0));
             if (otherCallbacks != m_callbacks.end()) {
+                std::cout << "[EventManager::Update] Checking global callbacks for '" << bind->m_name << "'" << std::endl;
                 auto callItr = otherCallbacks->second.find(bind->m_name);
                 if (callItr != otherCallbacks->second.end()) {
+                    std::cout << "[EventManager::Update] Calling global callback for '" << bind->m_name << "'" << std::endl;
                     callItr->second(&bind->m_details);
                 }
             }
@@ -189,6 +206,7 @@ void EventManager::LoadBindings() {
         std::cout << "! Failed loading keys.cfg." << std::endl;
         return;
     }
+    std::cout << "[EventManager] Loading bindings from keys.cfg..." << std::endl;
     
     std::string line;
     while (std::getline(bindings, line)) {
@@ -233,9 +251,13 @@ void EventManager::LoadBindings() {
         }
         
         if (bind && !AddBinding(bind)) {
+            std::cout << "[EventManager] Failed to add binding: " << bind->m_name << std::endl;
             delete bind;
+        } else if (bind) {
+            std::cout << "[EventManager] Loaded binding: " << bind->m_name << " with " << bind->m_events.size() << " event(s)" << std::endl;
         }
     }
     bindings.close();
+    std::cout << "[EventManager] Loaded " << m_bindings.size() << " bindings total" << std::endl;
 }
 

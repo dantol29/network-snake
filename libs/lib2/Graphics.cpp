@@ -108,13 +108,14 @@ t_event Graphics::checkEvents() {
 t_event Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i position)
 {
     t_event event;
-    event.type = MOUSE_BUTTON_PRESSED;
+    event.type = MOUSE_BUTTON_RELEASED;  // Changed to RELEASED to match keys.cfg (9:0)
 
     switch (button)
     {
     case sf::Mouse::Button::Left:
         event.mouse.x = position.x;
         event.mouse.y = position.y;
+        event.mouse.button = 0;  // Left button = 0 (matches keys.cfg)
         break;
     default:
         event.type = EMPTY;
@@ -128,44 +129,23 @@ t_event Graphics::onKeyPress(sf::Keyboard::Key code)
 {
     t_event event;
     event.type = KEY_PRESSED;
-
-    switch (code)
-    {
-    case sf::Keyboard::Key::W:
-    case sf::Keyboard::Key::Up:
-        event.keyCode = UP;
-        break;
-    case sf::Keyboard::Key::S:
-    case sf::Keyboard::Key::Down:
-        event.keyCode = DOWN;
-        break;
-    case sf::Keyboard::Key::A:
-    case sf::Keyboard::Key::Left:
-        event.keyCode = LEFT;
-        break;
-    case sf::Keyboard::Key::D:
-    case sf::Keyboard::Key::Right:
-        event.keyCode = RIGHT;
-        break;
-    case sf::Keyboard::Key::M:
-        event.keyCode = M;
-        break;
-    case sf::Keyboard::Key::N:
-        event.keyCode = N;
-        break;
-    case sf::Keyboard::Key::Num1:
-        event.keyCode = KEY_1;
-        break;
-    case sf::Keyboard::Key::Num2:
-        event.keyCode = KEY_2;
-        break;
-    case sf::Keyboard::Key::Num3:
-        event.keyCode = KEY_3;
-        break;
-    default:
-        event.type = EMPTY;
-        break;
-    }
-
+    
+    // Return the actual SFML key code (not the actions enum)
+    // This matches what EventManager expects from keys.cfg
+    int keyCode = static_cast<int>(code);
+    event.keyCode = keyCode;
+    
+    // Debug: log key press with name
+    std::cout << "[lib2 SFML] Key pressed: code=" << keyCode;
+    if (code == sf::Keyboard::Key::Up) std::cout << " (Up/73)";
+    else if (code == sf::Keyboard::Key::Down) std::cout << " (Down/74)";
+    else if (code == sf::Keyboard::Key::Left) std::cout << " (Left/71)";
+    else if (code == sf::Keyboard::Key::Right) std::cout << " (Right/72)";
+    else if (code == sf::Keyboard::Key::W) std::cout << " (W/22)";
+    else if (code == sf::Keyboard::Key::A) std::cout << " (A/0)";
+    else if (code == sf::Keyboard::Key::S) std::cout << " (S/18)";
+    else if (code == sf::Keyboard::Key::D) std::cout << " (D/3)";
+    std::cout << std::endl;
+    
     return event;
 }
