@@ -8,10 +8,7 @@ Graphics::Graphics(unsigned int height, unsigned int width)
     this->windowHeight = static_cast<float>(this->gameWindow.getSize().y);
 
     if (!font.openFromFile("assets/Montserrat-Bold.ttf"))
-        std::cout << "Could not open" << std::endl;
-
-    if (!tex.loadFromFile("assets/space.jpeg"))
-        throw "Image does not exist";
+        throw "Font does not exist";
 }
 
 Graphics::~Graphics()
@@ -22,16 +19,42 @@ Graphics::~Graphics()
         this->gameWindow.close();
 }
 
-void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
+void Graphics::loadAssets(const char **paths)
 {
-    sf::RectangleShape rectangle(sf::Vector2f(pixelWidth, pixelHeight));
-    rectangle.setPosition(sf::Vector2f(pixelX, pixelY));
-    rectangle.setFillColor(sf::Color(
-        static_cast<std::uint8_t>(color.r * 255),
-        static_cast<std::uint8_t>(color.g * 255),
-        static_cast<std::uint8_t>(color.b * 255)));
+    if (!paths)
+        return;
 
-    this->gameWindow.draw(rectangle);
+    for (int i = 0; paths[i]; i++)
+    {
+        sf::Texture texture;
+        if (!texture.loadFromFile(paths[i]))
+            throw "Failed to load assets";
+
+        this->assets.insert({std::string(paths[i]), texture});
+    }
+}
+
+void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, const char *assetPath)
+{
+    try
+    {
+        sf::Texture asset = assets.at(std::string(assetPath));
+
+        sf::Sprite sprite(asset);
+
+        float scaleX = pixelWidth / asset.getSize().x;
+        float scaleY = pixelHeight / asset.getSize().y;
+
+        sprite.setPosition(sf::Vector2f(pixelX, pixelY));
+        sprite.setScale(sf::Vector2f(scaleX, scaleY));
+
+        gameWindow.draw(sprite);
+    }
+    catch (const std::out_of_range &e)
+    {
+        std::cout << "Key not found!\n"
+                  << std::endl;
+    }
 }
 
 void Graphics::drawButton(float x, float y, float width, float height, const char *text)
@@ -64,28 +87,26 @@ void Graphics::drawText(float x, float y, int size, const char *text)
     label.setCharacterSize(size);
     label.setPosition(sf::Vector2f{x, y});
 
-    sf::Sprite sprite(tex);
+    // sf::Sprite sprite(tex);
 
-    this->gameWindow.draw(sprite);
+    // this->gameWindow.draw(sprite);
     this->gameWindow.draw(label);
 }
 
 void Graphics::endFrame()
 {
-    if (this->shouldUpdateScreen && this->gameWindow.isOpen()) 
+    if (this->gameWindow.isOpen())
         this->gameWindow.display();
 }
 
 void Graphics::beginFrame()
 {
-    if (this->shouldUpdateScreen && this->gameWindow.isOpen())
-    {
-        this->shouldUpdateScreen = false;
+    if (this->gameWindow.isOpen())
         this->gameWindow.clear();
-    }
 }
 
-t_event Graphics::checkEvents() {
+t_event Graphics::checkEvents()
+{
     t_event e;
     e.type = EMPTY;
 

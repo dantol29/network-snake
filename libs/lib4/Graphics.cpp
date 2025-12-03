@@ -29,43 +29,87 @@ Graphics::~Graphics()
 {
     std::cout << "Destructor SDL " << std::endl;
 
-    if (font) TTF_CloseFont(font);
-    if (renderer) SDL_DestroyRenderer(renderer);
-    if (gameWindow) SDL_DestroyWindow(gameWindow);
+    if (font)
+        TTF_CloseFont(font);
+    if (renderer)
+        SDL_DestroyRenderer(renderer);
+    if (gameWindow)
+        SDL_DestroyWindow(gameWindow);
     TTF_Quit();
     SDL_Quit();
 }
 
-void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
+void Graphics::loadAssets(const char **paths)
 {
-    SDL_FRect rect;
-    rect.x = pixelX;
-    rect.y = pixelY;
-    rect.w = pixelWidth;
-    rect.h = pixelHeight;
+    if (!paths)
+        return;
 
-    SDL_SetRenderDrawColor(renderer,
-                           static_cast<Uint8>(color.r * 255),
-                           static_cast<Uint8>(color.g * 255),
-                           static_cast<Uint8>(color.b * 255),
-                           255);
-    SDL_RenderFillRect(renderer, &rect);
+    for (int i = 0; paths[i]; ++i)
+    {
+        SDL_Surface* surface = IMG_Load(paths[i]);
+        if (!surface)
+        {
+            std::cerr << "Failed to load image: " << paths[i] << " | "
+                      << SDL_GetError() << std::endl;
+            continue;
+        }
+
+        SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_DestroySurface(surface);
+
+        if (!tex)
+        {
+            std::cerr << "Failed to create texture: " << paths[i] << " | "
+                      << SDL_GetError() << std::endl;
+            continue;
+        }
+
+        // Store in assets map
+        assets.insert({std::string(paths[i]), tex});
+    }
+}
+
+void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, const char *assetPath)
+{
+    try
+    {
+        SDL_Texture *tex = assets.at(assetPath);
+
+        SDL_FRect dest;
+        dest.x = pixelX;
+        dest.y = pixelY;
+        dest.w = pixelWidth;
+        dest.h = pixelHeight;
+
+        if (!SDL_RenderTexture(renderer, tex, nullptr, &dest))
+        {
+            std::cerr << "SDL_RenderTexture error: " << SDL_GetError() << std::endl;
+        };
+    }
+    catch (const std::out_of_range &e)
+    {
+        std::cerr << "Key not found!\n"
+                  << std::endl;
+    }
 }
 
 void Graphics::drawText(float x, float y, int size, const char *text)
 {
     (void)size;
-    if (!font || !renderer || !text) return;
+    if (!font || !renderer || !text)
+        return;
 
     SDL_Color color = {255, 255, 255, 255};
-    SDL_Surface* surface = TTF_RenderText_Blended(font, text, SDL_strlen(text), color);
-    if (!surface) {
+    SDL_Surface *surface = TTF_RenderText_Blended(font, text, SDL_strlen(text), color);
+    if (!surface)
+    {
         SDL_Log("TTF_RenderText_Blended failed: %s", SDL_GetError());
         return;
     }
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!texture) {
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!texture)
+    {
         SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
         SDL_DestroySurface(surface);
         return;
@@ -85,17 +129,20 @@ void Graphics::drawButton(float x, float y, float width, float height, const cha
     SDL_SetRenderDrawColor(renderer, 120, 120, 100, 255);
     SDL_RenderFillRect(renderer, &rect);
 
-    if (!font || !text) return;
+    if (!font || !text)
+        return;
 
     SDL_Color color = {255, 255, 255, 255}; // White
-    SDL_Surface* surface = TTF_RenderText_Blended(font, text, SDL_strlen(text), color);
-    if (!surface) {
+    SDL_Surface *surface = TTF_RenderText_Blended(font, text, SDL_strlen(text), color);
+    if (!surface)
+    {
         SDL_Log("TTF_RenderText_Blended failed: %s", SDL_GetError());
         return;
     }
 
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
-    if (!texture) {
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!texture)
+    {
         SDL_Log("SDL_CreateTextureFromSurface failed: %s", SDL_GetError());
         SDL_DestroySurface(surface);
         return;
@@ -113,23 +160,18 @@ void Graphics::drawButton(float x, float y, float width, float height, const cha
     SDL_DestroyTexture(texture);
 }
 
-void Graphics::beginFrame() 
+void Graphics::beginFrame()
 {
-    if (this->shouldUpdateScreen) 
-    {
-        this->shouldUpdateScreen = false;
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-        SDL_RenderClear(renderer);
-    }
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
 }
 
-void Graphics::endFrame() 
+void Graphics::endFrame()
 {
-    if (this->shouldUpdateScreen)
-        SDL_RenderPresent(renderer);
+    SDL_RenderPresent(renderer);
 }
 
-t_event Graphics::checkEvents() 
+t_event Graphics::checkEvents()
 {
     t_event e;
     e.type = EMPTY;
@@ -140,15 +182,15 @@ t_event Graphics::checkEvents()
     {
         switch (event.type)
         {
-            case SDL_EVENT_QUIT:
-                e.type = EXIT;
-                return e;
+        case SDL_EVENT_QUIT:
+            e.type = EXIT;
+            return e;
 
-            case SDL_EVENT_KEY_DOWN:
-                return onKeyPress(event.key);
+        case SDL_EVENT_KEY_DOWN:
+            return onKeyPress(event.key);
 
-            case SDL_EVENT_MOUSE_BUTTON_UP:
-                return onMouseUp(event.button);
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            return onMouseUp(event.button);
         }
     }
 
@@ -160,7 +202,7 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
     t_event event;
     event.type = EMPTY;
 
-    if (buttonEvent.button == SDL_BUTTON_LEFT) 
+    if (buttonEvent.button == SDL_BUTTON_LEFT)
     {
         event.a = buttonEvent.x;
         event.b = buttonEvent.y;
@@ -217,4 +259,3 @@ t_event Graphics::onKeyPress(const SDL_KeyboardEvent &keyEvent)
 
     return event;
 }
-

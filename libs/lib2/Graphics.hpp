@@ -15,14 +15,15 @@ public:
     t_event checkEvents() override;
     void beginFrame() override;
     void endFrame() override;
+    void loadAssets(const char **paths) override;
     void drawText(float x, float y, int size, const char *text) override;
-    void drawSquare(float x, float y, float width, float height, struct rgb color) override;
+    void drawAsset(float x, float y, float width, float height, const char *assetPath) override;
     void drawButton(float x, float y, float width, float height, const char *text) override;
 
 private:
     sf::RenderWindow gameWindow;
-    sf::Texture tex;
     sf::Font font;
+    std::unordered_map<std::string, sf::Texture> assets;
 
     t_event onKeyPress(sf::Keyboard::Key key);
     t_event onMouseUp(const sf::Mouse::Button, const sf::Vector2i position);

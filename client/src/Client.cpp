@@ -3,8 +3,8 @@
 #define BLOCKING -1
 #define POLL_TIMEOUT_MS 10
 #define SERVER_PORT 8080
-// #define SERVER_IP "127.0.0.1"
-#define SERVER_IP "159.65.186.248"
+#define SERVER_IP "127.0.0.1"
+// #define SERVER_IP "159.65.186.248"
 
 
 Client::Client() : stopFlag(false), isDead(false), height(0), width(0), snakeX(0), snakeY(0) {}

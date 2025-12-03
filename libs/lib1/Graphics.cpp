@@ -2,15 +2,6 @@
 #include "Graphics.hpp"
 #include <iostream>
 
-static Color toColor(rgb c)
-{
-    return Color{
-        (unsigned char)(c.r * 255.0f),
-        (unsigned char)(c.g * 255.0f),
-        (unsigned char)(c.b * 255.0f),
-        255};
-}
-
 Graphics::Graphics(unsigned int height, unsigned int width) : IGraphics(height, width)
 {
     InitWindow((int)width, (int)height, "raylib");
@@ -21,34 +12,64 @@ Graphics::Graphics(unsigned int height, unsigned int width) : IGraphics(height, 
     this->windowHeight = (float)GetScreenHeight();
 
     this->font = GetFontDefault();
-
-    if (!FileExists("assets/space.jpeg"))
-        throw "Image does not exist 1";
-
-    Image img = LoadImage("assets/space.jpeg");
-    if (img.data == nullptr)
-        throw "Image does not exist 2";
-
-    this->tex = LoadTextureFromImage(img);
-    UnloadImage(img);
-    if (this->tex.id == 0)
-        throw "Image does not exist 3";
 }
 
 Graphics::~Graphics()
 {
     std::cout << "Destructor RAYLIB" << std::endl;
-    if (tex.id != 0)
-        UnloadTexture(tex);
+    for (auto asset : assets)
+        UnloadTexture(asset.second);
 
-    UnloadFont(font);
     if (!WindowShouldClose())
         CloseWindow();
 }
 
-void Graphics::drawSquare(float pixelX, float pixelY, float pixelWidth, float pixelHeight, struct rgb color)
+void Graphics::loadAssets(const char **paths)
 {
-    DrawRectangle((int)pixelX, (int)pixelY, (int)pixelWidth, (int)pixelHeight, toColor(color));
+    if (!paths)
+        return;
+
+    for (int i = 0; paths[i]; ++i)
+    {
+        if (!FileExists(paths[i]))
+        {
+            std::cout << "Image does not exist: " << paths[i] << std::endl;
+            continue;
+        }
+
+        Image img = LoadImage(paths[i]);
+        if (img.data == nullptr)
+        {
+            std::cout << "Failed to load image: " << paths[i] << std::endl;
+            continue;
+        }
+
+        Texture2D tex = LoadTextureFromImage(img);
+        if (tex.id == 0)
+            throw "Failed to load texture";
+        UnloadImage(img);
+
+        assets.insert({std::string(paths[i]), tex});
+    }
+}
+
+void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, const char *assetPath)
+{
+    try
+    {
+        Texture2D tex = assets.at(assetPath);
+
+        Rectangle src = {0, 0, (float)tex.width, (float)tex.height};
+        Rectangle dest = {pixelX, pixelY, pixelWidth, pixelHeight};
+        Vector2 origin = {0, 0};
+
+        DrawTexturePro(tex, src, dest, origin, 0.0f, WHITE);
+    }
+    catch (const std::out_of_range &e)
+    {
+        std::cout << "Key not found!\n"
+                  << std::endl;
+    }
 }
 
 void Graphics::drawButton(float x, float y, float width, float height, const char *text)
@@ -67,18 +88,16 @@ void Graphics::drawButton(float x, float y, float width, float height, const cha
 
 void Graphics::drawText(float x, float y, int size, const char *text)
 {
-    DrawTexture(tex, 0, 0, WHITE);
-
     DrawTextEx(font, text, {x, y}, (float)size, 4.0f, WHITE);
 }
 
-void Graphics::beginFrame() 
+void Graphics::beginFrame()
 {
     BeginDrawing();
     ClearBackground(BLACK);
 }
 
-void Graphics::endFrame() 
+void Graphics::endFrame()
 {
     EndDrawing();
 }
@@ -88,7 +107,7 @@ t_event Graphics::checkEvents()
     t_event event;
     event.type = KEY;
 
-    if (WindowShouldClose()) 
+    if (WindowShouldClose())
         event.type = EXIT;
     else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
     {

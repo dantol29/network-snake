@@ -33,18 +33,17 @@ private:
     int prevSnakeHeadX;
     int prevSnakeHeadY;
     bool gameRunning = true;
-    bool isMenuDrawn = false;
     std::string switchLibPath;
     std::thread clientThread;
     mode gameMode;
-    struct rgb rgb;
+    char **assets;
     
     initFunc init;
     checkEventsFunc checkEvents;
     beginFrameFunc beginFrame;
     endFrameFunc endFrame;
-    setShouldUpdateScreenFunc setShouldUpdateScreen;
-    drawSquareFunc drawSquare;
+    loadAssetsFunc loadAssets;
+    drawAssetFunc drawAsset;
     drawButtonFunc drawButton;
     drawTextFunc drawText;
     cleanupFunc cleanup;
