@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <cstdint>
 
 #define TILE_SIZE 0.05f
 #define SCALE 20.0f
@@ -54,20 +55,50 @@ struct rgb
     float b;
 };
 
+// Created to accommodate sf::Vector2i from SFML
+// Graphics-agnostic 2D integer vector for window size and mouse position
+struct Vec2i {
+    int x;
+    int y;
+};
+
 enum type {
-    KEY,
-    MOUSE,
-    EXIT,
-    EMPTY
+    // Old types (removed, kept for reference):
+    // KEY,           // Replaced by KEY_PRESSED/KEY_RELEASED
+    // MOUSE,         // Replaced by MOUSE_BUTTON_PRESSED/MOUSE_BUTTON_RELEASED
+    // EXIT,          // Replaced by CLOSED
+    // EMPTY,         // Not needed - just don't process if type doesn't match
+    
+    // Match EventManager's EventType enum
+    CLOSED = 0,                    // Window closed (was EXIT)
+    RESIZED = 1,                    // Window resized
+    FOCUS_LOST = 2,                 // Window lost focus
+    FOCUS_GAINED = 3,               // Window gained focus
+    TEXT_ENTERED = 4,               // Text input
+    KEY_PRESSED = 5,                // Key pressed (was KEY)
+    KEY_RELEASED = 6,               // Key released
+    MOUSE_WHEEL_SCROLLED = 7,       // Mouse wheel scrolled
+    MOUSE_BUTTON_PRESSED = 8,       // Mouse button pressed (was MOUSE)
+    MOUSE_BUTTON_RELEASED = 9,      // Mouse button released
+    MOUSE_MOVED = 10,               // Mouse moved
+    MOUSE_MOVED_RAW = 11,           // Mouse moved (raw)
+    MOUSE_ENTERED = 12,             // Mouse entered window
+    MOUSE_LEFT = 13                 // Mouse left window
 };
 
 typedef struct s_event {
     type type;
     union {
-        int keyCode;        // When type == KEY: key code (UP, DOWN, LEFT, RIGHT, M, N, KEY_1, KEY_2, KEY_3)
+        int keyCode;        // When type == KEY_PRESSED/KEY_RELEASED: key code (UP, DOWN, LEFT, RIGHT, M, N, KEY_1, KEY_2, KEY_3)
         struct {
-            int x, y;       // When type == MOUSE: mouse coordinates
+            int x, y;       // When type == MOUSE_*: mouse coordinates
+            int button;     // When type == MOUSE_BUTTON_*: button code (0=left, 1=right, 2=middle)
         } mouse;
+        struct {
+            int width, height;  // When type == RESIZED: new window dimensions
+        } window;
+        int wheelDelta;     // When type == MOUSE_WHEEL_SCROLLED: scroll delta
+        std::uint32_t unicode;  // When type == TEXT_ENTERED: unicode character
     };
 } t_event;
 

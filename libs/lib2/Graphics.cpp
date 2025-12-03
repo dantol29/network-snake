@@ -93,7 +93,7 @@ t_event Graphics::checkEvents() {
     {
         if (event->is<sf::Event::Closed>())
         {
-            e.type = EXIT;
+            e.type = CLOSED;
             return e;
         }
         else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
@@ -108,7 +108,7 @@ t_event Graphics::checkEvents() {
 t_event Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i position)
 {
     t_event event;
-    event.type = MOUSE;
+    event.type = MOUSE_BUTTON_PRESSED;
 
     switch (button)
     {
@@ -127,7 +127,7 @@ t_event Graphics::onMouseUp(const sf::Mouse::Button button, const sf::Vector2i p
 t_event Graphics::onKeyPress(sf::Keyboard::Key code)
 {
     t_event event;
-    event.type = KEY;
+    event.type = KEY_PRESSED;
 
     switch (code)
     {

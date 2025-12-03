@@ -3,6 +3,7 @@
 
 #include "../includes/nibbler.hpp"
 #include "Client.hpp"
+#include "EventManager.hpp"
 
 enum mode
 {
@@ -33,6 +34,7 @@ public:
 
 private:
     Client *client;
+    EventManager *eventManager;
     void *dynamicLibrary = nullptr;
     void *window = nullptr;
     int screenSize;
@@ -65,7 +67,20 @@ private:
     void startDynamicLib();
     void closeDynamicLib();
     void onMouseUp(float x, float y);
-    void onKeyPress(int action);
+    // Old onKeyPress - kept for reference, replaced by EventManager callbacks
+    // void onKeyPress(int action);
+    
+    // EventManager callbacks
+    void MoveUp(EventDetails* l_details);
+    void MoveDown(EventDetails* l_details);
+    void MoveLeft(EventDetails* l_details);
+    void MoveRight(EventDetails* l_details);
+    void ZoomIn(EventDetails* l_details);
+    void ZoomOut(EventDetails* l_details);
+    void SwitchLib1(EventDetails* l_details);
+    void SwitchLib2(EventDetails* l_details);
+    void SwitchLib3(EventDetails* l_details);
+    
     void loadDynamicLibrary(const std::string &lib);
     void drawBorder(int x, int y, int px, int py, int tilePx);
     void drawGameField();

@@ -1,4 +1,5 @@
 #include "Drawer.hpp"
+#include "EventManager.hpp"
 
 #define WIDTH 1000
 #define HEIGHT 1000
@@ -11,10 +12,27 @@ multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
 singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
 {
     tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+    
+    // Initialize EventManager
+    eventManager = new EventManager();
+    
+    // Register movement callbacks (arrow keys and WASD)
+    eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
+    eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
+    eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
+    eventManager->AddCallback(StateType::Game, "Key_Right", &Drawer::MoveRight, this);
+    eventManager->AddCallback(StateType::Game, "Key_W", &Drawer::MoveUp, this);
+    eventManager->AddCallback(StateType::Game, "Key_A", &Drawer::MoveLeft, this);
+    eventManager->AddCallback(StateType::Game, "Key_S", &Drawer::MoveDown, this);
+    eventManager->AddCallback(StateType::Game, "Key_D", &Drawer::MoveRight, this);
+    
+    // Set initial state
+    eventManager->SetCurrentState(StateType::Game);
 }
 
 Drawer::~Drawer()
 {
+    delete eventManager;
     this->closeDynamicLib();
 }
 
@@ -85,19 +103,15 @@ void Drawer::start()
                 this->beginFrame(this->window);
 
                 t_event event = this->checkEvents(this->window);
-                switch (event.type) {
-                    case EXIT:
-                        gameRunning = false;
-                        break;
-                    case KEY:
-                        onKeyPress(event.keyCode);
-                        break;
-                    case MOUSE:
-                        onMouseUp(event.mouse.x, event.mouse.y);
-                        break;
-                    default:
-                        break;
+                
+                // Handle CLOSED event directly
+                if (event.type == CLOSED) {
+                    gameRunning = false;
                 }
+                
+                // Pass event to EventManager
+                eventManager->HandleEvent(event);
+                eventManager->Update();
 
                 if (this->gameMode == GAME)
                     this->drawGameField();
@@ -264,37 +278,98 @@ void Drawer::onMouseUp(float x, float y)
     }
 }
 
-void Drawer::onKeyPress(int key)
-{
-    actions action = (actions)key;
+// Old onKeyPress - kept for reference, replaced by EventManager callbacks
+// void Drawer::onKeyPress(int key)
+// {
+//     actions action = (actions)key;
+//
+//     switch (action)
+//     {
+//     case UP:
+//     case DOWN:
+//     case RIGHT:
+//     case LEFT:
+//         this->client->sendDirection(action);
+//         break;
+//     case M:
+//         this->screenSize = this->screenSize * 1.10 + 0.5;
+//         this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+//         break;
+//     case N:
+//         this->screenSize = this->screenSize / 1.10;
+//         this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+//         break;
+//     case KEY_1:
+//         this->switchLibPath = "../libs/lib1/lib1";
+//         this->gameRunning = false;
+//         break;
+//     case KEY_2:
+//         this->switchLibPath = "../libs/lib2/lib2";
+//         this->gameRunning = false;
+//         break;
+//     case KEY_3:
+//         this->switchLibPath = "../libs/lib4/lib3";
+//         this->gameRunning = false;
+//         break;
+//     }
+// }
 
-    switch (action)
-    {
-    case UP:
-    case DOWN:
-    case RIGHT:
-    case LEFT:
-        this->client->sendDirection(action);
-        break;
-    case M:
-        this->screenSize = this->screenSize * 1.10 + 0.5;
-        this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-        break;
-    case N:
-        this->screenSize = this->screenSize / 1.10;
-        this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-        break;
-    case KEY_1:
-        this->switchLibPath = "../libs/lib1/lib1";
-        this->gameRunning = false;
-        break;
-    case KEY_2:
-        this->switchLibPath = "../libs/lib2/lib2";
-        this->gameRunning = false;
-        break;
-    case KEY_3:
-        this->switchLibPath = "../libs/lib4/lib3";
-        this->gameRunning = false;
-        break;
-    }
+// EventManager callbacks
+void Drawer::MoveUp(EventDetails* l_details)
+{
+    (void)l_details; // Unused, but required by callback signature
+    this->client->sendDirection(UP);
+}
+
+void Drawer::MoveDown(EventDetails* l_details)
+{
+    (void)l_details;
+    this->client->sendDirection(DOWN);
+}
+
+void Drawer::MoveLeft(EventDetails* l_details)
+{
+    (void)l_details;
+    this->client->sendDirection(LEFT);
+}
+
+void Drawer::MoveRight(EventDetails* l_details)
+{
+    (void)l_details;
+    this->client->sendDirection(RIGHT);
+}
+
+void Drawer::ZoomIn(EventDetails* l_details)
+{
+    (void)l_details;
+    this->screenSize = this->screenSize * 1.10 + 0.5;
+    this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+}
+
+void Drawer::ZoomOut(EventDetails* l_details)
+{
+    (void)l_details;
+    this->screenSize = this->screenSize / 1.10;
+    this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+}
+
+void Drawer::SwitchLib1(EventDetails* l_details)
+{
+    (void)l_details;
+    this->switchLibPath = "../libs/lib1/lib1";
+    this->gameRunning = false;
+}
+
+void Drawer::SwitchLib2(EventDetails* l_details)
+{
+    (void)l_details;
+    this->switchLibPath = "../libs/lib2/lib2";
+    this->gameRunning = false;
+}
+
+void Drawer::SwitchLib3(EventDetails* l_details)
+{
+    (void)l_details;
+    this->switchLibPath = "../libs/lib4/lib3";
+    this->gameRunning = false;
 }

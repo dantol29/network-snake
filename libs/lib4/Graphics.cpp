@@ -141,7 +141,7 @@ t_event Graphics::checkEvents()
         switch (event.type)
         {
             case SDL_EVENT_QUIT:
-                e.type = EXIT;
+                e.type = CLOSED;
                 return e;
 
             case SDL_EVENT_KEY_DOWN:
@@ -164,7 +164,7 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
     {
         event.mouse.x = buttonEvent.x;
         event.mouse.y = buttonEvent.y;
-        event.type = MOUSE;
+        event.type = MOUSE_BUTTON_PRESSED;
     }
 
     return event;
@@ -173,7 +173,7 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
 t_event Graphics::onKeyPress(const SDL_KeyboardEvent &keyEvent)
 {
     t_event event;
-    event.type = KEY;
+    event.type = KEY_PRESSED;
 
     SDL_Keycode code = keyEvent.key;
 

@@ -4,7 +4,7 @@ NAME = nibbler_client
 CC = c++
 CFLAGS = -O2 -Wall -Wextra -std=c++17 -pthread
 FSANITIZE = -fsanitize=thread
-SOURCES_M := src/main.cpp src/Client.cpp src/Drawer.cpp
+SOURCES_M := src/main.cpp src/Client.cpp src/Drawer.cpp src/EventManager.cpp
 
 OBJECTS := $(SOURCES_M:.cpp=.o)
 

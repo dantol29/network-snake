@@ -86,14 +86,14 @@ void Graphics::endFrame()
 t_event Graphics::checkEvents()
 {
     t_event event;
-    event.type = KEY;
+    event.type = KEY_PRESSED;
 
     if (WindowShouldClose()) 
-        event.type = EXIT;
+        event.type = CLOSED;
     else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
     {
         Vector2 mp = GetMousePosition();
-        event.type = MOUSE;
+        event.type = MOUSE_BUTTON_PRESSED;
         event.mouse.x = (int)mp.x;
         event.mouse.y = (int)mp.y;
     }
