@@ -87,9 +87,6 @@ void Graphics::drawText(float x, float y, int size, const char *text)
     label.setCharacterSize(size);
     label.setPosition(sf::Vector2f{x, y});
 
-    // sf::Sprite sprite(tex);
-
-    // this->gameWindow.draw(sprite);
     this->gameWindow.draw(label);
 }
 

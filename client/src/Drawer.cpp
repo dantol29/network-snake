@@ -12,12 +12,9 @@ singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
 {
     tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 
-    assets = (char **)malloc(sizeof(char *) * 3);
-    assets[0] = (char *)malloc(17);
+    assets = (char **)malloc(sizeof(char *) * 4);
     assets[0] = strdup("assets/body.png");
-    assets[1] = (char *)malloc(17);
     assets[1] = strdup("assets/head.png");
-    assets[2] = (char *)malloc(17);
     assets[2] = strdup("assets/food.png");
     assets[3] = NULL;
 }
@@ -147,9 +144,6 @@ void Drawer::drawMenu()
                      this->multiplayerButton.width, this->multiplayerButton.height, this->multiplayerButton.label.c_str());
     this->drawButton(this->window, this->singlePlayerButton.x, this->singlePlayerButton.y, 
                      this->singlePlayerButton.width, this->singlePlayerButton.height, this->singlePlayerButton.label.c_str());
-    
-    this->setShouldUpdateScreen(this->window, true);
-    this->isMenuDrawn = true;
 }
 
 void Drawer::drawGameField()
