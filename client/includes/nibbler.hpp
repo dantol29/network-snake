@@ -108,9 +108,9 @@ typedef void (*beginFrameFunc)(void *);
 typedef void (*endFrameFunc)(void *);
 typedef void (*cleanupFunc)(void *);
 typedef t_event (*checkEventsFunc)(void *);
-typedef void (*setShouldUpdateScreenFunc)(void *, bool);
+typedef void (*loadAssetsFunc)(void *, const char **);
 typedef void (*drawTextFunc)(void *, float, float, int, const char *);
-typedef void (*drawSquareFunc)(void *, float, float, float, float, struct rgb);
+typedef void (*drawAssetFunc)(void *, float, float, float, float, const char *);
 typedef void (*drawButtonFunc)(void *, float, float, float, float, const char *);
 
 #endif

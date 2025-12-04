@@ -15,13 +15,14 @@ public:
     t_event checkEvents() override;
     void beginFrame() override;
     void endFrame() override;
+    void loadAssets(const char **paths) override;
     void drawText(float x, float y, int size, const char *text) override;
-    void drawSquare(float x, float y, float width, float height, struct rgb color) override;
+    void drawAsset(float x, float y, float width, float height, const char *assetPath) override;
     void drawButton(float x, float y, float width, float height, const char *text) override;
 
 private:
+    std::unordered_map<std::string, Texture2D> assets;
     Font font{};
-    Texture2D tex{};
 };
 
 extern "C" IGraphics *init(unsigned int height, unsigned int width)

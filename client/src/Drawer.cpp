@@ -35,12 +35,22 @@ singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
     
     // Set initial state to Menu (since we start with the menu)
     eventManager->SetCurrentState(StateType::Menu);
+
+    assets = (char **)malloc(sizeof(char *) * 4);
+    assets[0] = strdup("assets/body.png");
+    assets[1] = strdup("assets/head.png");
+    assets[2] = strdup("assets/food.png");
+    assets[3] = NULL;
 }
 
 Drawer::~Drawer()
 {
     delete eventManager;
     this->closeDynamicLib();
+
+    for (int i = 0; assets[i]; ++i)
+        free(assets[i]);
+    free(assets);
 }
 
 void Drawer::loadDynamicLibrary(const std::string &lib)
@@ -55,8 +65,8 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
 
     this->init = (initFunc)dlsym(this->dynamicLibrary, "init");
     this->cleanup = (cleanupFunc)dlsym(this->dynamicLibrary, "cleanup");
-    this->setShouldUpdateScreen = (setShouldUpdateScreenFunc)dlsym(this->dynamicLibrary, "setShouldUpdateScreen");
-    this->drawSquare = (drawSquareFunc)dlsym(this->dynamicLibrary, "drawSquare");
+    this->loadAssets = (loadAssetsFunc)dlsym(this->dynamicLibrary, "loadAssets");
+    this->drawAsset = (drawAssetFunc)dlsym(this->dynamicLibrary, "drawAsset");
     this->drawButton = (drawButtonFunc)dlsym(this->dynamicLibrary, "drawButton");
     this->drawText = (drawTextFunc)dlsym(this->dynamicLibrary, "drawText");
     this->beginFrame = (beginFrameFunc)dlsym(this->dynamicLibrary, "beginFrame");
@@ -67,8 +77,8 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
     if (error != NULL)
         throw "Failed to find functions in dynlib";
 
-    if (!this->init || !this->cleanup || !this->drawSquare ||
-        !this->setShouldUpdateScreen || !this->drawButton || !this->drawText ||
+    if (!this->init || !this->cleanup || !this->drawAsset ||
+        !this->drawButton || !this->drawText || !this->loadAssets ||
         !this->endFrame || !this->beginFrame || !this->checkEvents)
         throw "Failed to init dynlib functions";
 }
@@ -92,7 +102,6 @@ void Drawer::startDynamicLib()
     this->closeDynamicLib();
     this->loadDynamicLibrary(this->switchLibPath);
     this->switchLibPath = "";
-    this->isMenuDrawn = false;
 }
 
 void Drawer::start()
@@ -103,6 +112,7 @@ void Drawer::start()
         {
             this->startDynamicLib();
             this->openWindow();
+            this->loadAssets(this->window, (const char **)assets);
             gameRunning = true;
 
             while (gameRunning)
@@ -162,18 +172,11 @@ void Drawer::openWindow()
 
 void Drawer::drawMenu()
 {
-    // TODO: raylib requires to draw on every frame, but it is not needed for other libs
-    if (this->isMenuDrawn)
-        return;
-
     this->drawText(this->window, 380, 200, 40, "42 SNAKES");
     this->drawButton(this->window, this->multiplayerButton.x, this->multiplayerButton.y, 
                      this->multiplayerButton.width, this->multiplayerButton.height, this->multiplayerButton.label.c_str());
     this->drawButton(this->window, this->singlePlayerButton.x, this->singlePlayerButton.y, 
                      this->singlePlayerButton.width, this->singlePlayerButton.height, this->singlePlayerButton.label.c_str());
-    
-    this->setShouldUpdateScreen(this->window, true);
-    this->isMenuDrawn = true;
 }
 
 void Drawer::drawGameField()
@@ -187,10 +190,6 @@ void Drawer::drawGameField()
 
     const int snakeHeadX = this->client->getSnakeX();
     const int snakeHeadY = this->client->getSnakeY();
-
-    // TODO: raylib requires to draw on every frame, but it is not needed for other libs
-    if (snakeHeadX == this->prevSnakeHeadX && snakeHeadY == this->prevSnakeHeadY)
-        return;
 
     std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
     std::lock_guard<std::mutex> lock(gameFieldMutex);
@@ -218,38 +217,32 @@ void Drawer::drawGameField()
 
             char tile = gameField[wy][wx];
             if (tile == 'F')
-                rgb = {0.5f, 0.1f, 0.1f};
+                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/food.png");
             else if (tile == 'B')
-                rgb = {0.0f, 0.6f, 0.2f};
+                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/body.png");
             else if (tile == 'H')
-                rgb = {0.9f, 0.3f, 0.0f};
+                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/head.png");
             else
                 continue;
-
-            this->drawSquare(this->window, px, py, tilePx, tilePx, rgb);
         }
     }
     this->prevSnakeHeadX = snakeHeadX;
     this->prevSnakeHeadY = snakeHeadY;
-
-    this->setShouldUpdateScreen(this->window, true);
 }
 
 void Drawer::drawBorder(int x, int y, int px, int py, int tilePx)
 {
-    this->rgb = {1.0f, 1.0f, 1.0f};
-
     if (x == 0)
-        this->drawSquare(this->window, px - tilePx, py, tilePx, tilePx, this->rgb);
+        this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, "assets/body.png");
 
     if (x == this->width - 1)
-        this->drawSquare(this->window, px + tilePx, py, tilePx, tilePx, this->rgb);
+        this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, "assets/body.png");
 
     if (y == 0)
-        this->drawSquare(this->window, px, py - tilePx, tilePx, tilePx, this->rgb);
+        this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, "assets/body.png");
 
     if (y == this->height - 1)
-        this->drawSquare(this->window, px, py + tilePx, tilePx, tilePx, this->rgb);
+        this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, "assets/body.png");
 }
 
 void Drawer::stopClient()
@@ -293,8 +286,7 @@ void Drawer::onMouseUp(float x, float y)
             this->client->setIsDead(false);
             this->client->setStopFlag(false);
         this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
-            this->gameMode = GAME;
-            this->isMenuDrawn = false;
+        this->gameMode = GAME;
         eventManager->SetCurrentState(StateType::Game);
     }
 }
