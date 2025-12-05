@@ -54,42 +54,36 @@ struct Vec2i {
 };
 
 enum type {
-    // Old types (removed, kept for reference):
-    // KEY,           // Replaced by KEY_PRESSED/KEY_RELEASED
-    // MOUSE,         // Replaced by MOUSE_BUTTON_PRESSED/MOUSE_BUTTON_RELEASED
-    // EXIT,          // Replaced by CLOSED
-    
-    // Match EventManager's EventType enum
-    CLOSED,                    // Window closed (was EXIT)
-    RESIZED,                    // Window resized
-    FOCUS_LOST,                 // Window lost focus
-    FOCUS_GAINED,               // Window gained focus
-    TEXT_ENTERED,               // Text input
-    KEY_PRESSED,                // Key pressed (was KEY)
-    KEY_RELEASED,               // Key released
-    MOUSE_WHEEL_SCROLLED,       // Mouse wheel scrolled
-    MOUSE_BUTTON_PRESSED,       // Mouse button pressed (was MOUSE)
-    MOUSE_BUTTON_RELEASED,      // Mouse button released
-    MOUSE_MOVED,               // Mouse moved
-    MOUSE_MOVED_RAW,           // Mouse moved (raw)
-    MOUSE_ENTERED,             // Mouse entered window
-    MOUSE_LEFT,                // Mouse left window
-    EMPTY = 99                      // No event (used by graphics libraries for polling)
+    CLOSED,
+    RESIZED,
+    FOCUS_LOST,
+    FOCUS_GAINED,
+    TEXT_ENTERED,
+    KEY_PRESSED,
+    KEY_RELEASED,
+    MOUSE_WHEEL_SCROLLED,
+    MOUSE_BUTTON_PRESSED,
+    MOUSE_BUTTON_RELEASED,
+    MOUSE_MOVED,
+    MOUSE_MOVED_RAW,
+    MOUSE_ENTERED,
+    MOUSE_LEFT,
+    EMPTY = 99
 };
 
 typedef struct s_event {
     type type;
     union {
-        int keyCode;        // When type == KEY_PRESSED/KEY_RELEASED: key code (UP, DOWN, LEFT, RIGHT, M, N, KEY_1, KEY_2, KEY_3)
+        int keyCode;
         struct {
-            int x, y;       // When type == MOUSE_*: mouse coordinates
-            int button;     // When type == MOUSE_BUTTON_*: button code (0=left, 1=right, 2=middle)
+            int x, y;
+            int button;
         } mouse;
         struct {
-            int width, height;  // When type == RESIZED: new window dimensions
+            int width, height;
         } window;
-        int wheelDelta;     // When type == MOUSE_WHEEL_SCROLLED: scroll delta
-        std::uint32_t unicode;  // When type == TEXT_ENTERED: unicode character
+        int wheelDelta;
+        std::uint32_t unicode;
     };
 } t_event;
 
