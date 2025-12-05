@@ -34,7 +34,7 @@ void Graphics::loadAssets(const char **paths)
     }
 }
 
-void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, const char *assetPath)
+void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, int degrees, const char *assetPath)
 {
     try
     {
@@ -47,6 +47,7 @@ void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pix
 
         sprite.setPosition(sf::Vector2f(pixelX, pixelY));
         sprite.setScale(sf::Vector2f(scaleX, scaleY));
+        sprite.setRotation(sf::degrees(degrees));
 
         gameWindow.draw(sprite);
     }

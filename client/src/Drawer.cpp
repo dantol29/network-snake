@@ -1,4 +1,5 @@
 #include "Drawer.hpp"
+#include <fstream>
 
 #define WIDTH 1000
 #define HEIGHT 1000
@@ -12,11 +13,7 @@ singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
 {
     tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 
-    assets = (char **)malloc(sizeof(char *) * 4);
-    assets[0] = strdup("assets/body.png");
-    assets[1] = strdup("assets/head.png");
-    assets[2] = strdup("assets/food.png");
-    assets[3] = NULL;
+    this->readAssets();
 }
 
 Drawer::~Drawer()
@@ -25,7 +22,6 @@ Drawer::~Drawer()
 
     for (int i = 0; assets[i]; ++i)
         free(assets[i]);
-    free(assets);
 }
 
 void Drawer::loadDynamicLibrary(const std::string &lib)
@@ -87,7 +83,7 @@ void Drawer::start()
         {
             this->startDynamicLib();
             this->openWindow();
-            this->loadAssets(this->window, (const char **)assets);
+            this->loadAssets(this->window, (const char **)assets.data());
             gameRunning = true;
 
             while (gameRunning)
@@ -128,6 +124,27 @@ void Drawer::start()
     }
 
     this->stopClient();
+}
+
+void Drawer::readAssets() 
+{
+    std::ifstream file("assets.list");
+    if (!file.is_open())
+        throw "Error opening assets file";
+
+    std::string line;
+    while (getline(file, line)) 
+    {
+        assets.push_back(strdup(line.c_str()));
+        line = "";
+    }
+
+    assets.push_back(nullptr);
+
+    if (!file.eof())
+        throw "Error reading assets file";
+
+    file.close();
 }
 
 void Drawer::openWindow()
@@ -184,11 +201,11 @@ void Drawer::drawGameField()
 
             char tile = gameField[wy][wx];
             if (tile == 'F')
-                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/food.png");
+                this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/food.png");
             else if (tile == 'B')
-                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/body.png");
+                this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/body.png");
             else if (tile == 'H')
-                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/head.png");
+                this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/head.png");
             else
                 continue;
         }
@@ -200,16 +217,16 @@ void Drawer::drawGameField()
 void Drawer::drawBorder(int x, int y, int px, int py, int tilePx)
 {
     if (x == 0)
-        this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, "assets/body.png");
+        this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 0, "assets/wall.png");
 
     if (x == this->width - 1)
-        this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, "assets/body.png");
+        this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, 0, "assets/wall.png");
 
     if (y == 0)
-        this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, "assets/body.png");
+        this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 0, "assets/wall.png");
 
     if (y == this->height - 1)
-        this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, "assets/body.png");
+        this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 0, "assets/wall.png");
 }
 
 void Drawer::stopClient()
@@ -219,42 +236,28 @@ void Drawer::stopClient()
         this->clientThread.join();
 }
 
-void Drawer::onMouseUp(float x, float y)
+void Drawer::startClient(const std::string &serverIP, bool isSinglePlayer)
 {
-    // Check which button was clicked
-    bool isSinglePlayer = false;
-    
-    if (x >= this->multiplayerButton.x && x <= this->multiplayerButton.x + this->multiplayerButton.width &&
-        y >= this->multiplayerButton.y && y <= this->multiplayerButton.y + this->multiplayerButton.height)
+    const std::string mode = isSinglePlayer ? "Single-player" : "Multiplayer";
+    std::cout << mode << " mode selected" << '\n';
+
+    if (!this->clientThread.joinable())
     {
-        isSinglePlayer = false;
-    }
-    else if (x >= this->singlePlayerButton.x && x <= this->singlePlayerButton.x + this->singlePlayerButton.width &&
-             y >= this->singlePlayerButton.y && y <= this->singlePlayerButton.y + this->singlePlayerButton.height)
-    {
-        isSinglePlayer = true;
-    }
-    else
-    {
-        return; // No button clicked
-    }
-    
-    if (!clientThread.joinable())
-    {
-        // TODO: Drawer manages input events and starts server owned by client - refactor!
-        const std::string serverIP = isSinglePlayer ? LOCAL_SERVER_IP : REMOTE_SERVER_IP;
-        const std::string modeName = isSinglePlayer ? "Single-player" : "Multiplayer";
-        
-        std::cout << modeName << " mode selected";
-        if (isSinglePlayer)
-            std::cout << " - Starting local server";
-        std::cout << std::endl;
-        
+        this->gameMode = GAME;
         this->client->setIsDead(false);
         this->client->setStopFlag(false);
         this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
-        this->gameMode = GAME;
     }
+}
+
+void Drawer::onMouseUp(float x, float y)
+{   
+    if (x >= this->multiplayerButton.x && x <= this->multiplayerButton.x + this->multiplayerButton.width &&
+        y >= this->multiplayerButton.y && y <= this->multiplayerButton.y + this->multiplayerButton.height)
+        this->startClient(REMOTE_SERVER_IP, false);
+    else if (x >= this->singlePlayerButton.x && x <= this->singlePlayerButton.x + this->singlePlayerButton.width &&
+            y >= this->singlePlayerButton.y && y <= this->singlePlayerButton.y + this->singlePlayerButton.height)
+        this->startClient(LOCAL_SERVER_IP, true);
 }
 
 void Drawer::onKeyPress(int key)
