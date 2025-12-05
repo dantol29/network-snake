@@ -1,4 +1,4 @@
-# A multiplayer snake game built in C++ with real-time networking capabilities.
+fo# A multiplayer snake game built in C++ with real-time networking capabilities.
 
 ## How to play (compatible with macOS and Linux)?
 
