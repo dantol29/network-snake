@@ -106,30 +106,6 @@ void EventManager::Update() {
     Binding *binding_ptr = binding.second;
     for (auto &event_pair : binding_ptr->events_) {
       switch (event_pair.first) {
-      case (EventType::Keyboard):
-        // TODO: Continuous keyboard polling - needs graphics-agnostic
-        // implementation if (sf::Keyboard::isKeyPressed(
-        //     sf::Keyboard::Key(event_pair.second.code_))) {
-        //     std::cout << "Keyboard key " << event_pair.second.code_ << " is
-        //     currently pressed (continuous check)" << std::endl; if
-        //     (binding_ptr->details_.key_code_ != -1) {
-        //         binding_ptr->details_.key_code_ = event_pair.second.code_;
-        //     }
-        //     ++(binding_ptr->c);
-        // }
-        break;
-      case (EventType::Mouse):
-        // TODO: Continuous mouse polling - needs graphics-agnostic
-        // implementation if (sf::Mouse::isButtonPressed(
-        //     sf::Mouse::Button(event_pair.second.code_))) {
-        //     // std::cout << "Mouse button " << event_pair.second.code_ << "
-        //     is currently pressed (continuous check)" << std::endl; if
-        //     (binding_ptr->details_.key_code_ != -1) {
-        //         binding_ptr->details_.key_code_ = event_pair.second.code_;
-        //     }
-        //     ++(binding_ptr->c);
-        // }
-        break;
       case (EventType::Joystick):
         // Up for expansion.
         break;
