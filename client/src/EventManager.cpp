@@ -7,7 +7,7 @@ EventManager::EventManager()
   LoadTargetEventBindings();
 }
 
-bool EventManager::AddBinding(
+bool EventManager::AddTargetEventBindingState(
     std::unique_ptr<TargetEventBindingState> binding) {
   if (bindings_.find(binding->name_) != bindings_.end()) {
     return false;
@@ -15,7 +15,7 @@ bool EventManager::AddBinding(
   return bindings_.emplace(binding->name_, std::move(binding)).second;
 }
 
-bool EventManager::RemoveBinding(std::string name) {
+bool EventManager::RemoveTargetEventBindingState(std::string name) {
   auto it = bindings_.find(name);
   if (it == bindings_.end()) {
     return false;
@@ -88,29 +88,33 @@ void EventManager::HandleEvent(t_event &event) {
 }
 
 void EventManager::Update() {
+  // 1. Check focus: if the window is not in focus, return early
   if (!has_focus_) {
     return;
   }
+  // 2. Loop through all target event bindings
   for (auto &binding : bindings_) {
+    // 3. Extract the binding state pointer (we don't need binding.first which
+    // is the string key)
     TargetEventBindingState *binding_ptr = binding.second.get();
-    for (auto &event_pair : binding_ptr->events_) {
-      switch (event_pair.first) {
-      case (TargetEventType::Joystick):
-        break;
-      default:
-        break;
-      }
-    }
+    // 4. Check if all requirements are fulfilled (size equals matched count)
     if (static_cast<int>(binding_ptr->events_.size()) ==
         binding_ptr->matched_count_) {
+      // 5. Collect all callbacks registered for the current state
       auto state_callbacks = callbacks_.find(current_state_);
       if (state_callbacks != callbacks_.end()) {
+        // 6. Find the callback by name (binding name and callback name must
+        // match). Binding name set in LoadTargetEventBindings(), callback name
+        // set in AddCallback() calls
         auto call_it = state_callbacks->second.find(binding_ptr->name_);
         if (call_it != state_callbacks->second.end()) {
+          // 7. Call the callback function with the matched event details
           call_it->second(&binding_ptr->details_);
         }
       }
 
+      // 8. Check for global callbacks (StateType(0) - always active regardless
+      // of state)
       auto other_callbacks = callbacks_.find(StateType(0));
       if (other_callbacks != callbacks_.end()) {
         auto call_it = other_callbacks->second.find(binding_ptr->name_);
@@ -175,7 +179,7 @@ void EventManager::LoadTargetEventBindings() {
     }
 
     if (binding) {
-      AddBinding(std::move(binding));
+      AddTargetEventBindingState(std::move(binding));
     }
   }
   bindings.close();

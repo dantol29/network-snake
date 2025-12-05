@@ -75,10 +75,16 @@ struct TargetEventBindingState {
   MatchedEventDetails details_;
 };
 
+// TargetEventBindingStates: map of binding name (string) to
+// TargetEventBindingState (unique_ptr to the binding state object)
 using TargetEventBindingStates =
     std::unordered_map<std::string, std::unique_ptr<TargetEventBindingState>>;
+// CallbackContainer: map of callback name (string) to callback function
+// (std::function that takes MatchedEventDetails* as argument)
 using CallbackContainer =
     std::unordered_map<std::string, std::function<void(MatchedEventDetails *)>>;
+// Callbacks: map of state (StateType) to CallbackContainer
+// (all callbacks registered for that state)
 using Callbacks = std::unordered_map<StateType, CallbackContainer>;
 
 class EventManager {
@@ -91,12 +97,15 @@ public:
   EventManager(EventManager &&) = default;
   EventManager &operator=(EventManager &&) = default;
 
-  bool AddBinding(std::unique_ptr<TargetEventBindingState> binding);
-  bool RemoveBinding(std::string name);
+  bool
+  AddTargetEventBindingState(std::unique_ptr<TargetEventBindingState> binding);
+  bool RemoveTargetEventBindingState(std::string name);
 
   void SetFocus(const bool &has_focus);
   void SetCurrentState(StateType state);
 
+  // NOTE: The 'name' parameter must match the name defined in keys.cfg for the
+  // desired triggering configuration
   template <class T>
   bool AddCallback(StateType state, const std::string &name,
                    void (T::*func)(MatchedEventDetails *), T *instance) {
