@@ -48,8 +48,6 @@ enum actions
     KEY_3
 };
 
-// Created to accommodate sf::Vector2i from SFML
-// Graphics-agnostic 2D integer vector for window size and mouse position
 struct Vec2i {
     int x;
     int y;
