@@ -66,16 +66,16 @@ private:
   // void onKeyPress(int action);
 
   // EventManager callbacks
-  void MoveUp(EventDetails *details);
-  void MoveDown(EventDetails *details);
-  void MoveLeft(EventDetails *details);
-  void MoveRight(EventDetails *details);
-  void ZoomIn(EventDetails *details);
-  void ZoomOut(EventDetails *details);
-  void SwitchLib1(EventDetails *details);
-  void SwitchLib2(EventDetails *details);
-  void SwitchLib3(EventDetails *details);
-  void OnMouseClick(EventDetails *details);
+  void MoveUp(MatchedEventDetails *details);
+  void MoveDown(MatchedEventDetails *details);
+  void MoveLeft(MatchedEventDetails *details);
+  void MoveRight(MatchedEventDetails *details);
+  void ZoomIn(MatchedEventDetails *details);
+  void ZoomOut(MatchedEventDetails *details);
+  void SwitchLib1(MatchedEventDetails *details);
+  void SwitchLib2(MatchedEventDetails *details);
+  void SwitchLib3(MatchedEventDetails *details);
+  void OnMouseClick(MatchedEventDetails *details);
 
   void loadDynamicLibrary(const std::string &lib);
   void drawBorder(int x, int y, int px, int py, int tilePx);

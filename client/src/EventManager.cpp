@@ -4,7 +4,7 @@
 
 EventManager::EventManager()
     : has_focus_(true), current_state_(StateType::Global) {
-  LoadBindings();
+  LoadTargetEventBindings();
 }
 
 EventManager::~EventManager() {
@@ -14,7 +14,7 @@ EventManager::~EventManager() {
   }
 }
 
-bool EventManager::AddBinding(Binding *binding) {
+bool EventManager::AddBinding(TargetEventBindingState *binding) {
   if (bindings_.find(binding->name_) != bindings_.end()) {
     return false;
   }
@@ -49,50 +49,46 @@ bool EventManager::RemoveCallback(StateType state, const std::string &name) {
 }
 
 void EventManager::HandleEvent(t_event &event) {
-  // Map t_event.type to EventType enum
-  // t_event.type values match EventType enum values
-  EventType eventType = static_cast<EventType>(event.type);
+  TargetEventType eventType = static_cast<TargetEventType>(event.type);
 
-  // Check if event type is valid
   if (event.type < CLOSED || event.type > MOUSE_LEFT) {
-    return; // Unknown event type
+    return;
   }
 
   for (auto &binding : bindings_) {
-    Binding *binding_ptr = binding.second;
+    TargetEventBindingState *binding_ptr = binding.second;
     for (auto &event_pair : binding_ptr->events_) {
       if (event_pair.first != eventType) {
         continue;
       }
-      if (eventType == EventType::KeyPressed ||
-          eventType == EventType::KeyReleased) {
+      if (eventType == TargetEventType::KeyPressed ||
+          eventType == TargetEventType::KeyReleased) {
         if (event_pair.second.code_ == event.keyCode) {
           binding_ptr->details_.key_code_ = event.keyCode;
-          ++(binding_ptr->c);
+          ++(binding_ptr->matched_count_);
           break;
         }
-      } else if (eventType == EventType::MouseButtonPressed ||
-                 eventType == EventType::MouseButtonReleased) {
+      } else if (eventType == TargetEventType::MouseButtonPressed ||
+                 eventType == TargetEventType::MouseButtonReleased) {
         if (event_pair.second.code_ == event.mouse.button) {
-          binding_ptr->details_.mouse_.x = event.mouse.x;
-          binding_ptr->details_.mouse_.y = event.mouse.y;
+          binding_ptr->details_.mouse_position_.x = event.mouse.x;
+          binding_ptr->details_.mouse_position_.y = event.mouse.y;
           if (binding_ptr->details_.key_code_ != -1) {
             binding_ptr->details_.key_code_ = event.mouse.button;
           }
-          ++(binding_ptr->c);
+          ++(binding_ptr->matched_count_);
           break;
         }
       } else {
-        // No need for additional checking.
-        if (eventType == EventType::MouseWheelScrolled) {
+        if (eventType == TargetEventType::MouseWheelScrolled) {
           binding_ptr->details_.mouse_wheel_delta_ = event.wheelDelta;
-        } else if (eventType == EventType::Resized) {
-          binding_ptr->details_.size_.x = event.window.width;
-          binding_ptr->details_.size_.y = event.window.height;
-        } else if (eventType == EventType::TextEntered) {
+        } else if (eventType == TargetEventType::Resized) {
+          binding_ptr->details_.window_size_.x = event.window.width;
+          binding_ptr->details_.window_size_.y = event.window.height;
+        } else if (eventType == TargetEventType::TextEntered) {
           binding_ptr->details_.text_entered_ = event.unicode;
         }
-        ++(binding_ptr->c);
+        ++(binding_ptr->matched_count_);
       }
     }
   }
@@ -103,19 +99,17 @@ void EventManager::Update() {
     return;
   }
   for (auto &binding : bindings_) {
-    Binding *binding_ptr = binding.second;
+    TargetEventBindingState *binding_ptr = binding.second;
     for (auto &event_pair : binding_ptr->events_) {
       switch (event_pair.first) {
-      case (EventType::Joystick):
-        // Up for expansion.
+      case (TargetEventType::Joystick):
         break;
       default:
-        // Other event types are handled in HandleEvent, not here
         break;
       }
     }
-    if (static_cast<int>(binding_ptr->events_.size()) == binding_ptr->c) {
-      // Check callbacks for current state
+    if (static_cast<int>(binding_ptr->events_.size()) ==
+        binding_ptr->matched_count_) {
       auto state_callbacks = callbacks_.find(current_state_);
       if (state_callbacks != callbacks_.end()) {
         auto call_it = state_callbacks->second.find(binding_ptr->name_);
@@ -124,8 +118,6 @@ void EventManager::Update() {
         }
       }
 
-      // Check global callbacks (StateType(0) - always active regardless of
-      // state)
       auto other_callbacks = callbacks_.find(StateType(0));
       if (other_callbacks != callbacks_.end()) {
         auto call_it = other_callbacks->second.find(binding_ptr->name_);
@@ -134,12 +126,12 @@ void EventManager::Update() {
         }
       }
     }
-    binding_ptr->c = 0;
+    binding_ptr->matched_count_ = 0;
     binding_ptr->details_.Clear();
   }
 }
 
-void EventManager::LoadBindings() {
+void EventManager::LoadTargetEventBindings() {
   std::string delimiter = ":";
   std::ifstream bindings;
   bindings.open("keys.cfg");
@@ -158,7 +150,8 @@ void EventManager::LoadBindings() {
     if (callbackName.empty()) {
       continue;
     }
-    Binding *binding = new Binding(callbackName);
+    TargetEventBindingState *binding =
+        new TargetEventBindingState(callbackName);
 
     while (!key_stream.eof()) {
       std::string key_val;
@@ -174,15 +167,16 @@ void EventManager::LoadBindings() {
         break;
       }
       try {
-        EventType type = EventType(stoi(key_val.substr(start, end - start)));
+        TargetEventType type =
+            TargetEventType(stoi(key_val.substr(start, end - start)));
         std::string codeStr = key_val.substr(end + delimiter.length());
         std::string::size_type nextDelim = codeStr.find(delimiter);
         int code =
             stoi(nextDelim == std::string::npos ? codeStr
                                                 : codeStr.substr(0, nextDelim));
-        EventInfo eventInfo;
-        eventInfo.code_ = code;
-        binding->BindEvent(type, eventInfo);
+        TargetEventCode event_code;
+        event_code.code_ = code;
+        binding->AddTargetEvent(type, event_code);
       } catch (...) {
         delete binding;
         binding = nullptr;

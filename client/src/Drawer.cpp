@@ -281,60 +281,60 @@ void Drawer::onMouseUp(float x, float y) {
 }
 
 // EventManager callbacks
-void Drawer::MoveUp(EventDetails *details) {
+void Drawer::MoveUp(MatchedEventDetails *details) {
   (void)details; // Unused, but required by callback signature
   this->client->sendDirection(UP);
 }
 
-void Drawer::MoveDown(EventDetails *details) {
+void Drawer::MoveDown(MatchedEventDetails *details) {
   (void)details;
   this->client->sendDirection(DOWN);
 }
 
-void Drawer::MoveLeft(EventDetails *details) {
+void Drawer::MoveLeft(MatchedEventDetails *details) {
   (void)details;
   this->client->sendDirection(LEFT);
 }
 
-void Drawer::MoveRight(EventDetails *details) {
+void Drawer::MoveRight(MatchedEventDetails *details) {
   (void)details;
   this->client->sendDirection(RIGHT);
 }
 
-void Drawer::ZoomIn(EventDetails *details) {
+void Drawer::ZoomIn(MatchedEventDetails *details) {
   (void)details;
   this->screenSize = this->screenSize * 1.10 + 0.5;
   this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
-void Drawer::ZoomOut(EventDetails *details) {
+void Drawer::ZoomOut(MatchedEventDetails *details) {
   (void)details;
   this->screenSize = this->screenSize / 1.10;
   this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
-void Drawer::SwitchLib1(EventDetails *details) {
+void Drawer::SwitchLib1(MatchedEventDetails *details) {
   (void)details;
   this->switchLibPath = "../libs/lib1/lib1";
   this->gameRunning = false;
 }
 
-void Drawer::SwitchLib2(EventDetails *details) {
+void Drawer::SwitchLib2(MatchedEventDetails *details) {
   (void)details;
   this->switchLibPath = "../libs/lib2/lib2";
   this->gameRunning = false;
 }
 
-void Drawer::SwitchLib3(EventDetails *details) {
+void Drawer::SwitchLib3(MatchedEventDetails *details) {
   (void)details;
   this->switchLibPath = "../libs/lib4/lib3";
   this->gameRunning = false;
 }
 
-void Drawer::OnMouseClick(EventDetails *details) {
+void Drawer::OnMouseClick(MatchedEventDetails *details) {
   // Only process mouse clicks when in menu mode
   if (this->gameMode != MENU) {
     return;
   }
-  onMouseUp(details->mouse_.x, details->mouse_.y);
+  onMouseUp(details->mouse_position_.x, details->mouse_position_.y);
 }
