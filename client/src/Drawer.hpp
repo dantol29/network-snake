@@ -4,12 +4,7 @@
 #include "../includes/nibbler.hpp"
 #include "Client.hpp"
 #include "EventManager.hpp"
-
-enum mode
-{
-    MENU,
-    GAME
-};
+#include "StateManager.hpp"
 
 struct Button {
     float x;
@@ -46,7 +41,7 @@ private:
     bool gameRunning = true;
     std::string switchLibPath;
     std::thread clientThread;
-    mode gameMode;
+    StateType currentState;
     char **assets;
     const Button multiplayerButton;
     const Button singlePlayerButton;

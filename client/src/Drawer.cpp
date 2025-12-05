@@ -7,7 +7,7 @@
 #define SCREEN_LEN 2.0f
 
 Drawer::Drawer(Client *client) : client(client), screenSize(INITIAL_SCREEN_SIZE), 
-prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath("../libs/lib2/lib2"), gameMode(MENU),
+prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath("../libs/lib2/lib2"), currentState(StateType::MainMenu),
 multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
 singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
 {
@@ -143,7 +143,7 @@ void Drawer::start()
                     eventManager->Update();
                 }
 
-                if (this->gameMode == GAME)
+                if (this->currentState == StateType::Game)
                     this->drawGameField();
                 else
                     this->drawMenu();
@@ -184,7 +184,7 @@ void Drawer::drawGameField()
     if (this->client->getIsDead() || this->client->getStopFlag())
     {
         this->stopClient();
-        this->gameMode = MENU;
+        this->currentState = StateType::MainMenu;
         return;
     }
 
@@ -286,7 +286,7 @@ void Drawer::onMouseUp(float x, float y)
             this->client->setIsDead(false);
             this->client->setStopFlag(false);
         this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
-        this->gameMode = GAME;
+        this->currentState = StateType::Game;
         eventManager->SetCurrentState(StateType::Game);
     }
 }
@@ -390,7 +390,7 @@ void Drawer::SwitchLib3(EventDetails* l_details)
 void Drawer::OnMouseClick(EventDetails* l_details)
 {
     // Only process mouse clicks when in menu mode
-    if (this->gameMode != MENU) {
+    if (this->currentState != StateType::MainMenu) {
         return;
     }
     std::cout << "[Drawer::OnMouseClick] Mouse clicked at (" << l_details->m_mouse.x << ", " << l_details->m_mouse.y << ")" << std::endl;
