@@ -7,18 +7,12 @@ EventManager::EventManager()
   LoadTargetEventBindings();
 }
 
-EventManager::~EventManager() {
-  for (auto &it : bindings_) {
-    delete it.second;
-    it.second = nullptr;
-  }
-}
-
-bool EventManager::AddBinding(TargetEventBindingState *binding) {
+bool EventManager::AddBinding(
+    std::unique_ptr<TargetEventBindingState> binding) {
   if (bindings_.find(binding->name_) != bindings_.end()) {
     return false;
   }
-  return bindings_.emplace(binding->name_, binding).second;
+  return bindings_.emplace(binding->name_, std::move(binding)).second;
 }
 
 bool EventManager::RemoveBinding(std::string name) {
@@ -26,7 +20,6 @@ bool EventManager::RemoveBinding(std::string name) {
   if (it == bindings_.end()) {
     return false;
   }
-  delete it->second;
   bindings_.erase(it);
   return true;
 }
@@ -56,7 +49,7 @@ void EventManager::HandleEvent(t_event &event) {
   }
 
   for (auto &binding : bindings_) {
-    TargetEventBindingState *binding_ptr = binding.second;
+    TargetEventBindingState *binding_ptr = binding.second.get();
     for (auto &event_pair : binding_ptr->events_) {
       if (event_pair.first != eventType) {
         continue;
@@ -99,7 +92,7 @@ void EventManager::Update() {
     return;
   }
   for (auto &binding : bindings_) {
-    TargetEventBindingState *binding_ptr = binding.second;
+    TargetEventBindingState *binding_ptr = binding.second.get();
     for (auto &event_pair : binding_ptr->events_) {
       switch (event_pair.first) {
       case (TargetEventType::Joystick):
@@ -150,8 +143,7 @@ void EventManager::LoadTargetEventBindings() {
     if (callbackName.empty()) {
       continue;
     }
-    TargetEventBindingState *binding =
-        new TargetEventBindingState(callbackName);
+    auto binding = std::make_unique<TargetEventBindingState>(callbackName);
 
     while (!key_stream.eof()) {
       std::string key_val;
@@ -162,8 +154,7 @@ void EventManager::LoadTargetEventBindings() {
       int start = 0;
       std::string::size_type end = key_val.find(delimiter);
       if (end == std::string::npos) {
-        delete binding;
-        binding = nullptr;
+        binding.reset();
         break;
       }
       try {
@@ -178,14 +169,13 @@ void EventManager::LoadTargetEventBindings() {
         event_code.code_ = code;
         binding->AddTargetEvent(type, event_code);
       } catch (...) {
-        delete binding;
-        binding = nullptr;
+        binding.reset();
         break;
       }
     }
 
-    if (binding && !AddBinding(binding)) {
-      delete binding;
+    if (binding) {
+      AddBinding(std::move(binding));
     }
   }
   bindings.close();

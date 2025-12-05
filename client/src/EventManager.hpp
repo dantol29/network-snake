@@ -3,6 +3,7 @@
 
 #include "../includes/nibbler.hpp"
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -75,7 +76,7 @@ struct TargetEventBindingState {
 };
 
 using TargetEventBindingStates =
-    std::unordered_map<std::string, TargetEventBindingState *>;
+    std::unordered_map<std::string, std::unique_ptr<TargetEventBindingState>>;
 using CallbackContainer =
     std::unordered_map<std::string, std::function<void(MatchedEventDetails *)>>;
 using Callbacks = std::unordered_map<StateType, CallbackContainer>;
@@ -83,9 +84,8 @@ using Callbacks = std::unordered_map<StateType, CallbackContainer>;
 class EventManager {
 public:
   EventManager();
-  ~EventManager();
 
-  bool AddBinding(TargetEventBindingState *binding);
+  bool AddBinding(std::unique_ptr<TargetEventBindingState> binding);
   bool RemoveBinding(std::string name);
 
   void SetFocus(const bool &has_focus);
