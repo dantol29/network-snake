@@ -1,6 +1,5 @@
 #include "EventManager.hpp"
 #include <fstream>
-#include <iostream>
 #include <sstream>
 
 EventManager::EventManager()
@@ -59,15 +58,6 @@ void EventManager::HandleEvent(t_event &event) {
     return; // Unknown event type
   }
 
-  // Debug: log mouse events (key events logged only on match)
-  if (eventType == EventType::MouseButtonPressed ||
-      eventType == EventType::MouseButtonReleased) {
-    std::cout << "[EventManager::HandleEvent] Mouse event type="
-              << static_cast<int>(eventType) << " button=" << event.mouse.button
-              << " at (" << event.mouse.x << ", " << event.mouse.y << ")"
-              << std::endl;
-  }
-
   for (auto &binding : bindings_) {
     Binding *binding_ptr = binding.second;
     for (auto &event_pair : binding_ptr->events_) {
@@ -77,23 +67,13 @@ void EventManager::HandleEvent(t_event &event) {
       if (eventType == EventType::KeyPressed ||
           eventType == EventType::KeyReleased) {
         if (event_pair.second.code_ == event.keyCode) {
-          std::cout << "[EventManager::HandleEvent] Match! Key code "
-                    << event.keyCode << " matches binding '"
-                    << binding_ptr->name_ << "'" << std::endl;
           binding_ptr->details_.key_code_ = event.keyCode;
           ++(binding_ptr->c);
           break;
         }
       } else if (eventType == EventType::MouseButtonPressed ||
                  eventType == EventType::MouseButtonReleased) {
-        std::cout << "[EventManager] Checking binding '" << binding_ptr->name_
-                  << "' for mouse button " << event.mouse.button
-                  << " (binding expects " << event_pair.second.code_ << ")"
-                  << std::endl;
         if (event_pair.second.code_ == event.mouse.button) {
-          std::cout << "[EventManager] Match! Setting mouse coords to ("
-                    << event.mouse.x << ", " << event.mouse.y << ")"
-                    << std::endl;
           binding_ptr->details_.mouse_.x = event.mouse.x;
           binding_ptr->details_.mouse_.y = event.mouse.y;
           if (binding_ptr->details_.key_code_ != -1) {
@@ -159,43 +139,21 @@ void EventManager::Update() {
       }
     }
     if (static_cast<int>(binding_ptr->events_.size()) == binding_ptr->c) {
-      std::cout << "[EventManager::Update] Binding '" << binding_ptr->name_
-                << "' triggered! All " << binding_ptr->c << " events matched."
-                << std::endl;
-      std::cout << "[EventManager::Update] Current state: "
-                << static_cast<int>(current_state_) << std::endl;
-
       // Check callbacks for current state
       auto state_callbacks = callbacks_.find(current_state_);
       if (state_callbacks != callbacks_.end()) {
-        std::cout << "[EventManager::Update] Found callbacks for current "
-                     "state, looking for '"
-                  << binding_ptr->name_ << "'" << std::endl;
         auto call_it = state_callbacks->second.find(binding_ptr->name_);
         if (call_it != state_callbacks->second.end()) {
-          std::cout << "[EventManager::Update] Calling callback for '"
-                    << binding_ptr->name_ << "'" << std::endl;
           call_it->second(&binding_ptr->details_);
-        } else {
-          std::cout << "[EventManager::Update] No callback found for '"
-                    << binding_ptr->name_ << "' in current state" << std::endl;
         }
-      } else {
-        std::cout << "[EventManager::Update] No callbacks registered for "
-                     "current state"
-                  << std::endl;
       }
 
       // Check global callbacks (StateType(0) - always active regardless of
       // state)
       auto other_callbacks = callbacks_.find(StateType(0));
       if (other_callbacks != callbacks_.end()) {
-        std::cout << "[EventManager::Update] Checking global callbacks for '"
-                  << binding_ptr->name_ << "'" << std::endl;
         auto call_it = other_callbacks->second.find(binding_ptr->name_);
         if (call_it != other_callbacks->second.end()) {
-          std::cout << "[EventManager::Update] Calling global callback for '"
-                    << binding_ptr->name_ << "'" << std::endl;
           call_it->second(&binding_ptr->details_);
         }
       }
@@ -210,10 +168,8 @@ void EventManager::LoadBindings() {
   std::ifstream bindings;
   bindings.open("keys.cfg");
   if (!bindings.is_open()) {
-    std::cout << "! Failed loading keys.cfg." << std::endl;
     return;
   }
-  std::cout << "[EventManager] Loading bindings from keys.cfg..." << std::endl;
 
   std::string line;
   while (std::getline(bindings, line)) {
@@ -259,16 +215,8 @@ void EventManager::LoadBindings() {
     }
 
     if (binding && !AddBinding(binding)) {
-      std::cout << "[EventManager] Failed to add binding: " << binding->name_
-                << std::endl;
       delete binding;
-    } else if (binding) {
-      std::cout << "[EventManager] Loaded binding: " << binding->name_
-                << " with " << binding->events_.size() << " event(s)"
-                << std::endl;
     }
   }
   bindings.close();
-  std::cout << "[EventManager] Loaded " << bindings_.size() << " bindings total"
-            << std::endl;
 }
