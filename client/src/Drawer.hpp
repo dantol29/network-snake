@@ -45,7 +45,7 @@ private:
     std::string switchLibPath;
     std::thread clientThread;
     mode gameMode;
-    char **assets;
+    std::vector<char *> assets;
     const Button multiplayerButton;
     const Button singlePlayerButton;
     
@@ -60,6 +60,7 @@ private:
     cleanupFunc cleanup;
     
     void stopClient();
+    void startClient(const std::string &serverIP, bool isSinglePlayer);
     void openWindow();
     void startDynamicLib();
     void closeDynamicLib();
@@ -69,6 +70,7 @@ private:
     void drawBorder(int x, int y, int px, int py, int tilePx);
     void drawGameField();
     void drawMenu();
+    void readAssets();
 };
 
 #endif

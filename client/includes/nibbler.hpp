@@ -68,7 +68,7 @@ typedef void (*cleanupFunc)(void *);
 typedef t_event (*checkEventsFunc)(void *);
 typedef void (*loadAssetsFunc)(void *, const char **);
 typedef void (*drawTextFunc)(void *, float, float, int, const char *);
-typedef void (*drawAssetFunc)(void *, float, float, float, float, const char *);
+typedef void (*drawAssetFunc)(void *, float, float, float, float, int, const char *);
 typedef void (*drawButtonFunc)(void *, float, float, float, float, const char *);
 
 #endif
