@@ -52,7 +52,6 @@ Drawer::~Drawer()
 void Drawer::loadDynamicLibrary(const std::string &lib)
 {
     std::string libPath = lib + LIB_EXTENSION;
-    std::cout << libPath << std::endl;
     this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
     if (!this->dynamicLibrary)
         throw "Failed to load dynlib";
@@ -116,17 +115,6 @@ void Drawer::start()
                 this->beginFrame(this->window);
 
                 t_event event = this->checkEvents(this->window);
-                
-                // Debug: log all events
-                if (event.type != EMPTY) {
-                    std::cout << "[Drawer] Event received: type=" << static_cast<int>(event.type);
-                    if (event.type == MOUSE_BUTTON_PRESSED || event.type == MOUSE_BUTTON_RELEASED) {
-                        std::cout << " mouse button=" << event.mouse.button << " at (" << event.mouse.x << ", " << event.mouse.y << ")";
-                    } else if (event.type == KEY_PRESSED || event.type == KEY_RELEASED) {
-                        std::cout << " keyCode=" << event.keyCode;
-                    }
-                    std::cout << std::endl;
-                }
                 
                 // Handle CLOSED event directly
                 if (event.type == CLOSED) {
@@ -360,7 +348,5 @@ void Drawer::OnMouseClick(EventDetails* l_details)
     if (this->gameMode != MENU) {
         return;
     }
-    std::cout << "[Drawer::OnMouseClick] Mouse clicked at (" << l_details->m_mouse.x << ", " << l_details->m_mouse.y << ")" << std::endl;
-    // Extract mouse coordinates from EventDetails
     onMouseUp(l_details->m_mouse.x, l_details->m_mouse.y);
 }
