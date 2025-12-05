@@ -85,6 +85,7 @@ private:
     void drawBorder(int x, int y, int px, int py, int tilePx);
     void drawGameField();
     void drawMenu();
+    void loadAssetPaths(const std::string &configFile = "assets.cfg");
 };
 
 #endif
