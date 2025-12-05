@@ -69,8 +69,9 @@ void Graphics::loadAssets(const char **paths)
     }
 }
 
-void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, const char *assetPath)
+void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, int degrees, const char *assetPath)
 {
+    (void)degrees; // TODO: Implement rotation support
     try
     {
         SDL_Texture *tex = assets.at(assetPath);

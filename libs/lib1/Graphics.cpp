@@ -53,7 +53,7 @@ void Graphics::loadAssets(const char **paths)
     }
 }
 
-void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, const char *assetPath)
+void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, int degrees, const char *assetPath)
 {
     try
     {
@@ -63,7 +63,7 @@ void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pix
         Rectangle dest = {pixelX, pixelY, pixelWidth, pixelHeight};
         Vector2 origin = {0, 0};
 
-        DrawTexturePro(tex, src, dest, origin, 0.0f, WHITE);
+        DrawTexturePro(tex, src, dest, origin, (float)degrees, WHITE);
     }
     catch (const std::out_of_range &e)
     {
