@@ -60,20 +60,20 @@ enum type {
     // EXIT,          // Replaced by CLOSED
     
     // Match EventManager's EventType enum
-    CLOSED = 0,                    // Window closed (was EXIT)
-    RESIZED = 1,                    // Window resized
-    FOCUS_LOST = 2,                 // Window lost focus
-    FOCUS_GAINED = 3,               // Window gained focus
-    TEXT_ENTERED = 4,               // Text input
-    KEY_PRESSED = 5,                // Key pressed (was KEY)
-    KEY_RELEASED = 6,               // Key released
-    MOUSE_WHEEL_SCROLLED = 7,       // Mouse wheel scrolled
-    MOUSE_BUTTON_PRESSED = 8,       // Mouse button pressed (was MOUSE)
-    MOUSE_BUTTON_RELEASED = 9,      // Mouse button released
-    MOUSE_MOVED = 10,               // Mouse moved
-    MOUSE_MOVED_RAW = 11,           // Mouse moved (raw)
-    MOUSE_ENTERED = 12,             // Mouse entered window
-    MOUSE_LEFT = 13,                // Mouse left window
+    CLOSED,                    // Window closed (was EXIT)
+    RESIZED,                    // Window resized
+    FOCUS_LOST,                 // Window lost focus
+    FOCUS_GAINED,               // Window gained focus
+    TEXT_ENTERED,               // Text input
+    KEY_PRESSED,                // Key pressed (was KEY)
+    KEY_RELEASED,               // Key released
+    MOUSE_WHEEL_SCROLLED,       // Mouse wheel scrolled
+    MOUSE_BUTTON_PRESSED,       // Mouse button pressed (was MOUSE)
+    MOUSE_BUTTON_RELEASED,      // Mouse button released
+    MOUSE_MOVED,               // Mouse moved
+    MOUSE_MOVED_RAW,           // Mouse moved (raw)
+    MOUSE_ENTERED,             // Mouse entered window
+    MOUSE_LEFT,                // Mouse left window
     EMPTY = 99                      // No event (used by graphics libraries for polling)
 };
 
