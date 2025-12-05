@@ -84,6 +84,12 @@ using Callbacks = std::unordered_map<StateType, CallbackContainer>;
 class EventManager {
 public:
   EventManager();
+  ~EventManager() = default;
+
+  EventManager(const EventManager &) = delete;
+  EventManager &operator=(const EventManager &) = delete;
+  EventManager(EventManager &&) = default;
+  EventManager &operator=(EventManager &&) = default;
 
   bool AddBinding(std::unique_ptr<TargetEventBindingState> binding);
   bool RemoveBinding(std::string name);
