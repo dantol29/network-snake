@@ -281,60 +281,60 @@ void Drawer::onMouseUp(float x, float y) {
 }
 
 // EventManager callbacks
-void Drawer::MoveUp(EventDetails *l_details) {
-  (void)l_details; // Unused, but required by callback signature
+void Drawer::MoveUp(EventDetails *details) {
+  (void)details; // Unused, but required by callback signature
   this->client->sendDirection(UP);
 }
 
-void Drawer::MoveDown(EventDetails *l_details) {
-  (void)l_details;
+void Drawer::MoveDown(EventDetails *details) {
+  (void)details;
   this->client->sendDirection(DOWN);
 }
 
-void Drawer::MoveLeft(EventDetails *l_details) {
-  (void)l_details;
+void Drawer::MoveLeft(EventDetails *details) {
+  (void)details;
   this->client->sendDirection(LEFT);
 }
 
-void Drawer::MoveRight(EventDetails *l_details) {
-  (void)l_details;
+void Drawer::MoveRight(EventDetails *details) {
+  (void)details;
   this->client->sendDirection(RIGHT);
 }
 
-void Drawer::ZoomIn(EventDetails *l_details) {
-  (void)l_details;
+void Drawer::ZoomIn(EventDetails *details) {
+  (void)details;
   this->screenSize = this->screenSize * 1.10 + 0.5;
   this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
-void Drawer::ZoomOut(EventDetails *l_details) {
-  (void)l_details;
+void Drawer::ZoomOut(EventDetails *details) {
+  (void)details;
   this->screenSize = this->screenSize / 1.10;
   this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
-void Drawer::SwitchLib1(EventDetails *l_details) {
-  (void)l_details;
+void Drawer::SwitchLib1(EventDetails *details) {
+  (void)details;
   this->switchLibPath = "../libs/lib1/lib1";
   this->gameRunning = false;
 }
 
-void Drawer::SwitchLib2(EventDetails *l_details) {
-  (void)l_details;
+void Drawer::SwitchLib2(EventDetails *details) {
+  (void)details;
   this->switchLibPath = "../libs/lib2/lib2";
   this->gameRunning = false;
 }
 
-void Drawer::SwitchLib3(EventDetails *l_details) {
-  (void)l_details;
+void Drawer::SwitchLib3(EventDetails *details) {
+  (void)details;
   this->switchLibPath = "../libs/lib4/lib3";
   this->gameRunning = false;
 }
 
-void Drawer::OnMouseClick(EventDetails *l_details) {
+void Drawer::OnMouseClick(EventDetails *details) {
   // Only process mouse clicks when in menu mode
   if (this->gameMode != MENU) {
     return;
   }
-  onMouseUp(l_details->m_mouse.x, l_details->m_mouse.y);
+  onMouseUp(details->mouse_.x, details->mouse_.y);
 }

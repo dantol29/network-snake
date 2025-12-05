@@ -45,55 +45,54 @@ enum class EventType {
 };
 
 struct EventInfo {
-  EventInfo() { m_code = 0; }
-  EventInfo(int l_event) { m_code = l_event; }
+  EventInfo() { code_ = 0; }
+  EventInfo(int event) { code_ = event; }
 
   union {
-    int m_code;
+    int code_;
   };
 };
 
 using Events = std::vector<std::pair<EventType, EventInfo>>;
 
 struct EventDetails {
-  EventDetails(const std::string &l_bindName) : m_name(l_bindName) { Clear(); }
+  EventDetails(const std::string &bind_name) : name_(bind_name) { Clear(); }
 
-  std::string m_name;
-  // NOTE: m_size naming is vague - doesn't indicate what size or where it comes
+  std::string name_;
+  // NOTE: size_ naming is vague - doesn't indicate what size or where it comes
   // from. Better names would be: windowWidth/windowHeight, or
   // resizedWidth/resizedHeight. Functionally, it's only used for
   // sf::Event::Resized, so context limits confusion.
-  Vec2i m_size;
-  std::uint32_t m_textEntered;
-  Vec2i m_mouse;
-  int m_mouseWheelDelta;
-  int m_keyCode; // Single key code.
+  Vec2i size_;
+  std::uint32_t text_entered_;
+  Vec2i mouse_;
+  int mouse_wheel_delta_;
+  int key_code_; // Single key code.
 
   void Clear() {
-    m_size = Vec2i{0, 0};
-    m_textEntered = 0;
-    m_mouse = Vec2i{0, 0};
-    m_mouseWheelDelta = 0;
-    m_keyCode = -1;
+    size_ = Vec2i{0, 0};
+    text_entered_ = 0;
+    mouse_ = Vec2i{0, 0};
+    mouse_wheel_delta_ = 0;
+    key_code_ = -1;
   }
 };
 
 struct Binding {
-  Binding(const std::string &l_name)
-      : m_name(l_name), c(0), m_details(l_name) {}
+  Binding(const std::string &name) : name_(name), c(0), details_(name) {}
 
   // NOTE: Consider adding a method that takes an array/vector of event pairs
   // to bind multiple events at once, rather than calling BindEvent multiple
   // times. Alternatively, consider an EventInfo constructor that takes an array
   // of events.
-  void BindEvent(EventType l_type, EventInfo l_info = EventInfo()) {
-    m_events.emplace_back(l_type, l_info);
+  void BindEvent(EventType type, EventInfo info = EventInfo()) {
+    events_.emplace_back(type, info);
   }
 
-  Events m_events;
-  std::string m_name;
+  Events events_;
+  std::string name_;
   int c; // Count of events that are "happening".
-  EventDetails m_details;
+  EventDetails details_;
 };
 
 using Bindings = std::unordered_map<std::string, Binding *>;
@@ -107,33 +106,33 @@ public:
   EventManager();
   ~EventManager();
 
-  bool AddBinding(Binding *l_binding);
-  bool RemoveBinding(std::string l_name);
+  bool AddBinding(Binding *binding);
+  bool RemoveBinding(std::string name);
 
-  void SetFocus(const bool &l_focus);
-  void SetCurrentState(StateType l_state);
+  void SetFocus(const bool &has_focus);
+  void SetCurrentState(StateType state);
 
   // Needs to be defined in the header!
   template <class T>
-  bool AddCallback(StateType l_state, const std::string &l_name,
-                   void (T::*l_func)(EventDetails *), T *l_instance) {
-    auto itr = m_callbacks.emplace(l_state, CallbackContainer()).first;
-    auto temp = std::bind(l_func, l_instance, std::placeholders::_1);
-    return itr->second.emplace(l_name, temp).second;
+  bool AddCallback(StateType state, const std::string &name,
+                   void (T::*func)(EventDetails *), T *instance) {
+    auto it = callbacks_.emplace(state, CallbackContainer()).first;
+    auto temp = std::bind(func, instance, std::placeholders::_1);
+    return it->second.emplace(name, temp).second;
   }
 
-  bool RemoveCallback(StateType l_state, const std::string &l_name);
+  bool RemoveCallback(StateType state, const std::string &name);
 
-  void HandleEvent(t_event &l_event);
+  void HandleEvent(t_event &event);
   void Update();
 
 private:
   void LoadBindings();
 
-  Bindings m_bindings;
-  Callbacks m_callbacks;
-  bool m_hasFocus;
-  StateType m_currentState;
+  Bindings bindings_;
+  Callbacks callbacks_;
+  bool has_focus_;
+  StateType current_state_;
 };
 
 // SFML types used in this file:
