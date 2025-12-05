@@ -8,17 +8,8 @@
 #include <functional>
 #include "../includes/nibbler.hpp"  // For Vec2i
 
-// StateType enum for state-aware callbacks
-// NOTE: This is defined here (not in StateManager) to keep EventManager independent.
-// State-aware callbacks allow different callbacks to be registered for different UI states
-// (e.g., menu vs game). If StateManager is added later, this can be moved there.
-enum class StateType {
-    Global = 0,  // Global callbacks (always active regardless of state)
-    Menu = 1,
-    Game = 2,
-    GameOver = 3,
-    Paused = 4
-};
+// Forward declaration - StateType is defined in StateManager.hpp
+enum class StateType;
 
 // SFML 3.x uses variant-based events, so we use numeric values for EventType
 // These correspond to the variant index positions in sf::Event

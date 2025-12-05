@@ -31,10 +31,10 @@ singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
     eventManager->AddCallback(StateType::Game, "Key_N", &Drawer::ZoomOut, this);
     
     // Register mouse callback - only active in Menu state (not during gameplay)
-    eventManager->AddCallback(StateType::Menu, "Mouse_Left", &Drawer::OnMouseClick, this);
+    eventManager->AddCallback(StateType::MainMenu, "Mouse_Left", &Drawer::OnMouseClick, this);
     
     // Set initial state to Menu (since we start with the menu)
-    eventManager->SetCurrentState(StateType::Menu);
+    eventManager->SetCurrentState(StateType::MainMenu);
 
     assets = (char **)malloc(sizeof(char *) * 4);
     assets[0] = strdup("assets/body.png");

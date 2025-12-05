@@ -1,4 +1,5 @@
 #include "EventManager.hpp"
+#include "StateManager.hpp"  // For StateType enum
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -182,8 +183,8 @@ void EventManager::Update() {
                 std::cout << "[EventManager::Update] No callbacks registered for current state" << std::endl;
             }
             
-            // Check global callbacks (StateType(0) - always active regardless of state)
-            auto otherCallbacks = m_callbacks.find(StateType(0));
+            // Check global callbacks (StateType::Global - always active regardless of state)
+            auto otherCallbacks = m_callbacks.find(StateType::Global);
             if (otherCallbacks != m_callbacks.end()) {
                 std::cout << "[EventManager::Update] Checking global callbacks for '" << bind->m_name << "'" << std::endl;
                 auto callItr = otherCallbacks->second.find(bind->m_name);

@@ -12,9 +12,9 @@
 class Window;
 class EventManager;
 
-// State type enumeration
 enum class StateType {
-    Intro = 1,
+    Global = 0,
+    Intro,
     MainMenu,
     Game,
     Mushroom,
