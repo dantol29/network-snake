@@ -8,40 +8,26 @@
 #include <utility>
 #include <vector>
 
-// StateType enum for state-aware callbacks
-// NOTE: This is defined here (not in StateManager) to keep EventManager
-// independent. State-aware callbacks allow different callbacks to be registered
-// for different UI states (e.g., menu vs game). If StateManager is added later,
-// this can be moved there.
-enum class StateType {
-  Global = 0, // Global callbacks (always active regardless of state)
-  Menu = 1,
-  Game = 2,
-  GameOver = 3,
-  Paused = 4
-};
+enum class StateType { Global, Menu, Game, GameOver, Paused };
 
-// SFML 3.x uses variant-based events, so we use numeric values for EventType
-// These correspond to the variant index positions in sf::Event
 enum class EventType {
-  Closed = 0,
-  Resized = 1,
-  FocusLost = 2,
-  FocusGained = 3,
-  TextEntered = 4,
-  KeyPressed = 5,
-  KeyReleased = 6,
-  MouseWheelScrolled = 7,
-  MouseButtonPressed = 8,
-  MouseButtonReleased = 9,
-  MouseMoved = 10,
-  MouseMovedRaw = 11,
-  MouseEntered = 12,
-  MouseLeft = 13,
-  // Custom categories (after all SFML events)
-  Keyboard = 20,
-  Mouse = 21,
-  Joystick = 22
+  Closed,
+  Resized,
+  FocusLost,
+  FocusGained,
+  TextEntered,
+  KeyPressed,
+  KeyReleased,
+  MouseWheelScrolled,
+  MouseButtonPressed,
+  MouseButtonReleased,
+  MouseMoved,
+  MouseMovedRaw,
+  MouseEntered,
+  MouseLeft,
+  Keyboard,
+  Mouse,
+  Joystick
 };
 
 struct EventInfo {
@@ -79,7 +65,8 @@ struct EventDetails {
 };
 
 struct Binding {
-  Binding(const std::string &name) : name_(name), c(0), details_(name) {}
+  Binding(const std::string &name)
+      : name_(name), matched_count_(0), details_(name) {}
 
   // NOTE: Consider adding a method that takes an array/vector of event pairs
   // to bind multiple events at once, rather than calling BindEvent multiple
@@ -91,7 +78,7 @@ struct Binding {
 
   Events events_;
   std::string name_;
-  int c; // Count of events that are "happening".
+  int matched_count_; // Count of events that have matched so far.
   EventDetails details_;
 };
 
