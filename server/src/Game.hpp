@@ -8,48 +8,48 @@ class Snake;
 class Game
 {
 public:
-    Game(const int height, const int width);
-    Game(const Game& obj) = delete;
-    Game& operator=(const Game& obj) = delete;
-    ~Game();
+  Game(const int height, const int width);
+  Game(const Game &obj) = delete;
+  Game &operator=(const Game &obj) = delete;
+  ~Game();
 
-    void start();
-    void stop();
+  void start();
+  void stop();
 
-    void decreaseFood();
-    void addSnake(const int fd);
-    void removeSnake(const int fd);
-    void updateSnakeDirection(const int fd, const int dir);
-    void setIsDataUpdated(bool value);
-    std::string fieldToString();
+  void decreaseFood();
+  void addSnake(const int fd);
+  void removeSnake(const int fd);
+  void updateSnakeDirection(const int fd, const int dir);
+  void setIsDataUpdated(bool value);
+  std::string fieldToString();
 
-    struct coordinates getSnakeHead(const int fd);
-    int getHeight() const;
-    int getWidth() const;
-    bool getStopFlag() const;
-    bool getIsDataUpdated() const;
+  struct coordinates getSnakeHead(const int fd);
+  int getHeight() const;
+  int getWidth() const;
+  bool getStopFlag() const;
+  bool getIsDataUpdated() const;
 
 private:
-    int foodCount;
+  int foodCount;
 
-    // Used by another thread
-    std::atomic<int> height;
-    std::atomic<int> width;
-    std::atomic<int> snakeCount;
-    std::atomic<bool> stopFlag;
-    std::atomic<bool> isDataUpdated;
-    
-    std::mutex snakesMutex;
-    std::unordered_map<int, Snake *> snakes;
+  // Used by another thread
+  std::atomic<int> height;
+  std::atomic<int> width;
+  std::atomic<int> snakeCount;
+  std::atomic<bool> stopFlag;
+  std::atomic<bool> isDataUpdated;
 
-    std::mutex readableFieldMutex;
-    std::vector<std::string> readableField;
-    std::vector<std::string> writableField;
+  std::mutex snakesMutex;
+  std::unordered_map<int, Snake *> snakes;
 
-    void spawnFood();
-    void moveSnakes();
-    void updateReadableField();
-    void printField();
+  std::mutex readableFieldMutex;
+  std::vector<std::string> readableField;
+  std::vector<std::string> writableField;
+
+  void spawnFood();
+  void moveSnakes();
+  void updateReadableField();
+  void printField();
 };
 
 #endif

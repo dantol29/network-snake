@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <cstdint>
 
 #define TILE_SIZE 0.05f
 #define SCALE 20.0f
@@ -47,28 +48,60 @@ enum actions
     KEY_3
 };
 
-enum type {
-    KEY,
-    MOUSE,
-    EXIT,
-    EMPTY
+struct Vec2i
+{
+    int x;
+    int y;
 };
 
-typedef struct s_event {
+enum type
+{
+    CLOSED,
+    RESIZED,
+    FOCUS_LOST,
+    FOCUS_GAINED,
+    TEXT_ENTERED,
+    KEY_PRESSED,
+    KEY_RELEASED,
+    MOUSE_WHEEL_SCROLLED,
+    MOUSE_BUTTON_PRESSED,
+    MOUSE_BUTTON_RELEASED,
+    MOUSE_MOVED,
+    MOUSE_MOVED_RAW,
+    MOUSE_ENTERED,
+    MOUSE_LEFT,
+    EMPTY = 99
+};
+
+typedef struct s_event
+{
     type type;
-    int a;
-    int b;
+    union
+    {
+        int keyCode;
+        struct
+        {
+            int x, y;
+            int button;
+        } mouse;
+        struct
+        {
+            int width, height;
+        } window;
+        int wheelDelta;
+        std::uint32_t unicode;
+    };
 } t_event;
 
-typedef void *(*initFunc)(int, int, void *);
-typedef void (*loopFunc)(void *);
-typedef void (*beginFrameFunc)(void *);
-typedef void (*endFrameFunc)(void *);
-typedef void (*cleanupFunc)(void *);
-typedef t_event (*checkEventsFunc)(void *);
-typedef void (*loadAssetsFunc)(void *, const char **);
-typedef void (*drawTextFunc)(void *, float, float, int, const char *);
-typedef void (*drawAssetFunc)(void *, float, float, float, float, int, const char *);
-typedef void (*drawButtonFunc)(void *, float, float, float, float, const char *);
+typedef void *(*initFunc)(int height, int width, void *userData);
+typedef void (*loopFunc)(void *window);
+typedef void (*beginFrameFunc)(void *window);
+typedef void (*endFrameFunc)(void *window);
+typedef void (*cleanupFunc)(void *window);
+typedef t_event (*checkEventsFunc)(void *window);
+typedef void (*loadAssetsFunc)(void *window, const char **paths);
+typedef void (*drawTextFunc)(void *window, float x, float y, int size, const char *text);
+typedef void (*drawAssetFunc)(void *window, float x, float y, float width, float height, int degrees, const char *assetPath);
+typedef void (*drawButtonFunc)(void *window, float x, float y, float width, float height, const char *text);
 
 #endif

@@ -53,7 +53,7 @@ void Graphics::loadAssets(const char **paths)
     }
 }
 
-void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, const char *assetPath)
+void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, int degrees, const char *assetPath)
 {
     try
     {
@@ -63,7 +63,7 @@ void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pix
         Rectangle dest = {pixelX, pixelY, pixelWidth, pixelHeight};
         Vector2 origin = {0, 0};
 
-        DrawTexturePro(tex, src, dest, origin, 0.0f, WHITE);
+        DrawTexturePro(tex, src, dest, origin, (float)degrees, WHITE);
     }
     catch (const std::out_of_range &e)
     {
@@ -105,35 +105,47 @@ void Graphics::endFrame()
 t_event Graphics::checkEvents()
 {
     t_event event;
-    event.type = KEY;
+    event.type = KEY_PRESSED;
 
     if (WindowShouldClose())
-        event.type = EXIT;
+        event.type = CLOSED;
     else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
     {
         Vector2 mp = GetMousePosition();
-        event.type = MOUSE;
-        event.a = (int)mp.x;
-        event.b = (int)mp.y;
+        event.type = MOUSE_BUTTON_RELEASED; // Changed to RELEASED to match keys.cfg (9:0)
+        event.mouse.x = (int)mp.x;
+        event.mouse.y = (int)mp.y;
+        event.mouse.button = 0; // Left button = 0 (matches keys.cfg)
     }
-    else if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
-        event.a = UP;
-    else if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
-        event.a = DOWN;
-    else if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
-        event.a = LEFT;
-    else if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
-        event.a = RIGHT;
+    // Map raylib key codes to SFML key codes (to match keys.cfg)
+    // Raylib: KEY_W=87, KEY_A=65, KEY_S=83, KEY_D=68, KEY_UP=265, KEY_DOWN=264, KEY_LEFT=263, KEY_RIGHT=262
+    // SFML: W=22, A=0, S=18, D=3, Up=73, Down=74, Left=71, Right=72
+    else if (IsKeyPressed(KEY_W))
+        event.keyCode = 22; // SFML W
+    else if (IsKeyPressed(KEY_UP))
+        event.keyCode = 73; // SFML Up
+    else if (IsKeyPressed(KEY_S))
+        event.keyCode = 18; // SFML S
+    else if (IsKeyPressed(KEY_DOWN))
+        event.keyCode = 74; // SFML Down
+    else if (IsKeyPressed(KEY_A))
+        event.keyCode = 0; // SFML A
+    else if (IsKeyPressed(KEY_LEFT))
+        event.keyCode = 71; // SFML Left
+    else if (IsKeyPressed(KEY_D))
+        event.keyCode = 3; // SFML D
+    else if (IsKeyPressed(KEY_RIGHT))
+        event.keyCode = 72; // SFML Right
     else if (IsKeyPressed(KEY_M))
-        event.a = M;
+        event.keyCode = 12; // SFML M (approximate)
     else if (IsKeyPressed(KEY_N))
-        event.a = N;
+        event.keyCode = 13; // SFML N (approximate)
     else if (IsKeyPressed(KEY_ONE))
-        event.a = KEY_1;
+        event.keyCode = 27; // SFML Num1 (approximate)
     else if (IsKeyPressed(KEY_TWO))
-        event.a = KEY_2;
+        event.keyCode = 28; // SFML Num2 (approximate)
     else if (IsKeyPressed(KEY_THREE))
-        event.a = KEY_3;
+        event.keyCode = 29; // SFML Num3 (approximate)
     else
         event.type = EMPTY;
 

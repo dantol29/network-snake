@@ -46,7 +46,7 @@ void Graphics::loadAssets(const char **paths)
 
     for (int i = 0; paths[i]; ++i)
     {
-        SDL_Surface* surface = IMG_Load(paths[i]);
+        SDL_Surface *surface = IMG_Load(paths[i]);
         if (!surface)
         {
             std::cerr << "Failed to load image: " << paths[i] << " | "
@@ -69,8 +69,9 @@ void Graphics::loadAssets(const char **paths)
     }
 }
 
-void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, const char *assetPath)
+void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth, float pixelHeight, int degrees, const char *assetPath)
 {
+    (void)degrees; // TODO: Implement rotation support
     try
     {
         SDL_Texture *tex = assets.at(assetPath);
@@ -183,7 +184,7 @@ t_event Graphics::checkEvents()
         switch (event.type)
         {
         case SDL_EVENT_QUIT:
-            e.type = EXIT;
+            e.type = CLOSED;
             return e;
 
         case SDL_EVENT_KEY_DOWN:
@@ -204,9 +205,10 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
 
     if (buttonEvent.button == SDL_BUTTON_LEFT)
     {
-        event.a = buttonEvent.x;
-        event.b = buttonEvent.y;
-        event.type = MOUSE;
+        event.mouse.x = buttonEvent.x;
+        event.mouse.y = buttonEvent.y;
+        event.mouse.button = 0;             // Left button = 0 (matches keys.cfg)
+        event.type = MOUSE_BUTTON_RELEASED; // Changed to RELEASED to match keys.cfg (9:0)
     }
 
     return event;
@@ -215,42 +217,53 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
 t_event Graphics::onKeyPress(const SDL_KeyboardEvent &keyEvent)
 {
     t_event event;
-    event.type = KEY;
+    event.type = KEY_PRESSED;
 
     SDL_Keycode code = keyEvent.key;
 
+    // Map SDL key codes to SFML key codes (to match keys.cfg)
+    // SDL: SDLK_W=119, SDLK_A=97, SDLK_S=115, SDLK_D=100, SDLK_UP=1073741906, SDLK_DOWN=1073741905, SDLK_LEFT=1073741904, SDLK_RIGHT=1073741903
+    // SFML: W=22, A=0, S=18, D=3, Up=73, Down=74, Left=71, Right=72
     switch (code)
     {
     case SDLK_W:
+        event.keyCode = 22; // SFML W
+        break;
     case SDLK_UP:
-        event.a = UP;
+        event.keyCode = 73; // SFML Up
         break;
     case SDLK_S:
+        event.keyCode = 18; // SFML S
+        break;
     case SDLK_DOWN:
-        event.a = DOWN;
+        event.keyCode = 74; // SFML Down
         break;
     case SDLK_A:
+        event.keyCode = 0; // SFML A
+        break;
     case SDLK_LEFT:
-        event.a = LEFT;
+        event.keyCode = 71; // SFML Left
         break;
     case SDLK_D:
+        event.keyCode = 3; // SFML D
+        break;
     case SDLK_RIGHT:
-        event.a = RIGHT;
+        event.keyCode = 72; // SFML Right
         break;
     case SDLK_M:
-        event.a = M;
+        event.keyCode = 12; // SFML M (approximate)
         break;
     case SDLK_N:
-        event.a = N;
+        event.keyCode = 13; // SFML N (approximate)
         break;
     case SDLK_1:
-        event.a = KEY_1;
+        event.keyCode = 27; // SFML Num1 (approximate)
         break;
     case SDLK_2:
-        event.a = KEY_2;
+        event.keyCode = 28; // SFML Num2 (approximate)
         break;
     case SDLK_3:
-        event.a = KEY_3;
+        event.keyCode = 29; // SFML Num3 (approximate)
         break;
     default:
         event.type = EMPTY;

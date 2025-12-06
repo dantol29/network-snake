@@ -4,30 +4,30 @@
 
 void onerror(const char *msg)
 {
-    write(STDERR_FILENO, msg, strlen(msg));
-    exit(EXIT_FAILURE);
+  write(STDERR_FILENO, msg, strlen(msg));
+  exit(EXIT_FAILURE);
 }
 
 int main(int argc, char **argv)
 {
-    if (argc != 3)
-        onerror("Usage: ./nibbler_server height width");
+  if (argc != 3)
+    onerror("Usage: ./nibbler_server height width");
 
-    int height = atoi(argv[1]);
-    int width = atoi(argv[2]);
-    if (height < 10 || width < 10 || height > 100 || width > 100)
-        onerror("Invalid size");
+  int height = atoi(argv[1]);
+  int width = atoi(argv[2]);
+  if (height < 10 || width < 10 || height > 100 || width > 100)
+    onerror("Invalid size");
 
-    Game *game = new Game(height, width);
-    Server *server = new Server(game);
+  Game *game = new Game(height, width);
+  Server *server = new Server(game);
 
-    std::thread gameThread(&Game::start, game);
+  std::thread gameThread(&Game::start, game);
 
-    server->start();
+  server->start();
 
-    if (gameThread.joinable())
-        gameThread.join();
+  if (gameThread.joinable())
+    gameThread.join();
 
-    delete game;
-    delete server;
+  delete game;
+  delete server;
 }

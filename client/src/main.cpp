@@ -3,11 +3,11 @@
 
 int main()
 {
-    Client *client = new Client();
-    Drawer *drawer = new Drawer(client);
+  Client *client = new Client();
+  Drawer *drawer = new Drawer(client);
 
-    drawer->start();
+  drawer->start();
 
-    delete drawer;
-    delete client;
+  delete drawer;
+  delete client;
 }
