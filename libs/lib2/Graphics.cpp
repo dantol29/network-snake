@@ -3,7 +3,8 @@
 
 Graphics::Graphics(unsigned int height, unsigned int width)
     : IGraphics(height, width),
-      gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML") {
+      gameWindow(sf::VideoMode(sf::Vector2u(width, height)), "SFML")
+{
   this->windowWidth = static_cast<float>(this->gameWindow.getSize().x);
   this->windowHeight = static_cast<float>(this->gameWindow.getSize().y);
 
@@ -11,18 +12,21 @@ Graphics::Graphics(unsigned int height, unsigned int width)
     throw "Font does not exist";
 }
 
-Graphics::~Graphics() {
+Graphics::~Graphics()
+{
   std::cout << "Destructor SFML" << std::endl;
 
   if (this->gameWindow.isOpen())
     this->gameWindow.close();
 }
 
-void Graphics::loadAssets(const char **paths) {
+void Graphics::loadAssets(const char **paths)
+{
   if (!paths)
     return;
 
-  for (int i = 0; paths[i]; i++) {
+  for (int i = 0; paths[i]; i++)
+  {
     sf::Texture texture;
     if (!texture.loadFromFile(paths[i]))
       throw "Failed to load assets";
@@ -33,8 +37,10 @@ void Graphics::loadAssets(const char **paths) {
 
 void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth,
                          float pixelHeight, int degrees,
-                         const char *assetPath) {
-  try {
+                         const char *assetPath)
+{
+  try
+  {
     sf::Texture asset = assets.at(std::string(assetPath));
 
     sf::Sprite sprite(asset);
@@ -47,13 +53,17 @@ void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth,
     sprite.setRotation(sf::degrees(degrees));
 
     gameWindow.draw(sprite);
-  } catch (const std::out_of_range &e) {
-    std::cout << "Key not found!\n" << std::endl;
+  }
+  catch (const std::out_of_range &e)
+  {
+    std::cout << "Key not found!\n"
+              << std::endl;
   }
 }
 
 void Graphics::drawButton(float x, float y, float width, float height,
-                          const char *text) {
+                          const char *text)
+{
   sf::RectangleShape box;
   box.setSize({width, height});
   box.setPosition({x, y});
@@ -76,7 +86,8 @@ void Graphics::drawButton(float x, float y, float width, float height,
   this->gameWindow.draw(label);
 }
 
-void Graphics::drawText(float x, float y, int size, const char *text) {
+void Graphics::drawText(float x, float y, int size, const char *text)
+{
   sf::Text label(font);
   label.setString(text);
   label.setCharacterSize(size);
@@ -85,25 +96,31 @@ void Graphics::drawText(float x, float y, int size, const char *text) {
   this->gameWindow.draw(label);
 }
 
-void Graphics::endFrame() {
+void Graphics::endFrame()
+{
   if (this->gameWindow.isOpen())
     this->gameWindow.display();
 }
 
-void Graphics::beginFrame() {
+void Graphics::beginFrame()
+{
   if (this->gameWindow.isOpen())
     this->gameWindow.clear();
 }
 
-t_event Graphics::checkEvents() {
+t_event Graphics::checkEvents()
+{
   t_event e;
   e.type = EMPTY;
 
-  while (const std::optional event = this->gameWindow.pollEvent()) {
-    if (event->is<sf::Event::Closed>()) {
+  while (const std::optional event = this->gameWindow.pollEvent())
+  {
+    if (event->is<sf::Event::Closed>())
+    {
       e.type = CLOSED;
       return e;
-    } else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
+    }
+    else if (const auto *keyPressed = event->getIf<sf::Event::KeyPressed>())
       return this->onKeyPress(keyPressed->code);
     else if (const auto *mouseReleased =
                  event->getIf<sf::Event::MouseButtonReleased>())
@@ -114,12 +131,14 @@ t_event Graphics::checkEvents() {
 }
 
 t_event Graphics::onMouseUp(const sf::Mouse::Button button,
-                            const sf::Vector2i position) {
+                            const sf::Vector2i position)
+{
   t_event event;
   event.type =
       MOUSE_BUTTON_RELEASED; // Changed to RELEASED to match keys.cfg (9:0)
 
-  switch (button) {
+  switch (button)
+  {
   case sf::Mouse::Button::Left:
     event.mouse.x = position.x;
     event.mouse.y = position.y;
@@ -133,7 +152,8 @@ t_event Graphics::onMouseUp(const sf::Mouse::Button button,
   return event;
 }
 
-t_event Graphics::onKeyPress(sf::Keyboard::Key code) {
+t_event Graphics::onKeyPress(sf::Keyboard::Key code)
+{
   t_event event;
   event.type = KEY_PRESSED;
 

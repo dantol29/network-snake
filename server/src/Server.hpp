@@ -5,7 +5,8 @@
 
 class Game;
 
-class Server {
+class Server
+{
 public:
   Server(Game *game);
   Server(const Server &obj) = delete;

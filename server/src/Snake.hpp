@@ -6,7 +6,8 @@
 
 class Game;
 
-class Snake {
+class Snake
+{
 public:
   Snake(Game *game, int fd);
   ~Snake();

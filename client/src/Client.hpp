@@ -3,7 +3,8 @@
 
 #include "../includes/nibbler.hpp"
 
-class Client {
+class Client
+{
 public:
   Client();
   Client(const Client &obj) = delete;

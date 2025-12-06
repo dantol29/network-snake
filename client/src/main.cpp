@@ -1,7 +1,8 @@
 #include "Client.hpp"
 #include "Drawer.hpp"
 
-int main() {
+int main()
+{
   Client *client = new Client();
   Drawer *drawer = new Drawer(client);
 

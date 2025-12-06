@@ -46,7 +46,7 @@ void Graphics::loadAssets(const char **paths)
 
     for (int i = 0; paths[i]; ++i)
     {
-        SDL_Surface* surface = IMG_Load(paths[i]);
+        SDL_Surface *surface = IMG_Load(paths[i]);
         if (!surface)
         {
             std::cerr << "Failed to load image: " << paths[i] << " | "
@@ -183,9 +183,9 @@ t_event Graphics::checkEvents()
     {
         switch (event.type)
         {
-            case SDL_EVENT_QUIT:
-                e.type = CLOSED;
-                return e;
+        case SDL_EVENT_QUIT:
+            e.type = CLOSED;
+            return e;
 
         case SDL_EVENT_KEY_DOWN:
             return onKeyPress(event.key);
@@ -207,8 +207,8 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
     {
         event.mouse.x = buttonEvent.x;
         event.mouse.y = buttonEvent.y;
-        event.mouse.button = 0;  // Left button = 0 (matches keys.cfg)
-        event.type = MOUSE_BUTTON_RELEASED;  // Changed to RELEASED to match keys.cfg (9:0)
+        event.mouse.button = 0;             // Left button = 0 (matches keys.cfg)
+        event.type = MOUSE_BUTTON_RELEASED; // Changed to RELEASED to match keys.cfg (9:0)
     }
 
     return event;
@@ -227,43 +227,43 @@ t_event Graphics::onKeyPress(const SDL_KeyboardEvent &keyEvent)
     switch (code)
     {
     case SDLK_W:
-        event.keyCode = 22;  // SFML W
+        event.keyCode = 22; // SFML W
         break;
     case SDLK_UP:
-        event.keyCode = 73;  // SFML Up
+        event.keyCode = 73; // SFML Up
         break;
     case SDLK_S:
-        event.keyCode = 18;  // SFML S
+        event.keyCode = 18; // SFML S
         break;
     case SDLK_DOWN:
-        event.keyCode = 74;  // SFML Down
+        event.keyCode = 74; // SFML Down
         break;
     case SDLK_A:
-        event.keyCode = 0;   // SFML A
+        event.keyCode = 0; // SFML A
         break;
     case SDLK_LEFT:
-        event.keyCode = 71;  // SFML Left
+        event.keyCode = 71; // SFML Left
         break;
     case SDLK_D:
-        event.keyCode = 3;   // SFML D
+        event.keyCode = 3; // SFML D
         break;
     case SDLK_RIGHT:
-        event.keyCode = 72;  // SFML Right
+        event.keyCode = 72; // SFML Right
         break;
     case SDLK_M:
-        event.keyCode = 12;  // SFML M (approximate)
+        event.keyCode = 12; // SFML M (approximate)
         break;
     case SDLK_N:
-        event.keyCode = 13;  // SFML N (approximate)
+        event.keyCode = 13; // SFML N (approximate)
         break;
     case SDLK_1:
-        event.keyCode = 27;  // SFML Num1 (approximate)
+        event.keyCode = 27; // SFML Num1 (approximate)
         break;
     case SDLK_2:
-        event.keyCode = 28;  // SFML Num2 (approximate)
+        event.keyCode = 28; // SFML Num2 (approximate)
         break;
     case SDLK_3:
-        event.keyCode = 29;  // SFML Num3 (approximate)
+        event.keyCode = 29; // SFML Num3 (approximate)
         break;
     default:
         event.type = EMPTY;

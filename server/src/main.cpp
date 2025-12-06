@@ -2,12 +2,14 @@
 #include "Game.hpp"
 #include "Server.hpp"
 
-void onerror(const char *msg) {
+void onerror(const char *msg)
+{
   write(STDERR_FILENO, msg, strlen(msg));
   exit(EXIT_FAILURE);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   if (argc != 3)
     onerror("Usage: ./nibbler_server height width");
 

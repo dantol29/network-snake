@@ -12,7 +12,8 @@ Drawer::Drawer(Client *client)
       prevSnakeHeadY(0), switchLibPath("../libs/lib2/lib2"), gameMode(MENU),
       multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
       singlePlayerButton{
-          400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
+          400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
+{
   tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 
   // Initialize EventManager
@@ -46,7 +47,8 @@ Drawer::Drawer(Client *client)
   this->readAssets();
 }
 
-Drawer::~Drawer() {
+Drawer::~Drawer()
+{
   delete eventManager;
   this->closeDynamicLib();
 
@@ -54,7 +56,8 @@ Drawer::~Drawer() {
     free(assets[i]);
 }
 
-void Drawer::loadDynamicLibrary(const std::string &lib) {
+void Drawer::loadDynamicLibrary(const std::string &lib)
+{
   std::string libPath = lib + LIB_EXTENSION;
   this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
   if (!this->dynamicLibrary)
@@ -83,43 +86,53 @@ void Drawer::loadDynamicLibrary(const std::string &lib) {
     throw "Failed to init dynlib functions";
 }
 
-void Drawer::closeDynamicLib() {
-  if (this->window) {
+void Drawer::closeDynamicLib()
+{
+  if (this->window)
+  {
     this->cleanup(this->window);
     this->window = nullptr;
   }
-  if (this->dynamicLibrary) {
+  if (this->dynamicLibrary)
+  {
     dlclose(this->dynamicLibrary);
     this->dynamicLibrary = nullptr;
   }
 }
 
-void Drawer::startDynamicLib() {
+void Drawer::startDynamicLib()
+{
   this->closeDynamicLib();
   this->loadDynamicLibrary(this->switchLibPath);
   this->switchLibPath = "";
 }
 
-void Drawer::start() {
-  try {
-    while (1) {
+void Drawer::start()
+{
+  try
+  {
+    while (1)
+    {
       this->startDynamicLib();
       this->openWindow();
       this->loadAssets(this->window, (const char **)assets.data());
       gameRunning = true;
 
-      while (gameRunning) {
+      while (gameRunning)
+      {
         this->beginFrame(this->window);
 
         t_event event = this->checkEvents(this->window);
 
         // Handle CLOSED event directly
-        if (event.type == CLOSED) {
+        if (event.type == CLOSED)
+        {
           gameRunning = false;
         }
 
         // Pass event to EventManager (only if not EMPTY)
-        if (event.type != EMPTY) {
+        if (event.type != EMPTY)
+        {
           eventManager->HandleEvent(event);
           eventManager->Update();
         }
@@ -135,20 +148,24 @@ void Drawer::start() {
       if (this->switchLibPath.empty())
         break;
     }
-  } catch (const char *msg) {
+  }
+  catch (const char *msg)
+  {
     std::cerr << msg << std::endl;
   }
 
   this->stopClient();
 }
 
-void Drawer::readAssets() {
+void Drawer::readAssets()
+{
   std::ifstream file("assets.list");
   if (!file.is_open())
     throw "Error opening assets file";
 
   std::string line;
-  while (getline(file, line)) {
+  while (getline(file, line))
+  {
     assets.push_back(strdup(line.c_str()));
     line = "";
   }
@@ -161,13 +178,15 @@ void Drawer::readAssets() {
   file.close();
 }
 
-void Drawer::openWindow() {
+void Drawer::openWindow()
+{
   this->window = this->init(HEIGHT, WIDTH, this);
   if (!this->window)
     throw("Failed to init lib");
 }
 
-void Drawer::drawMenu() {
+void Drawer::drawMenu()
+{
   this->drawText(this->window, 380, 200, 40, "42 SNAKES");
   this->drawButton(this->window, this->multiplayerButton.x,
                    this->multiplayerButton.y, this->multiplayerButton.width,
@@ -179,8 +198,10 @@ void Drawer::drawMenu() {
                    this->singlePlayerButton.label.c_str());
 }
 
-void Drawer::drawGameField() {
-  if (this->client->getIsDead() || this->client->getStopFlag()) {
+void Drawer::drawGameField()
+{
+  if (this->client->getIsDead() || this->client->getStopFlag())
+  {
     this->stopClient();
     this->gameMode = MENU;
     return;
@@ -199,9 +220,11 @@ void Drawer::drawGameField() {
   const int originX = (WIDTH - (tilePx * screenSize)) / 2;
   const int originY = (HEIGHT - (tilePx * screenSize)) / 2;
 
-  for (int sy = 0; sy < screenSize; ++sy) {
+  for (int sy = 0; sy < screenSize; ++sy)
+  {
     int wy = snakeHeadY + (sy - screenCenter);
-    for (int sx = 0; sx < screenSize; ++sx) {
+    for (int sx = 0; sx < screenSize; ++sx)
+    {
       int wx = snakeHeadX + (sx - screenCenter);
       if (wx < 0 || wx >= width || wy < 0 || wy >= height)
         continue;
@@ -229,7 +252,8 @@ void Drawer::drawGameField() {
   this->prevSnakeHeadY = snakeHeadY;
 }
 
-void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {
+void Drawer::drawBorder(int x, int y, int px, int py, int tilePx)
+{
   if (x == 0)
     this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 0,
                     "assets/wall.png");
@@ -247,17 +271,20 @@ void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {
                     "assets/wall.png");
 }
 
-void Drawer::stopClient() {
+void Drawer::stopClient()
+{
   this->client->setStopFlag(true);
   if (this->clientThread.joinable())
     this->clientThread.join();
 }
 
-void Drawer::startClient(const std::string &serverIP, bool isSinglePlayer) {
+void Drawer::startClient(const std::string &serverIP, bool isSinglePlayer)
+{
   const std::string mode = isSinglePlayer ? "Single-player" : "Multiplayer";
   std::cout << mode << " mode selected" << '\n';
 
-  if (!this->clientThread.joinable()) {
+  if (!this->clientThread.joinable())
+  {
     this->gameMode = GAME;
     this->client->setIsDead(false);
     this->client->setStopFlag(false);
@@ -267,7 +294,8 @@ void Drawer::startClient(const std::string &serverIP, bool isSinglePlayer) {
   }
 }
 
-void Drawer::onMouseUp(float x, float y) {
+void Drawer::onMouseUp(float x, float y)
+{
   if (x >= this->multiplayerButton.x &&
       x <= this->multiplayerButton.x + this->multiplayerButton.width &&
       y >= this->multiplayerButton.y &&
@@ -281,59 +309,70 @@ void Drawer::onMouseUp(float x, float y) {
 }
 
 // EventManager callbacks
-void Drawer::MoveUp(MatchedEventDetails *details) {
+void Drawer::MoveUp(MatchedEventDetails *details)
+{
   (void)details; // Unused, but required by callback signature
   this->client->sendDirection(UP);
 }
 
-void Drawer::MoveDown(MatchedEventDetails *details) {
+void Drawer::MoveDown(MatchedEventDetails *details)
+{
   (void)details;
   this->client->sendDirection(DOWN);
 }
 
-void Drawer::MoveLeft(MatchedEventDetails *details) {
+void Drawer::MoveLeft(MatchedEventDetails *details)
+{
   (void)details;
   this->client->sendDirection(LEFT);
 }
 
-void Drawer::MoveRight(MatchedEventDetails *details) {
+void Drawer::MoveRight(MatchedEventDetails *details)
+{
   (void)details;
   this->client->sendDirection(RIGHT);
 }
 
-void Drawer::ZoomIn(MatchedEventDetails *details) {
+void Drawer::ZoomIn(MatchedEventDetails *details)
+{
   (void)details;
   this->screenSize = this->screenSize * 1.10 + 0.5;
   this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
-void Drawer::ZoomOut(MatchedEventDetails *details) {
+void Drawer::ZoomOut(MatchedEventDetails *details)
+{
   (void)details;
   this->screenSize = this->screenSize / 1.10;
   this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
-void Drawer::SwitchLib1(MatchedEventDetails *details) {
+void Drawer::SwitchLib1(MatchedEventDetails *details)
+{
   (void)details;
   this->switchLibPath = "../libs/lib1/lib1";
   this->gameRunning = false;
 }
 
-void Drawer::SwitchLib2(MatchedEventDetails *details) {
+void Drawer::SwitchLib2(MatchedEventDetails *details)
+{
   (void)details;
   this->switchLibPath = "../libs/lib2/lib2";
   this->gameRunning = false;
 }
 
-void Drawer::SwitchLib3(MatchedEventDetails *details) {
+void Drawer::SwitchLib3(MatchedEventDetails *details)
+{
   (void)details;
   this->switchLibPath = "../libs/lib4/lib3";
   this->gameRunning = false;
 }
 
-void Drawer::OnMouseClick(MatchedEventDetails *details) {
+void Drawer::OnMouseClick(MatchedEventDetails *details)
+{
   // Only process mouse clicks when in menu mode
-  if (this->gameMode != MENU) {
+  if (this->gameMode != MENU)
+  {
     return;
   }
   onMouseUp(details->mouse_position_.x, details->mouse_position_.y);

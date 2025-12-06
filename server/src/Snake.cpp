@@ -1,7 +1,8 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(Game *game, int fd) : game(game), fd(fd) {
+Snake::Snake(Game *game, int fd) : game(game), fd(fd)
+{
   struct coordinates c;
   c.x = this->game->getWidth() / 2;
   c.y = this->game->getHeight() / 2;
@@ -19,14 +20,16 @@ Snake::Snake(Game *game, int fd) : game(game), fd(fd) {
 
 Snake::~Snake() { std::cout << "Snake destructor called" << std::endl; }
 
-void Snake::moveSnake(std::vector<std::string> *gameField) {
+void Snake::moveSnake(std::vector<std::string> *gameField)
+{
   auto currentHead = body.front();
   auto newCoord = moveHead(currentHead.x, currentHead.y, gameField);
   body.push_front({newCoord.x, newCoord.y});
 
   if ((*gameField)[newCoord.y][newCoord.x] == 'F')
     this->game->decreaseFood();
-  else {
+  else
+  {
     auto tail = body.back();
     (*gameField)[tail.y][tail.x] = FLOOR_SYMBOL;
     body.pop_back();
@@ -39,8 +42,10 @@ void Snake::moveSnake(std::vector<std::string> *gameField) {
 }
 
 struct coordinates Snake::moveHead(int currentX, int currentY,
-                                   std::vector<std::string> *gameField) {
-  switch (this->direction) {
+                                   std::vector<std::string> *gameField)
+{
+  switch (this->direction)
+  {
   case UP:
     if (currentY > 0)
       currentY -= 1;
@@ -73,7 +78,8 @@ struct coordinates Snake::moveHead(int currentX, int currentY,
   return {currentX, currentY};
 }
 
-void Snake::setDirection(const int newDir) {
+void Snake::setDirection(const int newDir)
+{
   enum e_direction dir = (enum e_direction)newDir;
   if ((dir == UP || dir == DOWN) &&
       (this->direction == DOWN || this->direction == UP))
@@ -85,7 +91,8 @@ void Snake::setDirection(const int newDir) {
   this->direction = dir;
 }
 
-void Snake::cleanup(std::vector<std::string> *gameField) {
+void Snake::cleanup(std::vector<std::string> *gameField)
+{
   for (const auto &segment : body)
     (*gameField)[segment.y][segment.x] = FLOOR_SYMBOL;
 }

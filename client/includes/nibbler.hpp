@@ -48,12 +48,14 @@ enum actions
     KEY_3
 };
 
-struct Vec2i {
+struct Vec2i
+{
     int x;
     int y;
 };
 
-enum type {
+enum type
+{
     CLOSED,
     RESIZED,
     FOCUS_LOST,
@@ -71,15 +73,19 @@ enum type {
     EMPTY = 99
 };
 
-typedef struct s_event {
+typedef struct s_event
+{
     type type;
-    union {
+    union
+    {
         int keyCode;
-        struct {
+        struct
+        {
             int x, y;
             int button;
         } mouse;
-        struct {
+        struct
+        {
             int width, height;
         } window;
         int wheelDelta;

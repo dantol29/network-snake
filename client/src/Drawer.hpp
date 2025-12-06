@@ -5,20 +5,30 @@
 #include "Client.hpp"
 #include "EventManager.hpp"
 
-enum mode { MENU, GAME };
+enum mode
+{
+  MENU,
+  GAME
+};
 
-struct Button {
+struct Button
+{
   float x;
   float y;
   float width;
   float height;
   std::string label;
-  enum { MULTIPLAYER, SINGLE_PLAYER } type;
+  enum
+  {
+    MULTIPLAYER,
+    SINGLE_PLAYER
+  } type;
 };
 
 class Client;
 
-class Drawer {
+class Drawer
+{
 public:
   Drawer(Client *client);
   Drawer(const Drawer &obj) = delete;

@@ -9,9 +9,17 @@
 #include <utility>
 #include <vector>
 
-enum class StateType { Global, Menu, Game, GameOver, Paused };
+enum class StateType
+{
+  Global,
+  Menu,
+  Game,
+  GameOver,
+  Paused
+};
 
-enum class TargetEventType {
+enum class TargetEventType
+{
   Closed,
   Resized,
   FocusLost,
@@ -31,18 +39,21 @@ enum class TargetEventType {
   Joystick
 };
 
-struct TargetEventCode {
+struct TargetEventCode
+{
   TargetEventCode() { code_ = 0; }
   TargetEventCode(int event) { code_ = event; }
 
-  union {
+  union
+  {
     int code_;
   };
 };
 
 using TargetEvents = std::vector<std::pair<TargetEventType, TargetEventCode>>;
 
-struct MatchedEventDetails {
+struct MatchedEventDetails
+{
   MatchedEventDetails() { Clear(); }
 
   Vec2i window_size_;
@@ -51,7 +62,8 @@ struct MatchedEventDetails {
   int mouse_wheel_delta_;
   int key_code_;
 
-  void Clear() {
+  void Clear()
+  {
     window_size_ = Vec2i{0, 0};
     text_entered_ = 0;
     mouse_position_ = Vec2i{0, 0};
@@ -60,12 +72,14 @@ struct MatchedEventDetails {
   }
 };
 
-struct TargetEventBindingState {
+struct TargetEventBindingState
+{
   TargetEventBindingState(const std::string &name)
       : name_(name), matched_count_(0), details_() {}
 
   void AddTargetEvent(TargetEventType type,
-                      TargetEventCode code = TargetEventCode()) {
+                      TargetEventCode code = TargetEventCode())
+  {
     events_.emplace_back(type, code);
   }
 
@@ -87,7 +101,8 @@ using CallbackContainer =
 // (all callbacks registered for that state)
 using Callbacks = std::unordered_map<StateType, CallbackContainer>;
 
-class EventManager {
+class EventManager
+{
 public:
   EventManager();
   ~EventManager() = default;
@@ -108,7 +123,8 @@ public:
   // desired triggering configuration
   template <class T>
   bool AddCallback(StateType state, const std::string &name,
-                   void (T::*func)(MatchedEventDetails *), T *instance) {
+                   void (T::*func)(MatchedEventDetails *), T *instance)
+  {
     auto it = callbacks_.emplace(state, CallbackContainer()).first;
     auto temp = std::bind(func, instance, std::placeholders::_1);
     return it->second.emplace(name, temp).second;

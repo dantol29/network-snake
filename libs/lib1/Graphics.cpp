@@ -107,45 +107,45 @@ t_event Graphics::checkEvents()
     t_event event;
     event.type = KEY_PRESSED;
 
-    if (WindowShouldClose()) 
+    if (WindowShouldClose())
         event.type = CLOSED;
     else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
     {
         Vector2 mp = GetMousePosition();
-        event.type = MOUSE_BUTTON_RELEASED;  // Changed to RELEASED to match keys.cfg (9:0)
+        event.type = MOUSE_BUTTON_RELEASED; // Changed to RELEASED to match keys.cfg (9:0)
         event.mouse.x = (int)mp.x;
         event.mouse.y = (int)mp.y;
-        event.mouse.button = 0;  // Left button = 0 (matches keys.cfg)
+        event.mouse.button = 0; // Left button = 0 (matches keys.cfg)
     }
     // Map raylib key codes to SFML key codes (to match keys.cfg)
     // Raylib: KEY_W=87, KEY_A=65, KEY_S=83, KEY_D=68, KEY_UP=265, KEY_DOWN=264, KEY_LEFT=263, KEY_RIGHT=262
     // SFML: W=22, A=0, S=18, D=3, Up=73, Down=74, Left=71, Right=72
     else if (IsKeyPressed(KEY_W))
-        event.keyCode = 22;  // SFML W
+        event.keyCode = 22; // SFML W
     else if (IsKeyPressed(KEY_UP))
-        event.keyCode = 73;  // SFML Up
+        event.keyCode = 73; // SFML Up
     else if (IsKeyPressed(KEY_S))
-        event.keyCode = 18;  // SFML S
+        event.keyCode = 18; // SFML S
     else if (IsKeyPressed(KEY_DOWN))
-        event.keyCode = 74;  // SFML Down
+        event.keyCode = 74; // SFML Down
     else if (IsKeyPressed(KEY_A))
-        event.keyCode = 0;   // SFML A
+        event.keyCode = 0; // SFML A
     else if (IsKeyPressed(KEY_LEFT))
-        event.keyCode = 71;  // SFML Left
+        event.keyCode = 71; // SFML Left
     else if (IsKeyPressed(KEY_D))
-        event.keyCode = 3;   // SFML D
+        event.keyCode = 3; // SFML D
     else if (IsKeyPressed(KEY_RIGHT))
-        event.keyCode = 72;  // SFML Right
+        event.keyCode = 72; // SFML Right
     else if (IsKeyPressed(KEY_M))
-        event.keyCode = 12;  // SFML M (approximate)
+        event.keyCode = 12; // SFML M (approximate)
     else if (IsKeyPressed(KEY_N))
-        event.keyCode = 13;  // SFML N (approximate)
+        event.keyCode = 13; // SFML N (approximate)
     else if (IsKeyPressed(KEY_ONE))
-        event.keyCode = 27;  // SFML Num1 (approximate)
+        event.keyCode = 27; // SFML Num1 (approximate)
     else if (IsKeyPressed(KEY_TWO))
-        event.keyCode = 28;  // SFML Num2 (approximate)
+        event.keyCode = 28; // SFML Num2 (approximate)
     else if (IsKeyPressed(KEY_THREE))
-        event.keyCode = 29;  // SFML Num3 (approximate)
+        event.keyCode = 29; // SFML Num3 (approximate)
     else
         event.type = EMPTY;
 

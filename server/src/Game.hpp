@@ -5,7 +5,8 @@
 
 class Snake;
 
-class Game {
+class Game
+{
 public:
   Game(const int height, const int width);
   Game(const Game &obj) = delete;
