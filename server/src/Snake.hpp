@@ -25,9 +25,9 @@ private:
   enum e_direction direction;
   const int fd;
   bool isDead;
+  bool isActive;
 
-  struct coordinates moveHead(int currentX, int currentY,
-                              std::vector<std::string> *gameField);
+  struct coordinates moveHead(int currentX, int currentY, std::vector<std::string> *gameField);
 };
 
 #endif
