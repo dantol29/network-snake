@@ -29,8 +29,10 @@ Drawer::Drawer(Client *client)
   eventManager->AddCallback(StateType::Game, "Key_D", &Drawer::MoveRight, this);
   eventManager->AddCallback(StateType::Game, "Key_M", &Drawer::ZoomIn, this);
   eventManager->AddCallback(StateType::Game, "Key_N", &Drawer::ZoomOut, this);
+  eventManager->AddCallback(StateType::Game, "Key_1", &Drawer::SwitchLib1, this);
+  eventManager->AddCallback(StateType::Game, "Key_2", &Drawer::SwitchLib2, this);
+  eventManager->AddCallback(StateType::Game, "Key_3", &Drawer::SwitchLib3, this);
   eventManager->AddCallback(StateType::Menu, "Mouse_Left", &Drawer::OnMouseClick, this);
-
   eventManager->SetCurrentState(StateType::Menu);
 
   this->readAssets();
@@ -142,7 +144,7 @@ void Drawer::start()
 
 void Drawer::readAssets()
 {
-  std::ifstream file("assets.list");
+  std::ifstream file("assets.cfg");
   if (!file.is_open())
     throw "Error opening assets file";
 

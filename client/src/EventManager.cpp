@@ -131,6 +131,10 @@ void EventManager::LoadTargetEventBindings()
   std::string line;
   while (std::getline(bindings, line))
   {
+    // skip commented lines
+    if (line.find('#') != std::string::npos)
+      continue;
+
     size_t spacePos = line.find_first_of(' ');
     if (spacePos == std::string::npos || spacePos < 1)
       continue;

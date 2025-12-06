@@ -207,8 +207,8 @@ t_event Graphics::onMouseUp(const SDL_MouseButtonEvent &buttonEvent)
     {
         event.mouse.x = buttonEvent.x;
         event.mouse.y = buttonEvent.y;
-        event.mouse.button = 0;             // Left button = 0 (matches keys.cfg)
-        event.type = MOUSE_BUTTON_RELEASED; // Changed to RELEASED to match keys.cfg (9:0)
+        event.mouse.button = 0; // Left button = 0
+        event.type = MOUSE_BUTTON_RELEASED;
     }
 
     return event;
@@ -219,12 +219,7 @@ t_event Graphics::onKeyPress(const SDL_KeyboardEvent &keyEvent)
     t_event event;
     event.type = KEY_PRESSED;
 
-    SDL_Keycode code = keyEvent.key;
-
-    // Map SDL key codes to SFML key codes (to match keys.cfg)
-    // SDL: SDLK_W=119, SDLK_A=97, SDLK_S=115, SDLK_D=100, SDLK_UP=1073741906, SDLK_DOWN=1073741905, SDLK_LEFT=1073741904, SDLK_RIGHT=1073741903
-    // SFML: W=22, A=0, S=18, D=3, Up=73, Down=74, Left=71, Right=72
-    switch (code)
+    switch (keyEvent.key)
     {
     case SDLK_W:
         event.keyCode = 22; // SFML W
