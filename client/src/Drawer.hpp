@@ -43,12 +43,7 @@ private:
   std::vector<char *> assets;
   void *dynamicLibrary = nullptr;
   void *window = nullptr;
-  int screenSize;
-  int tilePx;
-  int height;
-  int width;
-  int prevSnakeHeadX;
-  int prevSnakeHeadY;
+  int tileSize;
   bool gameRunning = true;
   std::string switchLibPath;
   std::thread clientThread;
@@ -72,7 +67,6 @@ private:
   void startDynamicLib();
   void closeDynamicLib();
   void loadDynamicLibrary(const std::string &lib);
-  void drawBorder(int x, int y, int px, int py, int tilePx);
   void drawGameField();
   void drawMenu();
   void readAssets();
