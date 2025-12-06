@@ -16,32 +16,21 @@ Drawer::Drawer(Client *client)
 {
   tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 
-  // Initialize EventManager
   eventManager = new EventManager();
 
-  // Register movement callbacks (arrow keys and WASD) - only active in Game
-  // state
+  // Register callbacks
   eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
-  eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown,
-                            this);
-  eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft,
-                            this);
-  eventManager->AddCallback(StateType::Game, "Key_Right", &Drawer::MoveRight,
-                            this);
+  eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
+  eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
+  eventManager->AddCallback(StateType::Game, "Key_Right", &Drawer::MoveRight, this);
   eventManager->AddCallback(StateType::Game, "Key_W", &Drawer::MoveUp, this);
   eventManager->AddCallback(StateType::Game, "Key_A", &Drawer::MoveLeft, this);
   eventManager->AddCallback(StateType::Game, "Key_S", &Drawer::MoveDown, this);
   eventManager->AddCallback(StateType::Game, "Key_D", &Drawer::MoveRight, this);
-
-  // Register zoom callbacks
   eventManager->AddCallback(StateType::Game, "Key_M", &Drawer::ZoomIn, this);
   eventManager->AddCallback(StateType::Game, "Key_N", &Drawer::ZoomOut, this);
+  eventManager->AddCallback(StateType::Menu, "Mouse_Left", &Drawer::OnMouseClick, this);
 
-  // Register mouse callback - only active in Menu state (not during gameplay)
-  eventManager->AddCallback(StateType::Menu, "Mouse_Left",
-                            &Drawer::OnMouseClick, this);
-
-  // Set initial state to Menu (since we start with the menu)
   eventManager->SetCurrentState(StateType::Menu);
 
   this->readAssets();
@@ -123,15 +112,9 @@ void Drawer::start()
         this->beginFrame(this->window);
 
         t_event event = this->checkEvents(this->window);
-
-        // Handle CLOSED event directly
-        if (event.type == CLOSED)
-        {
+        if (event.type == CLOSED) // Handle CLOSED event directly
           gameRunning = false;
-        }
-
-        // Pass event to EventManager (only if not EMPTY)
-        if (event.type != EMPTY)
+        else if (event.type != EMPTY) // Pass event to EventManager (only if not EMPTY)
         {
           eventManager->HandleEvent(event);
           eventManager->Update();
@@ -294,8 +277,71 @@ void Drawer::startClient(const std::string &serverIP, bool isSinglePlayer)
   }
 }
 
-void Drawer::onMouseUp(float x, float y)
+// EventManager callbacks
+void Drawer::MoveUp(t_event *details)
 {
+  (void)details; // Unused, but required by callback signature
+  this->client->sendDirection(UP);
+}
+
+void Drawer::MoveDown(t_event *details)
+{
+  (void)details;
+  this->client->sendDirection(DOWN);
+}
+
+void Drawer::MoveLeft(t_event *details)
+{
+  (void)details;
+  this->client->sendDirection(LEFT);
+}
+
+void Drawer::MoveRight(t_event *details)
+{
+  (void)details;
+  this->client->sendDirection(RIGHT);
+}
+
+void Drawer::ZoomIn(t_event *details)
+{
+  (void)details;
+  this->screenSize = this->screenSize * 1.10 + 0.5;
+  this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+}
+
+void Drawer::ZoomOut(t_event *details)
+{
+  (void)details;
+  this->screenSize = this->screenSize / 1.10;
+  this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+}
+
+void Drawer::SwitchLib1(t_event *details)
+{
+  (void)details;
+  this->switchLibPath = "../libs/lib1/lib1";
+  this->gameRunning = false;
+}
+
+void Drawer::SwitchLib2(t_event *details)
+{
+  (void)details;
+  this->switchLibPath = "../libs/lib2/lib2";
+  this->gameRunning = false;
+}
+
+void Drawer::SwitchLib3(t_event *details)
+{
+  (void)details;
+  this->switchLibPath = "../libs/lib4/lib3";
+  this->gameRunning = false;
+}
+
+void Drawer::OnMouseClick(t_event *details)
+{
+  float x = details->mouse.x;
+  float y = details->mouse.y;
+
   if (x >= this->multiplayerButton.x &&
       x <= this->multiplayerButton.x + this->multiplayerButton.width &&
       y >= this->multiplayerButton.y &&
@@ -306,74 +352,4 @@ void Drawer::onMouseUp(float x, float y)
            y >= this->singlePlayerButton.y &&
            y <= this->singlePlayerButton.y + this->singlePlayerButton.height)
     this->startClient(LOCAL_SERVER_IP, true);
-}
-
-// EventManager callbacks
-void Drawer::MoveUp(MatchedEventDetails *details)
-{
-  (void)details; // Unused, but required by callback signature
-  this->client->sendDirection(UP);
-}
-
-void Drawer::MoveDown(MatchedEventDetails *details)
-{
-  (void)details;
-  this->client->sendDirection(DOWN);
-}
-
-void Drawer::MoveLeft(MatchedEventDetails *details)
-{
-  (void)details;
-  this->client->sendDirection(LEFT);
-}
-
-void Drawer::MoveRight(MatchedEventDetails *details)
-{
-  (void)details;
-  this->client->sendDirection(RIGHT);
-}
-
-void Drawer::ZoomIn(MatchedEventDetails *details)
-{
-  (void)details;
-  this->screenSize = this->screenSize * 1.10 + 0.5;
-  this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-}
-
-void Drawer::ZoomOut(MatchedEventDetails *details)
-{
-  (void)details;
-  this->screenSize = this->screenSize / 1.10;
-  this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-}
-
-void Drawer::SwitchLib1(MatchedEventDetails *details)
-{
-  (void)details;
-  this->switchLibPath = "../libs/lib1/lib1";
-  this->gameRunning = false;
-}
-
-void Drawer::SwitchLib2(MatchedEventDetails *details)
-{
-  (void)details;
-  this->switchLibPath = "../libs/lib2/lib2";
-  this->gameRunning = false;
-}
-
-void Drawer::SwitchLib3(MatchedEventDetails *details)
-{
-  (void)details;
-  this->switchLibPath = "../libs/lib4/lib3";
-  this->gameRunning = false;
-}
-
-void Drawer::OnMouseClick(MatchedEventDetails *details)
-{
-  // Only process mouse clicks when in menu mode
-  if (this->gameMode != MENU)
-  {
-    return;
-  }
-  onMouseUp(details->mouse_position_.x, details->mouse_position_.y);
 }
