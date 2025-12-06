@@ -69,6 +69,7 @@ private:
   void loadDynamicLibrary(const std::string &lib);
   void drawGameField();
   void drawMenu();
+  void drawControls();
   void readAssets();
 
   // EventManager callbacks

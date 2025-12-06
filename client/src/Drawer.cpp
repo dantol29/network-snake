@@ -179,6 +179,13 @@ void Drawer::drawMenu()
                    this->singlePlayerButton.label.c_str());
 }
 
+void Drawer::drawControls()
+{
+  this->drawText(this->window, 800, 670, 20, "CONTROLS");
+  this->drawText(this->window, 800, 700, 20, "M - ZOOM OUT");
+  this->drawText(this->window, 800, 725, 20, "N - ZOOM IN");
+}
+
 void Drawer::drawGameField()
 {
   if (this->client->getIsDead() || this->client->getStopFlag())
@@ -220,6 +227,8 @@ void Drawer::drawGameField()
         this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/head.png");
     }
   }
+
+  this->drawControls();
 }
 
 void Drawer::stopClient()
@@ -273,13 +282,13 @@ void Drawer::MoveRight(t_event *details)
 void Drawer::ZoomIn(t_event *details)
 {
   (void)details;
-  this->tileSize = std::min(SCREEN_HEIGHT / 4, this->tileSize + 10);
+  this->tileSize = std::min(SCREEN_HEIGHT / 4, this->tileSize + 5);
 }
 
 void Drawer::ZoomOut(t_event *details)
 {
   (void)details;
-  this->tileSize = std::max(1, this->tileSize - 10);
+  this->tileSize = std::max(1, this->tileSize - 5);
 }
 
 void Drawer::SwitchLib1(t_event *details)
