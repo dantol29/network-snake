@@ -3,21 +3,20 @@
 
 #include "../includes/nibbler.hpp"
 
-class Client
-{
+class Client {
 public:
   Client();
-  Client(const Client &obj) = delete;
-  Client &operator=(const Client &obj) = delete;
+  Client(const Client& obj) = delete;
+  Client& operator=(const Client& obj) = delete;
   ~Client();
 
-  void start(const std::string &serverIP, bool isSinglePlayer = false);
+  void start(const std::string& serverIP, bool isSinglePlayer = false);
   void sendDirection(const enum actions newDirection) const;
   void setIsDead(bool value);
   void setStopFlag(bool value);
 
-  const std::vector<std::string> &getGameField() const;
-  std::mutex &getGameFieldMutex();
+  const std::vector<std::string>& getGameField() const;
+  std::mutex& getGameFieldMutex();
   int getStopFlag() const;
   int getIsDead() const;
   int getWidth() const;
@@ -25,7 +24,7 @@ public:
   int getSnakeX() const;
   int getSnakeY() const;
 
-  static std::string deserealizeValue(const char *readBuf, int *index);
+  static std::string deserealizeValue(const char* readBuf, int* index);
 
 private:
   int tcpSocket;
@@ -48,15 +47,14 @@ private:
   int serverClientPipe[2];
   int clientServerPipe[2];
 
-  void initConnections(const std::string &serverIP);
+  void initConnections(const std::string& serverIP);
   void startLocalServer();
   void stopLocalServer();
-  void waitForServer(const std::string &serverIP);
+  void waitForServer(const std::string& serverIP);
   void receiveGameData();
   void deserealizeGameData(const int bytesRead);
-  void parseGameData(const char *message);
-  void updateGameState(int snakeX, int snakeY, int height, int width,
-                       const std::string &fieldStr);
+  void parseGameData(const char* message);
+  void updateGameState(int snakeX, int snakeY, int height, int width, const std::string& fieldStr);
 };
 
 #endif

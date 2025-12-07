@@ -2,22 +2,18 @@
 #include <fstream>
 #include <sstream>
 
-EventManager::EventManager()
-    : has_focus_(true), current_state_(StateType::Global)
-{
+EventManager::EventManager() : has_focus_(true), current_state_(StateType::Global) {
   LoadTargetEventBindings();
 }
 
-bool EventManager::AddEvent(std::unique_ptr<EventState> event)
-{
+bool EventManager::AddEvent(std::unique_ptr<EventState> event) {
   if (eventStates_.find(event->name_) != eventStates_.end())
     return false;
 
   return eventStates_.emplace(event->name_, std::move(event)).second;
 }
 
-bool EventManager::RemoveEvent(std::string name)
-{
+bool EventManager::RemoveEvent(std::string name) {
   auto it = eventStates_.find(name);
   if (it == eventStates_.end())
     return false;
@@ -26,12 +22,11 @@ bool EventManager::RemoveEvent(std::string name)
   return true;
 }
 
-void EventManager::SetFocus(const bool &has_focus) { has_focus_ = has_focus; }
+void EventManager::SetFocus(const bool& has_focus) { has_focus_ = has_focus; }
 
 void EventManager::SetCurrentState(StateType state) { current_state_ = state; }
 
-bool EventManager::RemoveCallback(StateType state, const std::string &name)
-{
+bool EventManager::RemoveCallback(StateType state, const std::string& name) {
   auto it = callbacks_.find(state);
   if (it == callbacks_.end())
     return false;
@@ -44,24 +39,20 @@ bool EventManager::RemoveCallback(StateType state, const std::string &name)
   return true;
 }
 
-void EventManager::HandleEvent(t_event &event)
-{
+void EventManager::HandleEvent(t_event& event) {
   if (event.type < CLOSED || event.type > MOUSE_LEFT)
     return;
 
   lastEvent_ = event;
   EventType eventType = static_cast<EventType>(event.type);
 
-  for (auto &eventStatePtr : eventStates_)
-  {
-    EventState *eventState = eventStatePtr.second.get();
-    for (auto &eventPair : eventState->events_)
-    {
+  for (auto& eventStatePtr : eventStates_) {
+    EventState* eventState = eventStatePtr.second.get();
+    for (auto& eventPair : eventState->events_) {
       if (eventPair.first != eventType)
         continue;
 
-      switch (eventType)
-      {
+      switch (eventType) {
       case EventType::KeyPressed:
       case EventType::KeyReleased:
         if (eventPair.second == event.keyCode)
@@ -84,20 +75,16 @@ void EventManager::HandleEvent(t_event &event)
   }
 }
 
-void EventManager::Update()
-{
+void EventManager::Update() {
   if (!has_focus_)
     return;
 
-  for (auto &eventStatePtr : eventStates_)
-  {
-    EventState *eventState = eventStatePtr.second.get();
-    if (eventState->events_.size() == eventState->matchedEvents_)
-    {
+  for (auto& eventStatePtr : eventStates_) {
+    EventState* eventState = eventStatePtr.second.get();
+    if (eventState->events_.size() == eventState->matchedEvents_) {
       // Collect all callbacks registered for the current state
       auto stateCallbacks = callbacks_.find(current_state_);
-      if (stateCallbacks != callbacks_.end())
-      {
+      if (stateCallbacks != callbacks_.end()) {
         // Find callback with the same name
         auto call_it = stateCallbacks->second.find(eventState->name_);
         if (call_it != stateCallbacks->second.end())
@@ -106,8 +93,7 @@ void EventManager::Update()
 
       // Check for global callbacks - always active
       auto globalCallbacks = callbacks_.find(StateType(0));
-      if (globalCallbacks != callbacks_.end())
-      {
+      if (globalCallbacks != callbacks_.end()) {
         auto call_it = globalCallbacks->second.find(eventState->name_);
         if (call_it != globalCallbacks->second.end())
           call_it->second(&lastEvent_);
@@ -120,8 +106,7 @@ void EventManager::Update()
 // FILE SYNTAX
 // EVENT_NAME EVENT_TYPE:EVENT_CODE
 // if needed: add support for multiple EVENT_TYPE:EVENT_CODE per EVENT_NAME
-void EventManager::LoadTargetEventBindings()
-{
+void EventManager::LoadTargetEventBindings() {
   std::ifstream bindings;
 
   bindings.open("keys.cfg");
@@ -129,8 +114,7 @@ void EventManager::LoadTargetEventBindings()
     return;
 
   std::string line;
-  while (std::getline(bindings, line))
-  {
+  while (std::getline(bindings, line)) {
     // skip commented lines
     if (line.find('#') != std::string::npos)
       continue;
@@ -146,16 +130,13 @@ void EventManager::LoadTargetEventBindings()
     if (columnPos == std::string::npos)
       continue;
 
-    try
-    {
+    try {
       auto eventType = EventType(stoi(remainingLine.substr(0, columnPos)));
       size_t eventCode = stoi(remainingLine.substr(columnPos + 1));
       event->AddEvent(eventType, eventCode);
 
       AddEvent(std::move(event));
-    }
-    catch (...)
-    {
+    } catch (...) {
       std::cerr << "Invalid line in config: " << line << '\n';
       continue;
     }

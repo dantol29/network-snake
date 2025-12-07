@@ -5,17 +5,19 @@
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
 
-Drawer::Drawer(Client *client)
+Drawer::Drawer(Client* client)
     : client(client), switchLibPath("../libs/lib2/lib2"), gameMode(MENU),
       multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
-      singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
-{
+      singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
   tileSize = SCREEN_HEIGHT / 40;
 
   eventManager = new EventManager();
 
   // Register callbacks
   eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
+  eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
+  eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
+  eventManager->AddCallback(StateType::Game, "Key_Right", &Drawer::MoveRight, this);
   eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
   eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
   eventManager->AddCallback(StateType::Game, "Key_Right", &Drawer::MoveRight, this);
@@ -34,8 +36,7 @@ Drawer::Drawer(Client *client)
   this->readAssets();
 }
 
-Drawer::~Drawer()
-{
+Drawer::~Drawer() {
   delete eventManager;
   this->closeDynamicLib();
 
@@ -43,8 +44,7 @@ Drawer::~Drawer()
     free(assets[i]);
 }
 
-void Drawer::loadDynamicLibrary(const std::string &lib)
-{
+void Drawer::loadDynamicLibrary(const std::string& lib) {
   std::string libPath = lib + LIB_EXTENSION;
   this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
   if (!this->dynamicLibrary)
@@ -60,53 +60,43 @@ void Drawer::loadDynamicLibrary(const std::string &lib)
   this->drawText = (drawTextFunc)dlsym(this->dynamicLibrary, "drawText");
   this->beginFrame = (beginFrameFunc)dlsym(this->dynamicLibrary, "beginFrame");
   this->endFrame = (endFrameFunc)dlsym(this->dynamicLibrary, "endFrame");
-  this->checkEvents =
-      (checkEventsFunc)dlsym(this->dynamicLibrary, "checkEvents");
+  this->checkEvents = (checkEventsFunc)dlsym(this->dynamicLibrary, "checkEvents");
 
-  char *error = dlerror(); // check dlsym calls
+  char* error = dlerror(); // check dlsym calls
   if (error != NULL)
     throw "Failed to find functions in dynlib";
 
-  if (!this->init || !this->cleanup || !this->drawAsset || !this->drawButton ||
-      !this->drawText || !this->loadAssets || !this->endFrame ||
-      !this->beginFrame || !this->checkEvents)
+  if (!this->init || !this->cleanup || !this->drawAsset || !this->drawButton || !this->drawText ||
+      !this->loadAssets || !this->endFrame || !this->beginFrame || !this->checkEvents)
     throw "Failed to init dynlib functions";
 }
 
-void Drawer::closeDynamicLib()
-{
-  if (this->window)
-  {
+void Drawer::closeDynamicLib() {
+  if (this->window) {
     this->cleanup(this->window);
     this->window = nullptr;
   }
-  if (this->dynamicLibrary)
-  {
+  if (this->dynamicLibrary) {
     dlclose(this->dynamicLibrary);
     this->dynamicLibrary = nullptr;
   }
 }
 
-void Drawer::startDynamicLib()
-{
+void Drawer::startDynamicLib() {
   this->closeDynamicLib();
   this->loadDynamicLibrary(this->switchLibPath);
   this->switchLibPath = "";
 }
 
-void Drawer::start()
-{
-  try
-  {
-    while (1)
-    {
+void Drawer::start() {
+  try {
+    while (1) {
       this->startDynamicLib();
       this->openWindow();
-      this->loadAssets(this->window, (const char **)assets.data());
+      this->loadAssets(this->window, (const char**)assets.data());
       gameRunning = true;
 
-      while (gameRunning)
-      {
+      while (gameRunning) {
         this->beginFrame(this->window);
 
         t_event event = this->checkEvents(this->window);
@@ -129,24 +119,20 @@ void Drawer::start()
       if (this->switchLibPath.empty())
         break;
     }
-  }
-  catch (const char *msg)
-  {
+  } catch (const char* msg) {
     std::cerr << msg << std::endl;
   }
 
   this->stopClient();
 }
 
-void Drawer::readAssets()
-{
+void Drawer::readAssets() {
   std::ifstream file("assets.cfg");
   if (!file.is_open())
     throw "Error opening assets file";
 
   std::string line;
-  while (getline(file, line))
-  {
+  while (getline(file, line)) {
     assets.push_back(strdup(line.c_str()));
     line = "";
   }
@@ -159,54 +145,46 @@ void Drawer::readAssets()
   file.close();
 }
 
-void Drawer::openWindow()
-{
+void Drawer::openWindow() {
   this->window = this->init(SCREEN_HEIGHT, SCREEN_WIDTH, this);
   if (!this->window)
     throw("Failed to init lib");
 }
 
-void Drawer::drawMenu()
-{
+void Drawer::drawMenu() {
   this->drawText(this->window, 380, 200, 40, "42 SNAKES");
-  this->drawButton(this->window, this->multiplayerButton.x,
-                   this->multiplayerButton.y, this->multiplayerButton.width,
-                   this->multiplayerButton.height,
+  this->drawButton(this->window, this->multiplayerButton.x, this->multiplayerButton.y,
+                   this->multiplayerButton.width, this->multiplayerButton.height,
                    this->multiplayerButton.label.c_str());
-  this->drawButton(this->window, this->singlePlayerButton.x,
-                   this->singlePlayerButton.y, this->singlePlayerButton.width,
-                   this->singlePlayerButton.height,
+  this->drawButton(this->window, this->singlePlayerButton.x, this->singlePlayerButton.y,
+                   this->singlePlayerButton.width, this->singlePlayerButton.height,
                    this->singlePlayerButton.label.c_str());
 }
 
-void Drawer::drawControls()
-{
+void Drawer::drawControls() {
   this->drawText(this->window, 800, 670, 20, "CONTROLS");
   this->drawText(this->window, 800, 700, 20, "M - ZOOM OUT");
   this->drawText(this->window, 800, 725, 20, "N - ZOOM IN");
 }
 
-void Drawer::drawGameField()
-{
-  if (this->client->getIsDead() || this->client->getStopFlag())
-  {
+void Drawer::drawGameField() {
+  if (this->client->getIsDead() || this->client->getStopFlag()) {
     this->stopClient();
     this->gameMode = MENU;
     return;
   }
 
-  std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
+  std::mutex& gameFieldMutex = this->client->getGameFieldMutex();
   std::lock_guard<std::mutex> lock(gameFieldMutex);
 
-  const std::vector<std::string> &gameField = this->client->getGameField();
+  const std::vector<std::string>& gameField = this->client->getGameField();
   const int fieldHeight = this->client->getHeight();
   const int fieldWidth = this->client->getWidth();
 
-  for (int sy = 0; sy < fieldHeight; ++sy)
-  {
-    for (int sx = 0; sx < fieldWidth; ++sx)
-    {
-      int px = sx * tileSize + tileSize; // calculate pixel on the screen to draw + offset(for walls)
+  for (int sy = 0; sy < fieldHeight; ++sy) {
+    for (int sx = 0; sx < fieldWidth; ++sx) {
+      int px =
+          sx * tileSize + tileSize; // calculate pixel on the screen to draw + offset(for walls)
       int py = sy * tileSize + tileSize;
 
       if (sx == 0)
@@ -231,89 +209,75 @@ void Drawer::drawGameField()
   this->drawControls();
 }
 
-void Drawer::stopClient()
-{
+void Drawer::stopClient() {
   this->client->setStopFlag(true);
   if (this->clientThread.joinable())
     this->clientThread.join();
 }
 
-void Drawer::startClient(const std::string &serverIP, bool isSinglePlayer)
-{
+void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
   const std::string mode = isSinglePlayer ? "Single-player" : "Multiplayer";
   std::cout << mode << " mode selected" << '\n';
 
-  if (!this->clientThread.joinable())
-  {
+  if (!this->clientThread.joinable()) {
     this->gameMode = GAME;
     this->client->setIsDead(false);
     this->client->setStopFlag(false);
-    this->clientThread =
-        std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
+    this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
     eventManager->SetCurrentState(StateType::Game);
   }
 }
 
 // EventManager callbacks
-void Drawer::MoveUp(t_event *details)
-{
+void Drawer::MoveUp(t_event* details) {
   (void)details; // Unused, but required by callback signature
   this->client->sendDirection(UP);
 }
 
-void Drawer::MoveDown(t_event *details)
-{
+void Drawer::MoveDown(t_event* details) {
   (void)details;
   this->client->sendDirection(DOWN);
 }
 
-void Drawer::MoveLeft(t_event *details)
-{
+void Drawer::MoveLeft(t_event* details) {
   (void)details;
   this->client->sendDirection(LEFT);
 }
 
-void Drawer::MoveRight(t_event *details)
-{
+void Drawer::MoveRight(t_event* details) {
   (void)details;
   this->client->sendDirection(RIGHT);
 }
 
-void Drawer::ZoomIn(t_event *details)
-{
+void Drawer::ZoomIn(t_event* details) {
   (void)details;
   this->tileSize = std::min(SCREEN_HEIGHT / 4, this->tileSize + 5);
 }
 
-void Drawer::ZoomOut(t_event *details)
-{
+void Drawer::ZoomOut(t_event* details) {
   (void)details;
   this->tileSize = std::max(1, this->tileSize - 5);
 }
 
-void Drawer::SwitchLib1(t_event *details)
-{
+void Drawer::SwitchLib1(t_event* details) {
   (void)details;
   this->switchLibPath = "../libs/lib1/lib1";
   this->gameRunning = false;
 }
 
-void Drawer::SwitchLib2(t_event *details)
-{
+void Drawer::SwitchLib2(t_event* details) {
   (void)details;
   this->switchLibPath = "../libs/lib2/lib2";
   this->gameRunning = false;
 }
 
-void Drawer::SwitchLib3(t_event *details)
-{
+void Drawer::SwitchLib3(t_event* details) {
   (void)details;
   this->switchLibPath = "../libs/lib4/lib3";
   this->gameRunning = false;
 }
 
-void Drawer::OnMouseClick(t_event *details)
-{
+void Drawer::OnMouseClick(t_event* details) {
   float x = details->mouse.x;
   float y = details->mouse.y;
 
