@@ -5,8 +5,6 @@
 #include "Client.hpp"
 #include "EventManager.hpp"
 
-enum mode { MENU, GAME };
-
 struct Button {
   float x;
   float y;
@@ -37,7 +35,7 @@ private:
   bool gameRunning = true;
   std::string switchLibPath;
   std::thread clientThread;
-  mode gameMode;
+  StateType gameMode;
   const Button multiplayerButton;
   const Button singlePlayerButton;
 

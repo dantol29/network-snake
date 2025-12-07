@@ -6,7 +6,7 @@
 #define SCREEN_HEIGHT 1000
 
 Drawer::Drawer(Client* client)
-    : client(client), switchLibPath("../libs/lib2/lib2"), gameMode(MENU),
+    : client(client), switchLibPath("../libs/lib2/lib2"), gameMode(StateType::Menu),
       multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
       singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
   tileSize = SCREEN_HEIGHT / 40;
@@ -108,9 +108,9 @@ void Drawer::start() {
           eventManager->Update();
         }
 
-        if (this->gameMode == GAME)
+        if (this->gameMode == StateType::Game)
           this->drawGameField();
-        else
+        else if (this->gameMode == StateType::Menu)
           this->drawMenu();
 
         this->endFrame(this->window);
@@ -170,7 +170,8 @@ void Drawer::drawControls() {
 void Drawer::drawGameField() {
   if (this->client->getIsDead() || this->client->getStopFlag()) {
     this->stopClient();
-    this->gameMode = MENU;
+    this->gameMode = StateType::Menu;
+    this->eventManager->SetCurrentState(StateType::Menu);
     return;
   }
 
@@ -220,7 +221,9 @@ void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
   std::cout << mode << " mode selected" << '\n';
 
   if (!this->clientThread.joinable()) {
-    this->gameMode = GAME;
+    // TODO: refactor so that we do not have to set StateType in 2 places
+    this->gameMode = StateType::Game;
+    this->eventManager->SetCurrentState(StateType::Game);
     this->client->setIsDead(false);
     this->client->setStopFlag(false);
     this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);

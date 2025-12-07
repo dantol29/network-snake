@@ -9,8 +9,6 @@
 #include <utility>
 #include <vector>
 
-enum class StateType { Global, Menu, Game, GameOver, Paused };
-
 enum class EventType {
   Closed,
   Resized,
