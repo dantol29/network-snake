@@ -5,20 +5,19 @@
 
 class Game;
 
-class Server
-{
+class Server {
 public:
-  Server(Game *game);
-  Server(const Server &obj) = delete;
-  Server &operator=(const Server &obj) = delete;
+  Server(Game* game);
+  Server(const Server& obj) = delete;
+  Server& operator=(const Server& obj) = delete;
   ~Server();
 
   void start();
 
-  static std::string serializeValue(const std::string &value);
+  static std::string serializeValue(const std::string& value);
 
 private:
-  Game *game;
+  Game* game;
   int tcpServerFd;
   int udpServerFd;
   std::vector<struct pollfd> connectedClients;

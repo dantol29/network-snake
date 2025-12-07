@@ -1,7 +1,6 @@
 #ifndef NIBBLER_HPP
 #define NIBBLER_HPP
 
-#include <optional>
 #include <atomic>
 #include <fcntl.h>
 #include <iostream>
@@ -10,6 +9,7 @@
 #include <mutex>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <optional>
 #include <poll.h>
 #include <stdio.h>
 #include <string.h>
@@ -25,18 +25,11 @@
 #define SNAKE_SPEED 1000
 #define MAX_PLAYERS 100
 
-typedef struct s_coordinates
-{
+typedef struct s_coordinates {
   int x;
   int y;
 } t_coordinates;
 
-enum e_direction
-{
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT
-};
+enum e_direction { UP, DOWN, LEFT, RIGHT };
 
 #endif

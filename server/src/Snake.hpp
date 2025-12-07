@@ -6,14 +6,13 @@
 
 class Game;
 
-class Snake
-{
+class Snake {
 public:
-  Snake(Game *game, int fd);
+  Snake(Game* game, int fd);
   ~Snake();
 
-  void moveSnake(std::vector<std::string> *gameField);
-  void cleanup(std::vector<std::string> *gameField);
+  void moveSnake(std::vector<std::string>* gameField);
+  void cleanup(std::vector<std::string>* gameField);
   void setDirection(const int newDir);
 
   bool getIsDead() const;

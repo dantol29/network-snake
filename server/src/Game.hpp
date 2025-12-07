@@ -5,12 +5,11 @@
 
 class Snake;
 
-class Game
-{
+class Game {
 public:
   Game(const int height, const int width);
-  Game(const Game &obj) = delete;
-  Game &operator=(const Game &obj) = delete;
+  Game(const Game& obj) = delete;
+  Game& operator=(const Game& obj) = delete;
   ~Game();
 
   void start();
@@ -40,7 +39,7 @@ private:
   std::atomic<bool> isDataUpdated;
 
   std::mutex snakesMutex;
-  std::unordered_map<int, Snake *> snakes;
+  std::unordered_map<int, Snake*> snakes;
 
   std::mutex readableFieldMutex;
   std::vector<std::string> readableField;
