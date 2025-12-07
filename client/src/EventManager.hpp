@@ -9,17 +9,9 @@
 #include <utility>
 #include <vector>
 
-enum class StateType
-{
-  Global,
-  Menu,
-  Game,
-  GameOver,
-  Paused
-};
+enum class StateType { Global, Menu, Game, GameOver, Paused };
 
-enum class TargetEventType
-{
+enum class TargetEventType {
   Closed,
   Resized,
   FocusLost,
@@ -39,21 +31,18 @@ enum class TargetEventType
   Joystick
 };
 
-struct TargetEventCode
-{
+struct TargetEventCode {
   TargetEventCode() { code_ = 0; }
   TargetEventCode(int event) { code_ = event; }
 
-  union
-  {
+  union {
     int code_;
   };
 };
 
 using TargetEvents = std::vector<std::pair<TargetEventType, TargetEventCode>>;
 
-struct MatchedEventDetails
-{
+struct MatchedEventDetails {
   MatchedEventDetails() { Clear(); }
 
   Vec2i window_size_;
@@ -62,8 +51,7 @@ struct MatchedEventDetails
   int mouse_wheel_delta_;
   int key_code_;
 
-  void Clear()
-  {
+  void Clear() {
     window_size_ = Vec2i{0, 0};
     text_entered_ = 0;
     mouse_position_ = Vec2i{0, 0};
@@ -72,14 +60,10 @@ struct MatchedEventDetails
   }
 };
 
-struct TargetEventBindingState
-{
-  TargetEventBindingState(const std::string &name)
-      : name_(name), matched_count_(0), details_() {}
+struct TargetEventBindingState {
+  TargetEventBindingState(const std::string& name) : name_(name), matched_count_(0), details_() {}
 
-  void AddTargetEvent(TargetEventType type,
-                      TargetEventCode code = TargetEventCode())
-  {
+  void AddTargetEvent(TargetEventType type, TargetEventCode code = TargetEventCode()) {
     events_.emplace_back(type, code);
   }
 
@@ -96,43 +80,40 @@ using TargetEventBindingStates =
 // CallbackContainer: map of callback name (string) to callback function
 // (std::function that takes MatchedEventDetails* as argument)
 using CallbackContainer =
-    std::unordered_map<std::string, std::function<void(MatchedEventDetails *)>>;
+    std::unordered_map<std::string, std::function<void(MatchedEventDetails*)>>;
 // Callbacks: map of state (StateType) to CallbackContainer
 // (all callbacks registered for that state)
 using Callbacks = std::unordered_map<StateType, CallbackContainer>;
 
-class EventManager
-{
+class EventManager {
 public:
   EventManager();
   ~EventManager() = default;
 
-  EventManager(const EventManager &) = delete;
-  EventManager &operator=(const EventManager &) = delete;
-  EventManager(EventManager &&) = default;
-  EventManager &operator=(EventManager &&) = default;
+  EventManager(const EventManager&) = delete;
+  EventManager& operator=(const EventManager&) = delete;
+  EventManager(EventManager&&) = default;
+  EventManager& operator=(EventManager&&) = default;
 
-  bool
-  AddTargetEventBindingState(std::unique_ptr<TargetEventBindingState> binding);
+  bool AddTargetEventBindingState(std::unique_ptr<TargetEventBindingState> binding);
   bool RemoveTargetEventBindingState(std::string name);
 
-  void SetFocus(const bool &has_focus);
+  void SetFocus(const bool& has_focus);
   void SetCurrentState(StateType state);
 
   // NOTE: The 'name' parameter must match the name defined in keys.cfg for the
   // desired triggering configuration
   template <class T>
-  bool AddCallback(StateType state, const std::string &name,
-                   void (T::*func)(MatchedEventDetails *), T *instance)
-  {
+  bool AddCallback(StateType state, const std::string& name, void (T::*func)(MatchedEventDetails*),
+                   T* instance) {
     auto it = callbacks_.emplace(state, CallbackContainer()).first;
     auto temp = std::bind(func, instance, std::placeholders::_1);
     return it->second.emplace(name, temp).second;
   }
 
-  bool RemoveCallback(StateType state, const std::string &name);
+  bool RemoveCallback(StateType state, const std::string& name);
 
-  void HandleEvent(t_event &event);
+  void HandleEvent(t_event& event);
   void Update();
 
 private:

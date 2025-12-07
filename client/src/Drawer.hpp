@@ -5,43 +5,33 @@
 #include "Client.hpp"
 #include "EventManager.hpp"
 
-enum mode
-{
-  MENU,
-  GAME
-};
+enum mode { MENU, GAME };
 
-struct Button
-{
+struct Button {
   float x;
   float y;
   float width;
   float height;
   std::string label;
-  enum
-  {
-    MULTIPLAYER,
-    SINGLE_PLAYER
-  } type;
+  enum { MULTIPLAYER, SINGLE_PLAYER } type;
 };
 
 class Client;
 
-class Drawer
-{
+class Drawer {
 public:
-  Drawer(Client *client);
-  Drawer(const Drawer &obj) = delete;
-  Drawer &operator=(const Drawer &obj) = delete;
+  Drawer(Client* client);
+  Drawer(const Drawer& obj) = delete;
+  Drawer& operator=(const Drawer& obj) = delete;
   ~Drawer();
 
   void start();
 
 private:
-  Client *client;
-  EventManager *eventManager;
-  void *dynamicLibrary = nullptr;
-  void *window = nullptr;
+  Client* client;
+  EventManager* eventManager;
+  void* dynamicLibrary = nullptr;
+  void* window = nullptr;
   int screenSize;
   int tilePx;
   int height;
@@ -52,7 +42,7 @@ private:
   std::string switchLibPath;
   std::thread clientThread;
   mode gameMode;
-  std::vector<char *> assets;
+  std::vector<char*> assets;
   const Button multiplayerButton;
   const Button singlePlayerButton;
 
@@ -67,7 +57,7 @@ private:
   cleanupFunc cleanup;
 
   void stopClient();
-  void startClient(const std::string &serverIP, bool isSinglePlayer);
+  void startClient(const std::string& serverIP, bool isSinglePlayer);
   void openWindow();
   void startDynamicLib();
   void closeDynamicLib();
@@ -76,18 +66,18 @@ private:
   // void onKeyPress(int action);
 
   // EventManager callbacks
-  void MoveUp(MatchedEventDetails *details);
-  void MoveDown(MatchedEventDetails *details);
-  void MoveLeft(MatchedEventDetails *details);
-  void MoveRight(MatchedEventDetails *details);
-  void ZoomIn(MatchedEventDetails *details);
-  void ZoomOut(MatchedEventDetails *details);
-  void SwitchLib1(MatchedEventDetails *details);
-  void SwitchLib2(MatchedEventDetails *details);
-  void SwitchLib3(MatchedEventDetails *details);
-  void OnMouseClick(MatchedEventDetails *details);
+  void MoveUp(MatchedEventDetails* details);
+  void MoveDown(MatchedEventDetails* details);
+  void MoveLeft(MatchedEventDetails* details);
+  void MoveRight(MatchedEventDetails* details);
+  void ZoomIn(MatchedEventDetails* details);
+  void ZoomOut(MatchedEventDetails* details);
+  void SwitchLib1(MatchedEventDetails* details);
+  void SwitchLib2(MatchedEventDetails* details);
+  void SwitchLib3(MatchedEventDetails* details);
+  void OnMouseClick(MatchedEventDetails* details);
 
-  void loadDynamicLibrary(const std::string &lib);
+  void loadDynamicLibrary(const std::string& lib);
   void drawBorder(int x, int y, int px, int py, int tilePx);
   void drawGameField();
   void drawMenu();
