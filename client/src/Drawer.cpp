@@ -238,9 +238,9 @@ void Drawer::drawGameField()
       if (tile == 'F')
         this->drawAsset(this->window, px, py, tilePx, tilePx, 0,
                         "assets/food.png");
-      else if (tile == 'B')
+      else if (tile == 'B' || tile == 'T')
         this->drawAsset(this->window, px, py, tilePx, tilePx, 0,
-                        "assets/body.png");
+                        tile == 'B' ? "assets/body.png" : "assets/tail.png");
       else if (tile == 'H')
         this->drawAsset(this->window, px, py, tilePx, tilePx, 0,
                         "assets/head.png");
@@ -263,11 +263,11 @@ void Drawer::drawBorder(int x, int y, int px, int py, int tilePx)
                     "assets/wall.png");
 
   if (y == 0)
-    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 0,
+    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 90,
                     "assets/wall.png");
 
   if (y == this->height - 1)
-    this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 0,
+    this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 90,
                     "assets/wall.png");
 }
 

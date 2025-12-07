@@ -1,31 +1,16 @@
-## TODO
+## Bugs
 
-- [x] Replace onerror() with proper exit
-- [x] Add 2 dynamic libs
-- [x] Check memory leaks in Server
-- [] Check memory leaks in Client
-- [x] Stop server when game is finished
-- [x] Scale game based on width and height
-- [x] Draw borders
-- [x] Spawn more food if more players
-- [x] Add canonical form for classes
-- [x] Accept both game width and height
-- [x] Parse args - too big, too small
-- [x] The edges of the plane can’t be passed through
-- [x] The snake starts with a size of 4 squares in the middle of the game area.
-- [x] Single player mode must remain available
-- [x] Add const
-- [] If game field is not square - it is not rendered correctly
-- [x] Data races in Server
+- [] Server must send a message that the game is over
 - [] Data races in Client
-- [x] When player quits and rejoins - do not increase game field
-- [x] Send snakes coordinates, so that client knows which snake to follow
-- [x] Think about mutexes, might be a better way 
-- [x] Create an abstract class for graphic libs
-- [x] move loop logic to the main executable
+- [] Memory leaks in Client
+- [] Sometimes server does not start right after it was closed(socket not closed?)
+
 ## Features
 
-- [x] Scale game field when new player is joining
-- [x] Center snake on the screen
-- [x] Zoom in & Zoom out
-- [] Improve graphics - draw smooth snake position transactions before new data arrives
+- [x] The single player snake should always run with the local server
+- [x] The snake is starting when you press any key
+- [x] Text in the corner with keys
+- [] A way to distinguish snakes in a multiplayer(different colors)
+- [] Count-down in a multi-player when another player joins(difficult)
+- [] Graphics like in nibbler
+- [] Leaderboard with points for multiplayer(easy, but more data to transmit)

@@ -24,6 +24,7 @@ Snake::~Snake() { std::cout << "Snake destructor called" << std::endl; }
 void Snake::moveSnake(std::vector<std::string> *gameField)
 {
   auto currentHead = body.front();
+  auto currentTail = body.back();
 
   if (this->isActive)
   {
@@ -34,9 +35,9 @@ void Snake::moveSnake(std::vector<std::string> *gameField)
       this->game->decreaseFood();
     else
     {
-      auto tail = body.back();
-      (*gameField)[tail.y][tail.x] = FLOOR_SYMBOL;
+      (*gameField)[currentTail.y][currentTail.x] = FLOOR_SYMBOL;
       body.pop_back();
+      currentTail = body.back();
     }
   }
 
@@ -44,6 +45,7 @@ void Snake::moveSnake(std::vector<std::string> *gameField)
     (*gameField)[segment.y][segment.x] = 'B';
 
   (*gameField)[currentHead.y][currentHead.x] = 'H';
+  (*gameField)[currentTail.y][currentTail.x] = 'T';
 }
 
 struct coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::string> *gameField)
