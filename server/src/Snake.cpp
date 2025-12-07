@@ -3,7 +3,7 @@
 
 Snake::Snake(Game *game, int fd) : game(game), fd(fd)
 {
-  struct coordinates c;
+  t_coordinates c;
   c.x = this->game->getWidth() / 2;
   c.y = this->game->getHeight() / 2;
   this->body.push_front(c);
@@ -48,7 +48,7 @@ void Snake::moveSnake(std::vector<std::string> *gameField)
   (*gameField)[currentTail.y][currentTail.x] = 'T';
 }
 
-struct coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::string> *gameField)
+t_coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::string> *gameField)
 {
   switch (this->direction)
   {
@@ -105,6 +105,6 @@ void Snake::cleanup(std::vector<std::string> *gameField)
     (*gameField)[segment.y][segment.x] = FLOOR_SYMBOL;
 }
 
-struct coordinates Snake::getHead() const { return this->body.front(); }
+t_coordinates Snake::getHead() const { return this->body.front(); }
 
 bool Snake::getIsDead() const { return this->isDead; }

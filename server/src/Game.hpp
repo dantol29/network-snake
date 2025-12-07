@@ -23,7 +23,7 @@ public:
   void setIsDataUpdated(bool value);
   std::string fieldToString();
 
-  struct coordinates getSnakeHead(const int fd);
+  t_coordinates getSnakeHead(const int fd);
   int getHeight() const;
   int getWidth() const;
   bool getStopFlag() const;

@@ -17,17 +17,17 @@ public:
   void setDirection(const int newDir);
 
   bool getIsDead() const;
-  struct coordinates getHead() const;
+  t_coordinates getHead() const;
 
 private:
   Game *game;
-  std::list<struct coordinates> body;
+  std::list<t_coordinates> body;
   enum e_direction direction;
   const int fd;
   bool isDead;
   bool isActive;
 
-  struct coordinates moveHead(int currentX, int currentY, std::vector<std::string> *gameField);
+  t_coordinates moveHead(int currentX, int currentY, std::vector<std::string> *gameField);
 };
 
 #endif

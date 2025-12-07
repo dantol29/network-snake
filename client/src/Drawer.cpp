@@ -296,6 +296,7 @@ void Drawer::startClient(const std::string &serverIP, bool isSinglePlayer)
 
 void Drawer::onMouseUp(float x, float y)
 {
+  std::cout << "MouseUp" << std::endl;
   if (x >= this->multiplayerButton.x &&
       x <= this->multiplayerButton.x + this->multiplayerButton.width &&
       y >= this->multiplayerButton.y &&
@@ -370,6 +371,7 @@ void Drawer::SwitchLib3(MatchedEventDetails *details)
 
 void Drawer::OnMouseClick(MatchedEventDetails *details)
 {
+  std::cout << "MouseClick" << std::endl;
   // Only process mouse clicks when in menu mode
   if (this->gameMode != MENU)
   {

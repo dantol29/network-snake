@@ -144,11 +144,11 @@ void Game::setIsDataUpdated(bool value) { this->isDataUpdated.store(value); }
 
 /// GETTERS
 
-struct coordinates Game::getSnakeHead(const int fd)
+t_coordinates Game::getSnakeHead(const int fd)
 {
   std::lock_guard<std::mutex> lock(snakesMutex);
 
-  struct coordinates head = {0};
+  t_coordinates head = {0};
   auto it = this->snakes.find(fd);
   if (it != this->snakes.end() && it->second)
     head = it->second->getHead();
