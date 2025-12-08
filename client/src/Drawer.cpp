@@ -39,6 +39,8 @@ Drawer::Drawer(Client* client)
   eventManager->SetCurrentState(StateType::Menu);
 
   this->readAssets();
+
+  tailFrame = std::make_pair(1, "assets/tail.png");
 }
 
 Drawer::~Drawer() {
@@ -190,6 +192,8 @@ void Drawer::drawGameField() {
   const int originX = (WIDTH - (tilePx * screenSize)) / 2;
   const int originY = (HEIGHT - (tilePx * screenSize)) / 2;
 
+  setTailFrame();
+
   for (int sy = 0; sy < screenSize; ++sy) {
     int wy = snakeHeadY + (sy - screenCenter);
     for (int sx = 0; sx < screenSize; ++sx) {
@@ -207,7 +211,7 @@ void Drawer::drawGameField() {
         this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/food.png");
       else if (tile == 'B' || tile == 'T')
         this->drawAsset(this->window, px, py, tilePx, tilePx, 0,
-                        tile == 'B' ? "assets/body.png" : "assets/tail.png");
+                        tile == 'B' ? "assets/body.png" : tailFrame.second.c_str());
       else if (tile == 'H')
         this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/head.png");
       else
@@ -216,6 +220,28 @@ void Drawer::drawGameField() {
   }
   this->prevSnakeHeadX = snakeHeadX;
   this->prevSnakeHeadY = snakeHeadY;
+}
+
+// TODO: refactor using AnimationManager :)
+void Drawer::setTailFrame() {
+  static auto lastReadTime = std::chrono::steady_clock::now();
+
+  auto currentTime = std::chrono::steady_clock::now();
+  auto elapsed =
+      std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastReadTime).count();
+
+  if (elapsed > 200) {
+    if (tailFrame.first == 1) {
+      tailFrame = std::make_pair(2, "assets/tail2.png");
+    } else if (tailFrame.first == 2) {
+      tailFrame = std::make_pair(3, "assets/tail.png");
+    } else if (tailFrame.first == 3) {
+      tailFrame = std::make_pair(4, "assets/tail3.png");
+    } else if (tailFrame.first == 4) {
+      tailFrame = std::make_pair(1, "assets/tail.png");
+    }
+    lastReadTime = currentTime;
+  }
 }
 
 void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {

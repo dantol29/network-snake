@@ -45,6 +45,7 @@ private:
   std::vector<char*> assets;
   const Button multiplayerButton;
   const Button singlePlayerButton;
+  std::pair<int, std::string> tailFrame;
 
   initFunc init;
   checkEventsFunc checkEvents;
@@ -62,8 +63,6 @@ private:
   void startDynamicLib();
   void closeDynamicLib();
   void onMouseUp(float x, float y);
-  // Old onKeyPress - kept for reference, replaced by EventManager callbacks
-  // void onKeyPress(int action);
 
   // EventManager callbacks
   void MoveUp(MatchedEventDetails* details);
@@ -82,6 +81,7 @@ private:
   void drawGameField();
   void drawMenu();
   void readAssets();
+  void setTailFrame();
 };
 
 #endif
