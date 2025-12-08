@@ -214,6 +214,8 @@ void Drawer::drawGameField() {
                         tile == 'B' ? "assets/body.png" : tailFrame.second.c_str());
       else if (tile == 'H')
         this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/head.png");
+      else if (tile == 'W')
+        this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/wall.png");
       else
         continue;
     }
@@ -246,16 +248,16 @@ void Drawer::setTailFrame() {
 
 void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {
   if (x == 0)
-    this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 180, "assets/wall.png");
+    this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 180, "assets/border.png");
 
   if (x == this->width - 1)
-    this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, 0, "assets/wall.png");
+    this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, 0, "assets/border.png");
 
   if (y == 0)
-    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 270, "assets/wall.png");
+    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 270, "assets/border.png");
 
   if (y == this->height - 1)
-    this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 90, "assets/wall.png");
+    this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 90, "assets/border.png");
 }
 
 void Drawer::stopClient() {

@@ -7,7 +7,7 @@ class Snake;
 
 class Game {
 public:
-  Game(const int height, const int width);
+  Game(const int height, const int width, const std::string& mapPath);
   Game(const Game& obj) = delete;
   Game& operator=(const Game& obj) = delete;
   ~Game();
@@ -49,6 +49,7 @@ private:
   void moveSnakes();
   void updateReadableField();
   void printField();
+  void loadGameMap(const std::string& mapFile);
 };
 
 #endif

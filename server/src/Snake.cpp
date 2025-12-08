@@ -71,7 +71,8 @@ t_coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::strin
       this->isDead = true;
   }
 
-  if ((*gameField)[currentY][currentX] == 'B' || (*gameField)[currentY][currentX] == 'H')
+  char tile = (*gameField)[currentY][currentX];
+  if (tile == 'B' || tile == 'H' || tile == 'W')
     this->isDead = true;
 
   return {currentX, currentY};
