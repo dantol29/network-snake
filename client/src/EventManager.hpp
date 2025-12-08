@@ -1,132 +1,129 @@
 #ifndef EVENTMANAGER_HPP
 #define EVENTMANAGER_HPP
 
-#include <vector>
-#include <utility>
+#include "../includes/nibbler.hpp"
+#include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
-#include <functional>
-#include "../includes/nibbler.hpp"  // For Vec2i
+#include <utility>
+#include <vector>
 
 // Forward declaration - StateType is defined in StateManager.hpp
 enum class StateType;
 
-// SFML 3.x uses variant-based events, so we use numeric values for EventType
-// These correspond to the variant index positions in sf::Event
-enum class EventType {
-    Closed = 0,
-    Resized = 1,
-    FocusLost = 2,
-    FocusGained = 3,
-    TextEntered = 4,
-    KeyPressed = 5,
-    KeyReleased = 6,
-    MouseWheelScrolled = 7,
-    MouseButtonPressed = 8,
-    MouseButtonReleased = 9,
-    MouseMoved = 10,
-    MouseMovedRaw = 11,
-    MouseEntered = 12,
-    MouseLeft = 13,
-    // Custom categories (after all SFML events)
-    Keyboard = 20,
-    Mouse = 21,
-    Joystick = 22
+enum class TargetEventType {
+  Closed,
+  Resized,
+  FocusLost,
+  FocusGained,
+  TextEntered,
+  KeyPressed,
+  KeyReleased,
+  MouseWheelScrolled,
+  MouseButtonPressed,
+  MouseButtonReleased,
+  MouseMoved,
+  MouseMovedRaw,
+  MouseEntered,
+  MouseLeft,
+  Keyboard,
+  Mouse,
+  Joystick
 };
 
-struct EventInfo {
-    EventInfo() { m_code = 0; }
-    EventInfo(int l_event) { m_code = l_event; }
-    
-    union {
-        int m_code;
-    };
+struct TargetEventCode {
+  TargetEventCode() { code_ = 0; }
+  TargetEventCode(int event) { code_ = event; }
+
+  union {
+    int code_;
+  };
 };
 
-using Events = std::vector<std::pair<EventType, EventInfo>>;
+using TargetEvents = std::vector<std::pair<TargetEventType, TargetEventCode>>;
 
-struct EventDetails {
-    EventDetails(const std::string& l_bindName)
-    : m_name(l_bindName) {
-        Clear();
-    }
-    
-    std::string m_name;
-    // NOTE: m_size naming is vague - doesn't indicate what size or where it comes from.
-    // Better names would be: windowWidth/windowHeight, or resizedWidth/resizedHeight.
-    // Functionally, it's only used for sf::Event::Resized, so context limits confusion.
-    Vec2i m_size;
-    std::uint32_t m_textEntered;
-    Vec2i m_mouse;
-    int m_mouseWheelDelta;
-    int m_keyCode; // Single key code.
-    
-    void Clear() {
-        m_size = Vec2i{0, 0};
-        m_textEntered = 0;
-        m_mouse = Vec2i{0, 0};
-        m_mouseWheelDelta = 0;
-        m_keyCode = -1;
-    }
+struct MatchedEventDetails {
+  MatchedEventDetails() { Clear(); }
+
+  Vec2i window_size_;
+  std::uint32_t text_entered_;
+  Vec2i mouse_position_;
+  int mouse_wheel_delta_;
+  int key_code_;
+
+  void Clear() {
+    window_size_ = Vec2i{0, 0};
+    text_entered_ = 0;
+    mouse_position_ = Vec2i{0, 0};
+    mouse_wheel_delta_ = 0;
+    key_code_ = -1;
+  }
 };
 
-struct Binding {
-    Binding(const std::string& l_name)
-    : m_name(l_name), c(0), m_details(l_name) {}
-    
-    // NOTE: Consider adding a method that takes an array/vector of event pairs
-    // to bind multiple events at once, rather than calling BindEvent multiple times.
-    // Alternatively, consider an EventInfo constructor that takes an array of events.
-    void BindEvent(EventType l_type, EventInfo l_info = EventInfo()) {
-        m_events.emplace_back(l_type, l_info);
-    }
-    
-    Events m_events;
-    std::string m_name;
-    int c; // Count of events that are "happening".
-    EventDetails m_details;
+struct TargetEventBindingState {
+  TargetEventBindingState(const std::string& name) : name_(name), matched_count_(0), details_() {}
+
+  void AddTargetEvent(TargetEventType type, TargetEventCode code = TargetEventCode()) {
+    events_.emplace_back(type, code);
+  }
+
+  TargetEvents events_;
+  std::string name_;
+  int matched_count_;
+  MatchedEventDetails details_;
 };
 
-using Bindings = std::unordered_map<std::string, Binding*>;
-// State-aware callback types
-using CallbackContainer = std::unordered_map<std::string, std::function<void(EventDetails*)>>;
+// TargetEventBindingStates: map of binding name (string) to
+// TargetEventBindingState (unique_ptr to the binding state object)
+using TargetEventBindingStates =
+    std::unordered_map<std::string, std::unique_ptr<TargetEventBindingState>>;
+// CallbackContainer: map of callback name (string) to callback function
+// (std::function that takes MatchedEventDetails* as argument)
+using CallbackContainer =
+    std::unordered_map<std::string, std::function<void(MatchedEventDetails*)>>;
+// Callbacks: map of state (StateType) to CallbackContainer
+// (all callbacks registered for that state)
 using Callbacks = std::unordered_map<StateType, CallbackContainer>;
 
 class EventManager {
 public:
-    EventManager();
-    ~EventManager();
-    
-    bool AddBinding(Binding* l_binding);
-    bool RemoveBinding(std::string l_name);
-    
-    void SetFocus(const bool& l_focus);
-    void SetCurrentState(StateType l_state);
-    
-    // Needs to be defined in the header!
-    template<class T>
-    bool AddCallback(StateType l_state, const std::string& l_name,
-                     void(T::*l_func)(EventDetails*), T* l_instance) {
-        auto itr = m_callbacks.emplace(l_state, CallbackContainer()).first;
-        auto temp = std::bind(l_func, l_instance, std::placeholders::_1);
-        return itr->second.emplace(l_name, temp).second;
-    }
-    
-    bool RemoveCallback(StateType l_state, const std::string& l_name);
-    
-    void HandleEvent(t_event& l_event);
-    void Update();
+  EventManager();
+  ~EventManager() = default;
+
+  EventManager(const EventManager&) = delete;
+  EventManager& operator=(const EventManager&) = delete;
+  EventManager(EventManager&&) = default;
+  EventManager& operator=(EventManager&&) = default;
+
+  bool AddTargetEventBindingState(std::unique_ptr<TargetEventBindingState> binding);
+  bool RemoveTargetEventBindingState(std::string name);
+
+  void SetFocus(const bool& has_focus);
+  void SetCurrentState(StateType state);
+
+  // NOTE: The 'name' parameter must match the name defined in keys.cfg for the
+  // desired triggering configuration
+  template <class T>
+  bool AddCallback(StateType state, const std::string& name, void (T::*func)(MatchedEventDetails*),
+                   T* instance) {
+    auto it = callbacks_.emplace(state, CallbackContainer()).first;
+    auto temp = std::bind(func, instance, std::placeholders::_1);
+    return it->second.emplace(name, temp).second;
+  }
+
+  bool RemoveCallback(StateType state, const std::string& name);
+
+  void HandleEvent(t_event& event);
+  void Update();
 
 private:
-    void LoadBindings();
-    
-    Bindings m_bindings;
-    Callbacks m_callbacks;
-    bool m_hasFocus;
-    StateType m_currentState;
-};
+  void LoadTargetEventBindings();
 
-// SFML types used in this file:
-// - sf::Event: Event type from SFML, used as base values for EventType enum
+  TargetEventBindingStates bindings_;
+  Callbacks callbacks_;
+  bool has_focus_;
+  StateType current_state_;
+};
 
 #endif

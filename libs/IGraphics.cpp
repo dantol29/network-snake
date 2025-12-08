@@ -23,10 +23,10 @@ t_event checkEvents(void *g)
     return static_cast<IGraphics *>(g)->checkEvents();
 }
 
-void drawAsset(void *g, float x, float y, float width, float height, const char *assetPath)
+void drawAsset(void *g, float x, float y, float width, float height, int degrees, const char *assetPath)
 {
     if (g)
-        static_cast<IGraphics *>(g)->drawAsset(x, y, width, height, assetPath);
+        static_cast<IGraphics *>(g)->drawAsset(x, y, width, height, degrees, assetPath);
 }
 
 void drawButton(void *g, float x, float y, float width, float height, const char *text)

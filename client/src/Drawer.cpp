@@ -1,399 +1,333 @@
 #include "Drawer.hpp"
 #include "EventManager.hpp"
+#include <fstream>
 
 #define WIDTH 1000
 #define HEIGHT 1000
 #define INITIAL_SCREEN_SIZE 20
 #define SCREEN_LEN 2.0f
 
-Drawer::Drawer(Client *client) : client(client), screenSize(INITIAL_SCREEN_SIZE), 
-prevSnakeHeadX(0), prevSnakeHeadY(0), switchLibPath("../libs/lib2/lib2"), currentState(StateType::MainMenu),
-multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
-singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER}
-{
-    tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-    
-    // Initialize EventManager
-    eventManager = new EventManager();
-    
-    // Register movement callbacks (arrow keys and WASD) - only active in Game state
-    eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
-    eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
-    eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
-    eventManager->AddCallback(StateType::Game, "Key_Right", &Drawer::MoveRight, this);
-    eventManager->AddCallback(StateType::Game, "Key_W", &Drawer::MoveUp, this);
-    eventManager->AddCallback(StateType::Game, "Key_A", &Drawer::MoveLeft, this);
-    eventManager->AddCallback(StateType::Game, "Key_S", &Drawer::MoveDown, this);
-    eventManager->AddCallback(StateType::Game, "Key_D", &Drawer::MoveRight, this);
-    
-    // Register zoom callbacks
-    eventManager->AddCallback(StateType::Game, "Key_M", &Drawer::ZoomIn, this);
-    eventManager->AddCallback(StateType::Game, "Key_N", &Drawer::ZoomOut, this);
-    
-    // Register mouse callback - only active in Menu state (not during gameplay)
-    eventManager->AddCallback(StateType::MainMenu, "Mouse_Left", &Drawer::OnMouseClick, this);
-    
-    // Set initial state to Menu (since we start with the menu)
-    eventManager->SetCurrentState(StateType::MainMenu);
+Drawer::Drawer(Client* client)
+    : client(client), screenSize(INITIAL_SCREEN_SIZE), prevSnakeHeadX(0), prevSnakeHeadY(0),
+      switchLibPath("../libs/lib2/lib2"), currentState(StateType::MainMenu),
+      multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
+      singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
+  tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 
-    assets = (char **)malloc(sizeof(char *) * 4);
-    assets[0] = strdup("assets/body.png");
-    assets[1] = strdup("assets/head.png");
-    assets[2] = strdup("assets/food.png");
-    assets[3] = NULL;
+  // Initialize EventManager
+  eventManager = new EventManager();
+
+  // Register movement callbacks (arrow keys and WASD) - only active in Game
+  // state
+  eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
+  eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
+  eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
+  eventManager->AddCallback(StateType::Game, "Key_Right", &Drawer::MoveRight, this);
+  eventManager->AddCallback(StateType::Game, "Key_W", &Drawer::MoveUp, this);
+  eventManager->AddCallback(StateType::Game, "Key_A", &Drawer::MoveLeft, this);
+  eventManager->AddCallback(StateType::Game, "Key_S", &Drawer::MoveDown, this);
+  eventManager->AddCallback(StateType::Game, "Key_D", &Drawer::MoveRight, this);
+
+  // Register zoom callbacks
+  eventManager->AddCallback(StateType::Game, "Key_M", &Drawer::ZoomIn, this);
+  eventManager->AddCallback(StateType::Game, "Key_N", &Drawer::ZoomOut, this);
+
+  // Register mouse callback - only active in Menu state (not during gameplay)
+  eventManager->AddCallback(StateType::MainMenu, "Mouse_Left", &Drawer::OnMouseClick, this);
+
+  // Set initial state to Menu (since we start with the menu)
+  eventManager->SetCurrentState(StateType::MainMenu);
+
+  this->readAssets();
 }
 
-Drawer::~Drawer()
-{
-    delete eventManager;
-    this->closeDynamicLib();
+Drawer::~Drawer() {
+  delete eventManager;
+  this->closeDynamicLib();
 
-    for (int i = 0; assets[i]; ++i)
-        free(assets[i]);
-    free(assets);
+  for (int i = 0; assets[i]; ++i)
+    free(assets[i]);
 }
 
-void Drawer::loadDynamicLibrary(const std::string &lib)
-{
-    std::string libPath = lib + LIB_EXTENSION;
-    std::cout << libPath << std::endl;
-    this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
-    if (!this->dynamicLibrary)
-        throw "Failed to load dynlib";
+void Drawer::loadDynamicLibrary(const std::string& lib) {
+  std::string libPath = lib + LIB_EXTENSION;
+  this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
+  if (!this->dynamicLibrary)
+    throw "Failed to load dynlib";
 
-    dlerror(); // clean errors
+  dlerror(); // clean errors
 
-    this->init = (initFunc)dlsym(this->dynamicLibrary, "init");
-    this->cleanup = (cleanupFunc)dlsym(this->dynamicLibrary, "cleanup");
-    this->loadAssets = (loadAssetsFunc)dlsym(this->dynamicLibrary, "loadAssets");
-    this->drawAsset = (drawAssetFunc)dlsym(this->dynamicLibrary, "drawAsset");
-    this->drawButton = (drawButtonFunc)dlsym(this->dynamicLibrary, "drawButton");
-    this->drawText = (drawTextFunc)dlsym(this->dynamicLibrary, "drawText");
-    this->beginFrame = (beginFrameFunc)dlsym(this->dynamicLibrary, "beginFrame");
-    this->endFrame = (endFrameFunc)dlsym(this->dynamicLibrary, "endFrame");
-    this->checkEvents = (checkEventsFunc)dlsym(this->dynamicLibrary, "checkEvents");
+  this->init = (initFunc)dlsym(this->dynamicLibrary, "init");
+  this->cleanup = (cleanupFunc)dlsym(this->dynamicLibrary, "cleanup");
+  this->loadAssets = (loadAssetsFunc)dlsym(this->dynamicLibrary, "loadAssets");
+  this->drawAsset = (drawAssetFunc)dlsym(this->dynamicLibrary, "drawAsset");
+  this->drawButton = (drawButtonFunc)dlsym(this->dynamicLibrary, "drawButton");
+  this->drawText = (drawTextFunc)dlsym(this->dynamicLibrary, "drawText");
+  this->beginFrame = (beginFrameFunc)dlsym(this->dynamicLibrary, "beginFrame");
+  this->endFrame = (endFrameFunc)dlsym(this->dynamicLibrary, "endFrame");
+  this->checkEvents = (checkEventsFunc)dlsym(this->dynamicLibrary, "checkEvents");
 
-    char *error = dlerror(); // check dlsym calls
-    if (error != NULL)
-        throw "Failed to find functions in dynlib";
+  char* error = dlerror(); // check dlsym calls
+  if (error != NULL)
+    throw "Failed to find functions in dynlib";
 
-    if (!this->init || !this->cleanup || !this->drawAsset ||
-        !this->drawButton || !this->drawText || !this->loadAssets ||
-        !this->endFrame || !this->beginFrame || !this->checkEvents)
-        throw "Failed to init dynlib functions";
+  if (!this->init || !this->cleanup || !this->drawAsset || !this->drawButton || !this->drawText ||
+      !this->loadAssets || !this->endFrame || !this->beginFrame || !this->checkEvents)
+    throw "Failed to init dynlib functions";
 }
 
-void Drawer::closeDynamicLib()
-{
-    if (this->window)
-    {
-        this->cleanup(this->window);
-        this->window = nullptr;
-    }
-    if (this->dynamicLibrary)
-    {
-        dlclose(this->dynamicLibrary);
-        this->dynamicLibrary = nullptr;
-    }
+void Drawer::closeDynamicLib() {
+  if (this->window) {
+    this->cleanup(this->window);
+    this->window = nullptr;
+  }
+  if (this->dynamicLibrary) {
+    dlclose(this->dynamicLibrary);
+    this->dynamicLibrary = nullptr;
+  }
 }
 
-void Drawer::startDynamicLib()
-{
-    this->closeDynamicLib();
-    this->loadDynamicLibrary(this->switchLibPath);
-    this->switchLibPath = "";
+void Drawer::startDynamicLib() {
+  this->closeDynamicLib();
+  this->loadDynamicLibrary(this->switchLibPath);
+  this->switchLibPath = "";
 }
 
-void Drawer::start()
-{
-    try
-    {
-        while (1)
-        {
-            this->startDynamicLib();
-            this->openWindow();
-            this->loadAssets(this->window, (const char **)assets);
-            gameRunning = true;
+void Drawer::start() {
+  try {
+    while (1) {
+      this->startDynamicLib();
+      this->openWindow();
+      this->loadAssets(this->window, (const char**)assets.data());
+      gameRunning = true;
 
-            while (gameRunning)
-            {
-                this->beginFrame(this->window);
+      while (gameRunning) {
+        this->beginFrame(this->window);
 
-                t_event event = this->checkEvents(this->window);
-                
-                // Debug: log all events
-                if (event.type != EMPTY) {
-                    std::cout << "[Drawer] Event received: type=" << static_cast<int>(event.type);
-                    if (event.type == MOUSE_BUTTON_PRESSED || event.type == MOUSE_BUTTON_RELEASED) {
-                        std::cout << " mouse button=" << event.mouse.button << " at (" << event.mouse.x << ", " << event.mouse.y << ")";
-                    } else if (event.type == KEY_PRESSED || event.type == KEY_RELEASED) {
-                        std::cout << " keyCode=" << event.keyCode;
-                    }
-                    std::cout << std::endl;
-                }
-                
-                // Handle CLOSED event directly
-                if (event.type == CLOSED) {
-                        gameRunning = false;
-                }
-                
-                // Pass event to EventManager (only if not EMPTY)
-                if (event.type != EMPTY) {
-                    eventManager->HandleEvent(event);
-                    eventManager->Update();
-                }
+        t_event event = this->checkEvents(this->window);
 
-                if (this->currentState == StateType::Game)
-                    this->drawGameField();
-                else
-                    this->drawMenu();
-
-                this->endFrame(this->window);
-            }
-
-            if (this->switchLibPath.empty())
-                break;
+        // Handle CLOSED event directly
+        if (event.type == CLOSED) {
+          gameRunning = false;
         }
-    }
-    catch (const char *msg)
-    {
-        std::cerr << msg << std::endl;
-    }
 
+        // Pass event to EventManager (only if not EMPTY)
+        if (event.type != EMPTY) {
+          eventManager->HandleEvent(event);
+          eventManager->Update();
+        }
+
+        if (this->currentState == StateType::Game)
+          this->drawGameField();
+        else
+          this->drawMenu();
+
+        this->endFrame(this->window);
+      }
+
+      if (this->switchLibPath.empty())
+        break;
+    }
+  } catch (const char* msg) {
+    std::cerr << msg << std::endl;
+  }
+
+  this->stopClient();
+}
+
+void Drawer::readAssets() {
+  std::ifstream file("assets.list");
+  if (!file.is_open())
+    throw "Error opening assets file";
+
+  std::string line;
+  while (getline(file, line)) {
+    assets.push_back(strdup(line.c_str()));
+    line = "";
+  }
+
+  assets.push_back(nullptr);
+
+  if (!file.eof())
+    throw "Error reading assets file";
+
+  file.close();
+}
+
+void Drawer::openWindow() {
+  this->window = this->init(HEIGHT, WIDTH, this);
+  if (!this->window)
+    throw("Failed to init lib");
+}
+
+void Drawer::drawMenu() {
+  this->drawText(this->window, 380, 200, 40, "42 SNAKES");
+  this->drawButton(this->window, this->multiplayerButton.x, this->multiplayerButton.y,
+                   this->multiplayerButton.width, this->multiplayerButton.height,
+                   this->multiplayerButton.label.c_str());
+  this->drawButton(this->window, this->singlePlayerButton.x, this->singlePlayerButton.y,
+                   this->singlePlayerButton.width, this->singlePlayerButton.height,
+                   this->singlePlayerButton.label.c_str());
+}
+
+void Drawer::drawGameField() {
+  if (this->client->getIsDead() || this->client->getStopFlag()) {
     this->stopClient();
-}
+    this->currentState = StateType::MainMenu;
+    return;
+  }
 
-void Drawer::openWindow()
-{
-    this->window = this->init(HEIGHT, WIDTH, this);
-    if (!this->window)
-        throw("Failed to init lib");
-}
+  const int snakeHeadX = this->client->getSnakeX();
+  const int snakeHeadY = this->client->getSnakeY();
 
-void Drawer::drawMenu()
-{
-    this->drawText(this->window, 380, 200, 40, "42 SNAKES");
-    this->drawButton(this->window, this->multiplayerButton.x, this->multiplayerButton.y, 
-                     this->multiplayerButton.width, this->multiplayerButton.height, this->multiplayerButton.label.c_str());
-    this->drawButton(this->window, this->singlePlayerButton.x, this->singlePlayerButton.y, 
-                     this->singlePlayerButton.width, this->singlePlayerButton.height, this->singlePlayerButton.label.c_str());
-}
+  std::mutex& gameFieldMutex = this->client->getGameFieldMutex();
+  std::lock_guard<std::mutex> lock(gameFieldMutex);
 
-void Drawer::drawGameField()
-{
-    if (this->client->getIsDead() || this->client->getStopFlag())
-    {
-        this->stopClient();
-        this->currentState = StateType::MainMenu;
-        return;
+  const std::vector<std::string>& gameField = this->client->getGameField();
+  this->height = this->client->getHeight();
+  this->width = this->client->getWidth();
+  const int screenCenter = screenSize / 2;
+  const int originX = (WIDTH - (tilePx * screenSize)) / 2;
+  const int originY = (HEIGHT - (tilePx * screenSize)) / 2;
+
+  for (int sy = 0; sy < screenSize; ++sy) {
+    int wy = snakeHeadY + (sy - screenCenter);
+    for (int sx = 0; sx < screenSize; ++sx) {
+      int wx = snakeHeadX + (sx - screenCenter);
+      if (wx < 0 || wx >= width || wy < 0 || wy >= height)
+        continue;
+
+      int px = originX + sx * tilePx;
+      int py = originY + sy * tilePx;
+
+      this->drawBorder(wx, wy, px, py, tilePx);
+
+      char tile = gameField[wy][wx];
+      if (tile == 'F')
+        this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/food.png");
+      else if (tile == 'B')
+        this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/body.png");
+      else if (tile == 'H')
+        this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/head.png");
+      else
+        continue;
     }
-
-    const int snakeHeadX = this->client->getSnakeX();
-    const int snakeHeadY = this->client->getSnakeY();
-
-    std::mutex &gameFieldMutex = this->client->getGameFieldMutex();
-    std::lock_guard<std::mutex> lock(gameFieldMutex);
-
-    const std::vector<std::string> &gameField = this->client->getGameField();
-    this->height = this->client->getHeight();
-    this->width = this->client->getWidth();
-    const int screenCenter = screenSize / 2;
-    const int originX = (WIDTH - (tilePx * screenSize)) / 2;
-    const int originY = (HEIGHT - (tilePx * screenSize)) / 2;
-
-    for (int sy = 0; sy < screenSize; ++sy)
-    {
-        int wy = snakeHeadY + (sy - screenCenter);
-        for (int sx = 0; sx < screenSize; ++sx)
-        {
-            int wx = snakeHeadX + (sx - screenCenter);
-            if (wx < 0 || wx >= width || wy < 0 || wy >= height)
-                continue;
-
-            int px = originX + sx * tilePx;
-            int py = originY + sy * tilePx;
-
-            this->drawBorder(wx, wy, px, py, tilePx);
-
-            char tile = gameField[wy][wx];
-            if (tile == 'F')
-                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/food.png");
-            else if (tile == 'B')
-                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/body.png");
-            else if (tile == 'H')
-                this->drawAsset(this->window, px, py, tilePx, tilePx, "assets/head.png");
-            else
-                continue;
-        }
-    }
-    this->prevSnakeHeadX = snakeHeadX;
-    this->prevSnakeHeadY = snakeHeadY;
+  }
+  this->prevSnakeHeadX = snakeHeadX;
+  this->prevSnakeHeadY = snakeHeadY;
 }
 
-void Drawer::drawBorder(int x, int y, int px, int py, int tilePx)
-{
-    if (x == 0)
-        this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, "assets/body.png");
+void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {
+  if (x == 0)
+    this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 0, "assets/wall.png");
 
-    if (x == this->width - 1)
-        this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, "assets/body.png");
+  if (x == this->width - 1)
+    this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, 0, "assets/wall.png");
 
-    if (y == 0)
-        this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, "assets/body.png");
+  if (y == 0)
+    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 0, "assets/wall.png");
 
-    if (y == this->height - 1)
-        this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, "assets/body.png");
+  if (y == this->height - 1)
+    this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 0, "assets/wall.png");
 }
 
-void Drawer::stopClient()
-{
-    this->client->setStopFlag(true);
-    if (this->clientThread.joinable())
-        this->clientThread.join();
+void Drawer::stopClient() {
+  this->client->setStopFlag(true);
+  if (this->clientThread.joinable())
+    this->clientThread.join();
 }
 
-void Drawer::onMouseUp(float x, float y)
-{
-    // Check which button was clicked
-    bool isSinglePlayer = false;
-    
-    if (x >= this->multiplayerButton.x && x <= this->multiplayerButton.x + this->multiplayerButton.width &&
-        y >= this->multiplayerButton.y && y <= this->multiplayerButton.y + this->multiplayerButton.height)
-    {
-        isSinglePlayer = false;
-    }
-    else if (x >= this->singlePlayerButton.x && x <= this->singlePlayerButton.x + this->singlePlayerButton.width &&
-             y >= this->singlePlayerButton.y && y <= this->singlePlayerButton.y + this->singlePlayerButton.height)
-    {
-        isSinglePlayer = true;
-    }
-    else
-    {
-        return; // No button clicked
-    }
-    
-    if (!clientThread.joinable())
-    {
-        // TODO: Drawer manages input events and starts server owned by client - refactor!
-        const std::string serverIP = isSinglePlayer ? LOCAL_SERVER_IP : REMOTE_SERVER_IP;
-        const std::string modeName = isSinglePlayer ? "Single-player" : "Multiplayer";
-        
-        std::cout << modeName << " mode selected";
-        if (isSinglePlayer)
-            std::cout << " - Starting local server";
-        std::cout << std::endl;
-        
-            this->client->setIsDead(false);
-            this->client->setStopFlag(false);
-        this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
-        this->currentState = StateType::Game;
-        eventManager->SetCurrentState(StateType::Game);
-    }
-}
+void Drawer::onMouseUp(float x, float y) {
+  // Check which button was clicked
+  bool isSinglePlayer = false;
 
-// Old onKeyPress - kept for reference, replaced by EventManager callbacks
-// void Drawer::onKeyPress(int key)
-// {
-//     actions action = (actions)key;
-//
-//     switch (action)
-//     {
-//     case UP:
-//     case DOWN:
-//     case RIGHT:
-//     case LEFT:
-//         this->client->sendDirection(action);
-//         break;
-//     case M:
-//         this->screenSize = this->screenSize * 1.10 + 0.5;
-//         this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-//         break;
-//     case N:
-//         this->screenSize = this->screenSize / 1.10;
-//         this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
-//         break;
-//     case KEY_1:
-//         this->switchLibPath = "../libs/lib1/lib1";
-//         this->gameRunning = false;
-//         break;
-//     case KEY_2:
-//         this->switchLibPath = "../libs/lib2/lib2";
-//         this->gameRunning = false;
-//         break;
-//     case KEY_3:
-//         this->switchLibPath = "../libs/lib4/lib3";
-//         this->gameRunning = false;
-//         break;
-//     }
-// }
+  if (x >= this->multiplayerButton.x &&
+      x <= this->multiplayerButton.x + this->multiplayerButton.width &&
+      y >= this->multiplayerButton.y &&
+      y <= this->multiplayerButton.y + this->multiplayerButton.height) {
+    isSinglePlayer = false;
+  } else if (x >= this->singlePlayerButton.x &&
+             x <= this->singlePlayerButton.x + this->singlePlayerButton.width &&
+             y >= this->singlePlayerButton.y &&
+             y <= this->singlePlayerButton.y + this->singlePlayerButton.height) {
+    isSinglePlayer = true;
+  } else {
+    return; // No button clicked
+  }
+
+  if (!clientThread.joinable()) {
+    // TODO: Drawer manages input events and starts server owned by client - refactor!
+    const std::string serverIP = isSinglePlayer ? LOCAL_SERVER_IP : REMOTE_SERVER_IP;
+    const std::string modeName = isSinglePlayer ? "Single-player" : "Multiplayer";
+
+    std::cout << modeName << " mode selected";
+    if (isSinglePlayer)
+      std::cout << " - Starting local server";
+    std::cout << std::endl;
+
+    this->client->setIsDead(false);
+    this->client->setStopFlag(false);
+    this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
+    this->currentState = StateType::Game;
+    eventManager->SetCurrentState(StateType::Game);
+  }
+}
 
 // EventManager callbacks
-void Drawer::MoveUp(EventDetails* l_details)
-{
-    (void)l_details; // Unused, but required by callback signature
-    this->client->sendDirection(UP);
+void Drawer::MoveUp(MatchedEventDetails* details) {
+  (void)details; // Unused, but required by callback signature
+  this->client->sendDirection(UP);
 }
 
-void Drawer::MoveDown(EventDetails* l_details)
-    {
-    (void)l_details;
-    this->client->sendDirection(DOWN);
+void Drawer::MoveDown(MatchedEventDetails* details) {
+  (void)details;
+  this->client->sendDirection(DOWN);
 }
 
-void Drawer::MoveLeft(EventDetails* l_details)
-{
-    (void)l_details;
-    this->client->sendDirection(LEFT);
+void Drawer::MoveLeft(MatchedEventDetails* details) {
+  (void)details;
+  this->client->sendDirection(LEFT);
 }
 
-void Drawer::MoveRight(EventDetails* l_details)
-{
-    (void)l_details;
-    this->client->sendDirection(RIGHT);
+void Drawer::MoveRight(MatchedEventDetails* details) {
+  (void)details;
+  this->client->sendDirection(RIGHT);
 }
 
-void Drawer::ZoomIn(EventDetails* l_details)
-{
-    (void)l_details;
-        this->screenSize = this->screenSize * 1.10 + 0.5;
-        this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+void Drawer::ZoomIn(MatchedEventDetails* details) {
+  (void)details;
+  this->screenSize = this->screenSize * 1.10 + 0.5;
+  this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
-void Drawer::ZoomOut(EventDetails* l_details)
-{
-    (void)l_details;
-        this->screenSize = this->screenSize / 1.10;
-        this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+void Drawer::ZoomOut(MatchedEventDetails* details) {
+  (void)details;
+  this->screenSize = this->screenSize / 1.10;
+  this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
 }
 
-void Drawer::SwitchLib1(EventDetails* l_details)
-{
-    (void)l_details;
-        this->switchLibPath = "../libs/lib1/lib1";
-        this->gameRunning = false;
+void Drawer::SwitchLib1(MatchedEventDetails* details) {
+  (void)details;
+  this->switchLibPath = "../libs/lib1/lib1";
+  this->gameRunning = false;
 }
 
-void Drawer::SwitchLib2(EventDetails* l_details)
-{
-    (void)l_details;
-        this->switchLibPath = "../libs/lib2/lib2";
-        this->gameRunning = false;
+void Drawer::SwitchLib2(MatchedEventDetails* details) {
+  (void)details;
+  this->switchLibPath = "../libs/lib2/lib2";
+  this->gameRunning = false;
 }
 
-void Drawer::SwitchLib3(EventDetails* l_details)
-{
-    (void)l_details;
-        this->switchLibPath = "../libs/lib4/lib3";
-        this->gameRunning = false;
+void Drawer::SwitchLib3(MatchedEventDetails* details) {
+  (void)details;
+  this->switchLibPath = "../libs/lib4/lib3";
+  this->gameRunning = false;
 }
 
-void Drawer::OnMouseClick(EventDetails* l_details)
-{
-    // Only process mouse clicks when in menu mode
-    if (this->currentState != StateType::MainMenu) {
-        return;
-    }
-    std::cout << "[Drawer::OnMouseClick] Mouse clicked at (" << l_details->m_mouse.x << ", " << l_details->m_mouse.y << ")" << std::endl;
-    // Extract mouse coordinates from EventDetails
-    onMouseUp(l_details->m_mouse.x, l_details->m_mouse.y);
+void Drawer::OnMouseClick(MatchedEventDetails* details) {
+  // Only process mouse clicks when in menu mode
+  if (this->currentState != StateType::MainMenu) {
+    return;
+  }
+  onMouseUp(details->mouse_position_.x, details->mouse_position_.y);
 }

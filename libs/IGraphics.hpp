@@ -18,7 +18,7 @@ public:
     virtual void endFrame() = 0;
     virtual void loadAssets(const char **paths) = 0;
     virtual void drawText(float x, float y, int size, const char *text) = 0;
-    virtual void drawAsset(float x, float y, float width, float height, const char *assetPath) = 0;
+    virtual void drawAsset(float x, float y, float width, float height, int degrees, const char *assetPath) = 0;
     virtual void drawButton(float x, float y, float width, float height, const char *text) = 0;
 
 protected:
@@ -33,7 +33,7 @@ extern "C"
     void cleanup(void *g);
     t_event checkEvents(void *g);
     void loadAssets(void *g, const char **paths);
-    void drawAsset(void *g, float x, float y, float width, float height, const char *assetPath);
+    void drawAsset(void *g, float x, float y, float width, float height, int degrees, const char *assetPath);
     void drawButton(void *g, float x, float y, float width, float height, const char *text);
     void drawText(void *g, float x, float y, int size, const char *text);
     void beginFrame(void *g);
