@@ -45,11 +45,17 @@ void Graphics::drawAsset(float pixelX, float pixelY, float pixelWidth,
 
     sf::Sprite sprite(asset);
 
-    float scaleX = pixelWidth / asset.getSize().x;
-    float scaleY = pixelHeight / asset.getSize().y;
+    sf::Vector2u size = asset.getSize();
+    sprite.setOrigin(sf::Vector2f(size.x / 2.f, size.y / 2.f));
 
-    sprite.setPosition(sf::Vector2f(pixelX, pixelY));
+    float centerX = pixelX + pixelWidth / 2.f;
+    float centerY = pixelY + pixelHeight / 2.f;
+    sprite.setPosition(sf::Vector2f(centerX, centerY));
+
+    float scaleX = pixelWidth / size.x;
+    float scaleY = pixelHeight / size.y;
     sprite.setScale(sf::Vector2f(scaleX, scaleY));
+
     sprite.setRotation(sf::degrees(degrees));
 
     gameWindow.draw(sprite);

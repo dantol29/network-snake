@@ -246,13 +246,13 @@ void Drawer::setTailFrame() {
 
 void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {
   if (x == 0)
-    this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 0, "assets/wall.png");
+    this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 180, "assets/wall.png");
 
   if (x == this->width - 1)
     this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, 0, "assets/wall.png");
 
   if (y == 0)
-    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 90, "assets/wall.png");
+    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 270, "assets/wall.png");
 
   if (y == this->height - 1)
     this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 90, "assets/wall.png");
