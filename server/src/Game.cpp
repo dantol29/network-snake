@@ -211,7 +211,7 @@ void Game::printField() {
 
 bool has_invalid_chars(const std::string& line) {
   for (char c : line) {
-    if (c != FLOOR_SYMBOL && c != 'W' && c != 'F' && c != 'H' && c != 'B' && c != 'T')
+    if (c != FLOOR_SYMBOL && c != 'W' && c != 'V' && c != 'F' && c != 'H' && c != 'B' && c != 'T')
       return true;
   }
   return false;

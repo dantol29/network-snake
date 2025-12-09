@@ -2,17 +2,14 @@
 #include "EventManager.hpp"
 #include <fstream>
 
-#define WIDTH 1000
-#define HEIGHT 1000
-#define INITIAL_SCREEN_SIZE 20
-#define SCREEN_LEN 2.0f
+#define SCREEN_WIDTH 1000
+#define SCREEN_HEIGHT 1000
 
 Drawer::Drawer(Client* client)
-    : client(client), screenSize(INITIAL_SCREEN_SIZE), prevSnakeHeadX(0), prevSnakeHeadY(0),
-      switchLibPath("../libs/lib2/lib2"), gameMode(MENU),
+    : client(client), switchLibPath("../libs/lib2/lib2"), gameMode(MENU),
       multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
       singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
-  tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+  tileSize = SCREEN_HEIGHT / 20;
 
   // Initialize EventManager
   eventManager = new EventManager();
@@ -157,7 +154,7 @@ void Drawer::readAssets() {
 }
 
 void Drawer::openWindow() {
-  this->window = this->init(HEIGHT, WIDTH, this);
+  this->window = this->init(SCREEN_HEIGHT, SCREEN_WIDTH, this);
   if (!this->window)
     throw("Failed to init lib");
 }
@@ -179,49 +176,92 @@ void Drawer::drawGameField() {
     return;
   }
 
-  const int snakeHeadX = this->client->getSnakeX();
-  const int snakeHeadY = this->client->getSnakeY();
-
   std::mutex& gameFieldMutex = this->client->getGameFieldMutex();
   std::lock_guard<std::mutex> lock(gameFieldMutex);
 
   const std::vector<std::string>& gameField = this->client->getGameField();
   this->height = this->client->getHeight();
   this->width = this->client->getWidth();
-  const int screenCenter = screenSize / 2;
-  const int originX = (WIDTH - (tilePx * screenSize)) / 2;
-  const int originY = (HEIGHT - (tilePx * screenSize)) / 2;
 
   setTailFrame();
 
-  for (int sy = 0; sy < screenSize; ++sy) {
-    int wy = snakeHeadY + (sy - screenCenter);
-    for (int sx = 0; sx < screenSize; ++sx) {
-      int wx = snakeHeadX + (sx - screenCenter);
-      if (wx < 0 || wx >= width || wy < 0 || wy >= height)
-        continue;
+  for (int y = 0; y < height; ++y) {
+    for (int x = 0; x < width; ++x) {
+      int px = x * tileSize + tileSize;
+      int py = y * tileSize + tileSize;
 
-      int px = originX + sx * tilePx;
-      int py = originY + sy * tilePx;
+      this->drawBorder(x, y, px, py, tileSize);
 
-      this->drawBorder(wx, wy, px, py, tilePx);
-
-      char tile = gameField[wy][wx];
+      char tile = gameField[y][x];
       if (tile == 'F')
-        this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/food.png");
+        this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/food.png");
       else if (tile == 'B' || tile == 'T')
-        this->drawAsset(this->window, px, py, tilePx, tilePx, 0,
+        this->drawAsset(this->window, px, py, tileSize, tileSize, 0,
                         tile == 'B' ? "assets/body.png" : tailFrame.second.c_str());
       else if (tile == 'H')
-        this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/head.png");
-      else if (tile == 'W')
-        this->drawAsset(this->window, px, py, tilePx, tilePx, 0, "assets/wall.png");
-      else
-        continue;
+        this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/head.png");
+      else if (tile == 'W' || tile == 'V') {
+        auto wall = chooseWallTexture(x, y, gameField, width);
+        this->drawAsset(this->window, px, py, tileSize, tileSize, wall.second, wall.first.c_str());
+      }
     }
   }
-  this->prevSnakeHeadX = snakeHeadX;
-  this->prevSnakeHeadY = snakeHeadY;
+}
+
+void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {
+  if (x == 0)
+    this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 180, "assets/border.png");
+
+  if (x == this->width - 1)
+    this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, 0, "assets/border.png");
+
+  if (y == 0)
+    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 270, "assets/border.png");
+
+  if (y == this->height - 1)
+    this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 90, "assets/border.png");
+}
+
+#include <string>
+
+std::pair<std::string, int>
+Drawer::chooseWallTexture(int x, int y, const std::vector<std::string>& gameField, int fieldWidth) {
+  auto isWall = [&](int cx, int cy) {
+    if (cx < 0 || cy < 0 || cx >= fieldWidth || cy >= gameField.size())
+      return false;
+    return gameField[cy][cx] == 'W' || gameField[cy][cx] == 'V';
+  };
+
+  bool up = isWall(x, y - 1);
+  bool down = isWall(x, y + 1);
+  bool left = isWall(x - 1, y);
+  bool right = isWall(x + 1, y);
+
+  // Ending walls
+  if (up && !down && !left && !right)
+    return std::make_pair("assets/wall_end.png", 180);
+  if (down && !up && !left && !right)
+    return std::make_pair("assets/wall_end.png", 0);
+  if (left && !right && !up && !down)
+    return std::make_pair("assets/wall_end.png", 90);
+  if (right && !left && !up && !down)
+    return std::make_pair("assets/wall_end.png", 270);
+
+  // Corner walls
+  if (down && right && !up && !left)
+    return std::make_pair("assets/corner.png", 0);
+  if (down && left && !up && !right)
+    return std::make_pair("assets/corner.png", 90);
+  if (up && left && !down && !right)
+    return std::make_pair("assets/corner.png", 180);
+  if (up && right && !down && !left)
+    return std::make_pair("assets/corner.png", 270);
+
+  // Single wall
+  // if (!up && !down && !left && !right)
+
+  return gameField[y][x] == 'W' ? std::make_pair("assets/wall.png", 90)
+                                : std::make_pair("assets/wall.png", 0);
 }
 
 // TODO: refactor using AnimationManager :)
@@ -244,20 +284,6 @@ void Drawer::setTailFrame() {
     }
     lastReadTime = currentTime;
   }
-}
-
-void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {
-  if (x == 0)
-    this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 180, "assets/border.png");
-
-  if (x == this->width - 1)
-    this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, 0, "assets/border.png");
-
-  if (y == 0)
-    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 270, "assets/border.png");
-
-  if (y == this->height - 1)
-    this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 90, "assets/border.png");
 }
 
 void Drawer::stopClient() {
@@ -316,14 +342,12 @@ void Drawer::MoveRight(MatchedEventDetails* details) {
 
 void Drawer::ZoomIn(MatchedEventDetails* details) {
   (void)details;
-  this->screenSize = this->screenSize * 1.10 + 0.5;
-  this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+  tileSize = std::min(SCREEN_HEIGHT / 4, tileSize + 5);
 }
 
 void Drawer::ZoomOut(MatchedEventDetails* details) {
   (void)details;
-  this->screenSize = this->screenSize / 1.10;
-  this->tilePx = std::max(1, std::min(WIDTH / screenSize, HEIGHT / screenSize));
+  tileSize = std::max(1, this->tileSize - 5);
 }
 
 void Drawer::SwitchLib1(MatchedEventDetails* details) {

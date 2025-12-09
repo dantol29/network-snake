@@ -32,12 +32,9 @@ private:
   EventManager* eventManager;
   void* dynamicLibrary = nullptr;
   void* window = nullptr;
-  int screenSize;
-  int tilePx;
+  int tileSize;
   int height;
   int width;
-  int prevSnakeHeadX;
-  int prevSnakeHeadY;
   bool gameRunning = true;
   std::string switchLibPath;
   std::thread clientThread;
@@ -82,6 +79,9 @@ private:
   void drawMenu();
   void readAssets();
   void setTailFrame();
+
+  std::pair<std::string, int>
+  chooseWallTexture(int x, int y, const std::vector<std::string>& gameField, int fieldWidth);
 };
 
 #endif
