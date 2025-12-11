@@ -6,14 +6,14 @@
 #define SCREEN_HEIGHT 1000
 
 Drawer::Drawer(Client* client)
-    : client(client), switchLibPath("../libs/lib2/lib2"), gameMode(StateType::Menu),
+    : client(client), switchLibPath("../libs/lib2/lib2"),
       multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
       singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
   tileSize = SCREEN_HEIGHT / 40;
+  tailFrame = std::make_pair(1, "assets/tail.png");
+  readAssets();
 
   eventManager = new EventManager();
-
-  // Register callbacks
   eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
   eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
   eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
@@ -31,11 +31,8 @@ Drawer::Drawer(Client* client)
   eventManager->AddCallback(StateType::Game, "Key_2", &Drawer::SwitchLib2, this);
   eventManager->AddCallback(StateType::Game, "Key_3", &Drawer::SwitchLib3, this);
   eventManager->AddCallback(StateType::Menu, "Mouse_Left", &Drawer::OnMouseClick, this);
+
   eventManager->SetCurrentState(StateType::Menu);
-
-  this->readAssets();
-
-  tailFrame = std::make_pair(1, "assets/tail.png");
 }
 
 Drawer::~Drawer() {
@@ -102,17 +99,17 @@ void Drawer::start() {
         this->beginFrame(this->window);
 
         t_event event = this->checkEvents(this->window);
-        if (event.type == CLOSED) // Handle CLOSED event directly
+        if (event.type == CLOSED)
           gameRunning = false;
-        else if (event.type != EMPTY) // Pass event to EventManager (only if not EMPTY)
-        {
+        else if (event.type != EMPTY) {
           eventManager->HandleEvent(event);
           eventManager->Update();
         }
 
-        if (this->gameMode == StateType::Game)
+        const StateType state = eventManager->getCurrentState();
+        if (state == StateType::Game)
           this->drawGameField();
-        else if (this->gameMode == StateType::Menu)
+        else if (state == StateType::Menu)
           this->drawMenu();
 
         this->endFrame(this->window);
@@ -172,7 +169,6 @@ void Drawer::drawControls() {
 void Drawer::drawGameField() {
   if (this->client->getIsDead() || this->client->getStopFlag()) {
     this->stopClient();
-    this->gameMode = StateType::Menu;
     this->eventManager->SetCurrentState(StateType::Menu);
     return;
   }
@@ -186,20 +182,19 @@ void Drawer::drawGameField() {
 
   setTailFrame();
 
-  for (int sy = 0; sy < fieldHeight; ++sy) {
-    for (int sx = 0; sx < fieldWidth; ++sx) {
-      int px =
-          sx * tileSize + tileSize; // calculate pixel on the screen to draw + offset(for walls)
-      int py = sy * tileSize + tileSize;
+  for (int y = 0; y < fieldHeight; ++y) {
+    for (int x = 0; x < fieldWidth; ++x) {
+      int px = x * tileSize + tileSize; // calculate pixel on the screen to draw + offset(for walls)
+      int py = y * tileSize + tileSize;
 
-      if (sx == 0)
+      if (x == 0)
         this->drawAsset(this->window, px - tileSize, py, tileSize, tileSize, 0, "assets/wall.png");
-      if (sx == fieldWidth - 1)
+      if (x == fieldWidth - 1)
         this->drawAsset(this->window, px + tileSize, py, tileSize, tileSize, 0, "assets/wall.png");
-      if (sy == 0)
-        this->drawAsset(this->window, px, py - tileSize, tileSize, tileSize, 0, "assets/wall.png");
-      if (sy == fieldHeight - 1)
-        this->drawAsset(this->window, px, py + tileSize, tileSize, tileSize, 0, "assets/wall.png");
+      if (y == 0)
+        this->drawAsset(this->window, px, py - tileSize, tileSize, tileSize, 90, "assets/wall.png");
+      if (y == fieldHeight - 1)
+        this->drawAsset(this->window, px, py + tileSize, tileSize, tileSize, 90, "assets/wall.png");
 
       char tile = gameField[y][x];
       if (tile == 'F')
@@ -210,33 +205,19 @@ void Drawer::drawGameField() {
       else if (tile == 'H')
         this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/head.png");
       else if (tile == 'W' || tile == 'V') {
-        auto wall = chooseWallTexture(x, y, gameField, width);
+        auto wall = chooseWallTexture(x, y, gameField, fieldWidth);
         this->drawAsset(this->window, px, py, tileSize, tileSize, wall.second, wall.first.c_str());
       }
     }
   }
+
+  drawControls();
 }
-
-void Drawer::drawBorder(int x, int y, int px, int py, int tilePx) {
-  if (x == 0)
-    this->drawAsset(this->window, px - tilePx, py, tilePx, tilePx, 180, "assets/border.png");
-
-  if (x == this->width - 1)
-    this->drawAsset(this->window, px + tilePx, py, tilePx, tilePx, 0, "assets/border.png");
-
-  if (y == 0)
-    this->drawAsset(this->window, px, py - tilePx, tilePx, tilePx, 270, "assets/border.png");
-
-  if (y == this->height - 1)
-    this->drawAsset(this->window, px, py + tilePx, tilePx, tilePx, 90, "assets/border.png");
-}
-
-#include <string>
 
 std::pair<std::string, int>
 Drawer::chooseWallTexture(int x, int y, const std::vector<std::string>& gameField, int fieldWidth) {
   auto isWall = [&](int cx, int cy) {
-    if (cx < 0 || cy < 0 || cx >= fieldWidth || cy >= gameField.size())
+    if (cx < 0 || cy < 0 || cx >= fieldWidth || cy >= (int)gameField.size())
       return false;
     return gameField[cy][cx] == 'W' || gameField[cy][cx] == 'V';
   };
@@ -306,8 +287,6 @@ void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
   std::cout << mode << " mode selected" << '\n';
 
   if (!this->clientThread.joinable()) {
-    // TODO: refactor so that we do not have to set StateType in 2 places
-    this->gameMode = StateType::Game;
     this->eventManager->SetCurrentState(StateType::Game);
     this->client->setIsDead(false);
     this->client->setStopFlag(false);
@@ -316,21 +295,6 @@ void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
   }
 }
 
-void Drawer::onMouseUp(float x, float y) {
-  std::cout << "MouseUp" << std::endl;
-  if (x >= this->multiplayerButton.x &&
-      x <= this->multiplayerButton.x + this->multiplayerButton.width &&
-      y >= this->multiplayerButton.y &&
-      y <= this->multiplayerButton.y + this->multiplayerButton.height)
-    this->startClient(REMOTE_SERVER_IP, false);
-  else if (x >= this->singlePlayerButton.x &&
-           x <= this->singlePlayerButton.x + this->singlePlayerButton.width &&
-           y >= this->singlePlayerButton.y &&
-           y <= this->singlePlayerButton.y + this->singlePlayerButton.height)
-    this->startClient(LOCAL_SERVER_IP, true);
-}
-
-// EventManager callbacks
 void Drawer::MoveUp(t_event* details) {
   (void)details; // Unused, but required by callback signature
   this->client->sendDirection(UP);

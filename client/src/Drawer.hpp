@@ -32,12 +32,9 @@ private:
   void* dynamicLibrary = nullptr;
   void* window = nullptr;
   int tileSize;
-  int height;
-  int width;
   bool gameRunning = true;
   std::string switchLibPath;
   std::thread clientThread;
-  StateType gameMode;
   const Button multiplayerButton;
   const Button singlePlayerButton;
   std::pair<int, std::string> tailFrame;

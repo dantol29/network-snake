@@ -263,7 +263,7 @@ void Client::startLocalServer() {
 
     chdir("../server");
     if (execl("./nibbler_server", "nibbler_server", std::to_string(DEFAULT_GAME_HEIGHT).c_str(),
-              std::to_string(DEFAULT_GAME_WIDTH).c_str(), (char*)nullptr) == -1) {
+              std::to_string(DEFAULT_GAME_WIDTH).c_str(), "maps/map.map", (char*)nullptr) == -1) {
       std::cerr << "Failed to execute local server: " << strerror(errno) << std::endl;
       exit(EXIT_FAILURE);
     }
