@@ -22,6 +22,8 @@ bool EventManager::RemoveEvent(std::string name) {
   return true;
 }
 
+StateType EventManager::getCurrentState() const { return current_state_; }
+
 void EventManager::SetFocus(const bool& has_focus) { has_focus_ = has_focus; }
 
 void EventManager::SetCurrentState(StateType state) { current_state_ = state; }

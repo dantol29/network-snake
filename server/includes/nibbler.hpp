@@ -9,6 +9,7 @@
 #include <mutex>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <optional>
 #include <poll.h>
 #include <stdio.h>
 #include <string.h>
@@ -24,10 +25,10 @@
 #define SNAKE_SPEED 1000
 #define MAX_PLAYERS 100
 
-struct coordinates {
+typedef struct s_coordinates {
   int x;
   int y;
-};
+} t_coordinates;
 
 enum e_direction { UP, DOWN, LEFT, RIGHT };
 

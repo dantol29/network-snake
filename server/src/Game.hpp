@@ -7,7 +7,7 @@ class Snake;
 
 class Game {
 public:
-  Game(const int height, const int width);
+  Game(const int height, const int width, const std::string& mapPath);
   Game(const Game& obj) = delete;
   Game& operator=(const Game& obj) = delete;
   ~Game();
@@ -22,7 +22,7 @@ public:
   void setIsDataUpdated(bool value);
   std::string fieldToString();
 
-  struct coordinates getSnakeHead(const int fd);
+  t_coordinates getSnakeHead(const int fd);
   int getHeight() const;
   int getWidth() const;
   bool getStopFlag() const;
@@ -49,6 +49,7 @@ private:
   void moveSnakes();
   void updateReadableField();
   void printField();
+  void loadGameMap(const std::string& mapFile);
 };
 
 #endif

@@ -1,8 +1,11 @@
 #include "Game.hpp"
 #include "Snake.hpp"
 #include <chrono>
+#include <fstream>
 
 #define MAX_FOOD_SPAWN_TRIES 50
+
+bool has_invalid_chars(const std::string& line);
 
 using Clock = std::chrono::steady_clock;
 using TimePoint = std::chrono::time_point<Clock>;
@@ -10,15 +13,29 @@ using TimePoint = std::chrono::time_point<Clock>;
 TimePoint lastMoveTime = Clock::now();
 TimePoint lastEatTime = Clock::now();
 
-Game::Game(const int height, const int width)
-    : height(height), width(width), stopFlag(false), snakeCount(0) {
-  for (int i = 0; i < height; i++) {
-    std::string row(width, FLOOR_SYMBOL);
-    this->readableField.push_back(row);
-    this->writableField.push_back(row);
+Game::Game(const int height, const int width, const std::string& mapPath)
+    : stopFlag(false), snakeCount(0), foodCount(0) {
+
+  try {
+    if (mapPath.empty())
+      throw "Map is not defined";
+
+    loadGameMap(mapPath);
+  } catch (const char* err) {
+    std::cerr << err << std::endl;
+    std::cout << "Fallback to an empty map" << std::endl;
+
+    this->writableField.clear();
+    for (int i = 0; i < height; i++)
+      this->writableField.push_back(std::string(width, FLOOR_SYMBOL));
   }
 
-  this->foodCount = 0;
+  updateReadableField();
+  this->height.store(writableField.size());
+  this->width.store(writableField[0].size());
+
+  std::cout << "height: " << writableField.size() << ", width: " << writableField[0].size() << '\n';
+  printField();
 
   srand(time(NULL)); // init random generator
 }
@@ -31,6 +48,32 @@ Game::~Game() {
 }
 
 void Game::stop() { this->stopFlag.store(true); }
+
+void Game::loadGameMap(const std::string& mapFile) {
+  std::ifstream file(mapFile);
+  if (!file.is_open())
+    throw "Error opening map";
+
+  int width = 0;
+  std::string line;
+  while (getline(file, line)) {
+    if (!width)
+      width = line.size();
+
+    if (has_invalid_chars(line))
+      throw "Invalid characters";
+
+    if (line.size() != width)
+      throw "Invalid line width";
+
+    writableField.push_back(line);
+  }
+
+  if (!file.eof())
+    throw "Error reading assets file";
+
+  file.close();
+}
 
 void Game::start() {
   auto nextMoveTime = Clock::now() + std::chrono::milliseconds(SNAKE_SPEED);
@@ -125,10 +168,10 @@ void Game::setIsDataUpdated(bool value) { this->isDataUpdated.store(value); }
 
 /// GETTERS
 
-struct coordinates Game::getSnakeHead(const int fd) {
+t_coordinates Game::getSnakeHead(const int fd) {
   std::lock_guard<std::mutex> lock(snakesMutex);
 
-  struct coordinates head = {0};
+  t_coordinates head = {0};
   auto it = this->snakes.find(fd);
   if (it != this->snakes.end() && it->second)
     head = it->second->getHead();
@@ -164,4 +207,12 @@ void Game::printField() {
   for (int i = 0; i < readableField.size(); i++)
     printf("%3d:%s\n", i, readableField[i].c_str());
   printf("\n\n");
+}
+
+bool has_invalid_chars(const std::string& line) {
+  for (char c : line) {
+    if (c != FLOOR_SYMBOL && c != 'W' && c != 'V' && c != 'F' && c != 'H' && c != 'B' && c != 'T')
+      return true;
+  }
+  return false;
 }

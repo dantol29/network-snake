@@ -8,7 +8,7 @@ void onerror(const char* msg) {
 }
 
 int main(int argc, char** argv) {
-  if (argc != 3)
+  if (argc < 3)
     onerror("Usage: ./nibbler_server height width");
 
   int height = atoi(argv[1]);
@@ -16,7 +16,9 @@ int main(int argc, char** argv) {
   if (height < 10 || width < 10 || height > 100 || width > 100)
     onerror("Invalid size");
 
-  Game* game = new Game(height, width);
+  std::string mapPath = argc == 4 ? argv[3] : nullptr;
+
+  Game* game = new Game(height, width, mapPath);
   Server* server = new Server(game);
 
   std::thread gameThread(&Game::start, game);

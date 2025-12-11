@@ -147,7 +147,7 @@ void Server::removeClosedConnections() {
 
 // TCP
 void Server::sendGameData(const int fd) const {
-  struct coordinates head = this->game->getSnakeHead(fd);
+  t_coordinates head = this->game->getSnakeHead(fd);
   const std::string headX = serializeValue(std::to_string(head.x));
   const std::string headY = serializeValue(std::to_string(head.y));
   const std::string serializedGameData = headX + headY + this->serializedGameField + "END";

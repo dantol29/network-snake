@@ -35,9 +35,9 @@ private:
   bool gameRunning = true;
   std::string switchLibPath;
   std::thread clientThread;
-  StateType gameMode;
   const Button multiplayerButton;
   const Button singlePlayerButton;
+  std::pair<int, std::string> tailFrame;
 
   initFunc init;
   checkEventsFunc checkEvents;
@@ -59,6 +59,10 @@ private:
   void drawMenu();
   void drawControls();
   void readAssets();
+  void setTailFrame();
+
+  std::pair<std::string, int>
+  chooseWallTexture(int x, int y, const std::vector<std::string>& gameField, int fieldWidth);
 
   // EventManager callbacks
   void MoveUp(t_event* details);

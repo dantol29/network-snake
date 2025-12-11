@@ -60,6 +60,7 @@ public:
   bool AddEvent(std::unique_ptr<EventState> event);
   bool RemoveEvent(std::string name);
 
+  StateType getCurrentState() const;
   void SetFocus(const bool& has_focus);
   void SetCurrentState(StateType state);
 

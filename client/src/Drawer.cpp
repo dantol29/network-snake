@@ -6,14 +6,14 @@
 #define SCREEN_HEIGHT 1000
 
 Drawer::Drawer(Client* client)
-    : client(client), switchLibPath("../libs/lib2/lib2"), gameMode(StateType::Menu),
+    : client(client), switchLibPath("../libs/lib2/lib2"),
       multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
       singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
   tileSize = SCREEN_HEIGHT / 40;
+  tailFrame = std::make_pair(1, "assets/tail.png");
+  readAssets();
 
   eventManager = new EventManager();
-
-  // Register callbacks
   eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
   eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
   eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
@@ -31,9 +31,8 @@ Drawer::Drawer(Client* client)
   eventManager->AddCallback(StateType::Game, "Key_2", &Drawer::SwitchLib2, this);
   eventManager->AddCallback(StateType::Game, "Key_3", &Drawer::SwitchLib3, this);
   eventManager->AddCallback(StateType::Menu, "Mouse_Left", &Drawer::OnMouseClick, this);
-  eventManager->SetCurrentState(StateType::Menu);
 
-  this->readAssets();
+  eventManager->SetCurrentState(StateType::Menu);
 }
 
 Drawer::~Drawer() {
@@ -100,17 +99,17 @@ void Drawer::start() {
         this->beginFrame(this->window);
 
         t_event event = this->checkEvents(this->window);
-        if (event.type == CLOSED) // Handle CLOSED event directly
+        if (event.type == CLOSED)
           gameRunning = false;
-        else if (event.type != EMPTY) // Pass event to EventManager (only if not EMPTY)
-        {
+        else if (event.type != EMPTY) {
           eventManager->HandleEvent(event);
           eventManager->Update();
         }
 
-        if (this->gameMode == StateType::Game)
+        const StateType state = eventManager->getCurrentState();
+        if (state == StateType::Game)
           this->drawGameField();
-        else if (this->gameMode == StateType::Menu)
+        else if (state == StateType::Menu)
           this->drawMenu();
 
         this->endFrame(this->window);
@@ -170,7 +169,6 @@ void Drawer::drawControls() {
 void Drawer::drawGameField() {
   if (this->client->getIsDead() || this->client->getStopFlag()) {
     this->stopClient();
-    this->gameMode = StateType::Menu;
     this->eventManager->SetCurrentState(StateType::Menu);
     return;
   }
@@ -182,32 +180,100 @@ void Drawer::drawGameField() {
   const int fieldHeight = this->client->getHeight();
   const int fieldWidth = this->client->getWidth();
 
-  for (int sy = 0; sy < fieldHeight; ++sy) {
-    for (int sx = 0; sx < fieldWidth; ++sx) {
-      int px =
-          sx * tileSize + tileSize; // calculate pixel on the screen to draw + offset(for walls)
-      int py = sy * tileSize + tileSize;
+  setTailFrame();
 
-      if (sx == 0)
+  for (int y = 0; y < fieldHeight; ++y) {
+    for (int x = 0; x < fieldWidth; ++x) {
+      int px = x * tileSize + tileSize; // calculate pixel on the screen to draw + offset(for walls)
+      int py = y * tileSize + tileSize;
+
+      if (x == 0)
         this->drawAsset(this->window, px - tileSize, py, tileSize, tileSize, 0, "assets/wall.png");
-      if (sx == fieldWidth - 1)
+      if (x == fieldWidth - 1)
         this->drawAsset(this->window, px + tileSize, py, tileSize, tileSize, 0, "assets/wall.png");
-      if (sy == 0)
-        this->drawAsset(this->window, px, py - tileSize, tileSize, tileSize, 0, "assets/wall.png");
-      if (sy == fieldHeight - 1)
-        this->drawAsset(this->window, px, py + tileSize, tileSize, tileSize, 0, "assets/wall.png");
+      if (y == 0)
+        this->drawAsset(this->window, px, py - tileSize, tileSize, tileSize, 90, "assets/wall.png");
+      if (y == fieldHeight - 1)
+        this->drawAsset(this->window, px, py + tileSize, tileSize, tileSize, 90, "assets/wall.png");
 
-      char tile = gameField[sy][sx];
+      char tile = gameField[y][x];
       if (tile == 'F')
         this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/food.png");
-      else if (tile == 'B')
-        this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/body.png");
+      else if (tile == 'B' || tile == 'T')
+        this->drawAsset(this->window, px, py, tileSize, tileSize, 0,
+                        tile == 'B' ? "assets/body.png" : tailFrame.second.c_str());
       else if (tile == 'H')
         this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/head.png");
+      else if (tile == 'W' || tile == 'V') {
+        auto wall = chooseWallTexture(x, y, gameField, fieldWidth);
+        this->drawAsset(this->window, px, py, tileSize, tileSize, wall.second, wall.first.c_str());
+      }
     }
   }
 
-  this->drawControls();
+  drawControls();
+}
+
+std::pair<std::string, int>
+Drawer::chooseWallTexture(int x, int y, const std::vector<std::string>& gameField, int fieldWidth) {
+  auto isWall = [&](int cx, int cy) {
+    if (cx < 0 || cy < 0 || cx >= fieldWidth || cy >= (int)gameField.size())
+      return false;
+    return gameField[cy][cx] == 'W' || gameField[cy][cx] == 'V';
+  };
+
+  bool up = isWall(x, y - 1);
+  bool down = isWall(x, y + 1);
+  bool left = isWall(x - 1, y);
+  bool right = isWall(x + 1, y);
+
+  // Ending walls
+  if (up && !down && !left && !right)
+    return std::make_pair("assets/wall_end.png", 180);
+  if (down && !up && !left && !right)
+    return std::make_pair("assets/wall_end.png", 0);
+  if (left && !right && !up && !down)
+    return std::make_pair("assets/wall_end.png", 90);
+  if (right && !left && !up && !down)
+    return std::make_pair("assets/wall_end.png", 270);
+
+  // Corner walls
+  if (down && right && !up && !left)
+    return std::make_pair("assets/corner.png", 0);
+  if (down && left && !up && !right)
+    return std::make_pair("assets/corner.png", 90);
+  if (up && left && !down && !right)
+    return std::make_pair("assets/corner.png", 180);
+  if (up && right && !down && !left)
+    return std::make_pair("assets/corner.png", 270);
+
+  // Single wall
+  // if (!up && !down && !left && !right)
+
+  return gameField[y][x] == 'W' ? std::make_pair("assets/wall.png", 90)
+                                : std::make_pair("assets/wall.png", 0);
+}
+
+// TODO: refactor using AnimationManager :)
+void Drawer::setTailFrame() {
+  static auto lastReadTime = std::chrono::steady_clock::now();
+
+  auto currentTime = std::chrono::steady_clock::now();
+  auto elapsed =
+      std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastReadTime).count();
+
+  if (elapsed > 200) {
+    if (tailFrame.first == 1) {
+      tailFrame = std::make_pair(2, "assets/tail2.png");
+    } else if (tailFrame.first == 2) {
+      tailFrame = std::make_pair(3, "assets/tail.png");
+    } else if (tailFrame.first == 3) {
+      tailFrame = std::make_pair(4, "assets/tail3.png");
+    } else if (tailFrame.first == 4) {
+      tailFrame = std::make_pair(1, "assets/tail.png");
+    }
+    lastReadTime = currentTime;
+  }
 }
 
 void Drawer::stopClient() {
@@ -221,8 +287,6 @@ void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
   std::cout << mode << " mode selected" << '\n';
 
   if (!this->clientThread.joinable()) {
-    // TODO: refactor so that we do not have to set StateType in 2 places
-    this->gameMode = StateType::Game;
     this->eventManager->SetCurrentState(StateType::Game);
     this->client->setIsDead(false);
     this->client->setStopFlag(false);
@@ -231,7 +295,6 @@ void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
   }
 }
 
-// EventManager callbacks
 void Drawer::MoveUp(t_event* details) {
   (void)details; // Unused, but required by callback signature
   this->client->sendDirection(UP);
@@ -254,12 +317,12 @@ void Drawer::MoveRight(t_event* details) {
 
 void Drawer::ZoomIn(t_event* details) {
   (void)details;
-  this->tileSize = std::min(SCREEN_HEIGHT / 4, this->tileSize + 5);
+  tileSize = std::min(SCREEN_HEIGHT / 4, tileSize + 5);
 }
 
 void Drawer::ZoomOut(t_event* details) {
   (void)details;
-  this->tileSize = std::max(1, this->tileSize - 5);
+  tileSize = std::max(1, this->tileSize - 5);
 }
 
 void Drawer::SwitchLib1(t_event* details) {
