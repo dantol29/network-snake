@@ -34,6 +34,8 @@
 #define LIB_EXTENSION ".so"
 #endif
 
+enum class StateType { Global, Menu, Game, GameOver, Paused };
+
 enum actions { UP, DOWN, LEFT, RIGHT, M, N, KEY_1, KEY_2, KEY_3 };
 
 struct Vec2i {

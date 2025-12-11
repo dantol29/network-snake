@@ -112,14 +112,11 @@ t_event Graphics::checkEvents()
     else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
     {
         Vector2 mp = GetMousePosition();
-        event.type = MOUSE_BUTTON_RELEASED; // Changed to RELEASED to match keys.cfg (9:0)
+        event.type = MOUSE_BUTTON_RELEASED;
         event.mouse.x = (int)mp.x;
         event.mouse.y = (int)mp.y;
-        event.mouse.button = 0; // Left button = 0 (matches keys.cfg)
+        event.mouse.button = 0; // Left button = 0
     }
-    // Map raylib key codes to SFML key codes (to match keys.cfg)
-    // Raylib: KEY_W=87, KEY_A=65, KEY_S=83, KEY_D=68, KEY_UP=265, KEY_DOWN=264, KEY_LEFT=263, KEY_RIGHT=262
-    // SFML: W=22, A=0, S=18, D=3, Up=73, Down=74, Left=71, Right=72
     else if (IsKeyPressed(KEY_W))
         event.keyCode = 22; // SFML W
     else if (IsKeyPressed(KEY_UP))

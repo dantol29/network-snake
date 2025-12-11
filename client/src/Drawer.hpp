@@ -5,8 +5,6 @@
 #include "Client.hpp"
 #include "EventManager.hpp"
 
-enum mode { MENU, GAME };
-
 struct Button {
   float x;
   float y;
@@ -30,6 +28,7 @@ public:
 private:
   Client* client;
   EventManager* eventManager;
+  std::vector<char*> assets;
   void* dynamicLibrary = nullptr;
   void* window = nullptr;
   int tileSize;
@@ -38,8 +37,7 @@ private:
   bool gameRunning = true;
   std::string switchLibPath;
   std::thread clientThread;
-  mode gameMode;
-  std::vector<char*> assets;
+  StateType gameMode;
   const Button multiplayerButton;
   const Button singlePlayerButton;
   std::pair<int, std::string> tailFrame;
@@ -59,29 +57,27 @@ private:
   void openWindow();
   void startDynamicLib();
   void closeDynamicLib();
-  void onMouseUp(float x, float y);
-
-  // EventManager callbacks
-  void MoveUp(MatchedEventDetails* details);
-  void MoveDown(MatchedEventDetails* details);
-  void MoveLeft(MatchedEventDetails* details);
-  void MoveRight(MatchedEventDetails* details);
-  void ZoomIn(MatchedEventDetails* details);
-  void ZoomOut(MatchedEventDetails* details);
-  void SwitchLib1(MatchedEventDetails* details);
-  void SwitchLib2(MatchedEventDetails* details);
-  void SwitchLib3(MatchedEventDetails* details);
-  void OnMouseClick(MatchedEventDetails* details);
-
   void loadDynamicLibrary(const std::string& lib);
-  void drawBorder(int x, int y, int px, int py, int tilePx);
   void drawGameField();
   void drawMenu();
+  void drawControls();
   void readAssets();
   void setTailFrame();
 
   std::pair<std::string, int>
   chooseWallTexture(int x, int y, const std::vector<std::string>& gameField, int fieldWidth);
+
+  // EventManager callbacks
+  void MoveUp(t_event* details);
+  void MoveDown(t_event* details);
+  void MoveLeft(t_event* details);
+  void MoveRight(t_event* details);
+  void ZoomIn(t_event* details);
+  void ZoomOut(t_event* details);
+  void SwitchLib1(t_event* details);
+  void SwitchLib2(t_event* details);
+  void SwitchLib3(t_event* details);
+  void OnMouseClick(t_event* details);
 };
 
 #endif
