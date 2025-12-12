@@ -6,10 +6,7 @@
 #define NON_BLOCKING 0
 #define BLOCKING -1
 
-Server::Server(Game* game) : game(game) {
-  this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
-  this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
-}
+Server::Server(Game* game) : game(game) {}
 
 void Server::setupSocket(int socket) {
   int flag = 1; // Disable Nagle's Algorithm

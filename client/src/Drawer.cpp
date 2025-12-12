@@ -379,7 +379,7 @@ void Drawer::SwitchLib2(t_event* details) {
 
 void Drawer::SwitchLib3(t_event* details) {
   (void)details;
-  this->switchLibPath = "../libs/lib4/lib3";
+  this->switchLibPath = "../libs/lib3/lib3";
   this->gameRunning = false;
 }
 

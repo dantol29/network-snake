@@ -14,8 +14,6 @@ public:
 
   void start();
 
-  static std::string serializeValue(const std::string& value);
-
 private:
   Game* game;
   int tcpServerFd;
