@@ -184,20 +184,21 @@ void Drawer::drawGameField() {
   int rotation = 0;
 
   for (auto it = snakes->begin(); it != snakes->end(); ++it) {
-    for (auto it2 = it->body()->begin(); it2 != it->body()->end(); ++it2) {
+    auto body = it->body();
+    for (auto it2 = body->begin(); it2 != body->end(); ++it2) {
       int px = it2->x() * tileSize + tileSize; // pixel on the screen to draw + offset(walls)
       int py = it2->y() * tileSize + tileSize;
 
       auto nextPart = it2 + 1;
-      if (nextPart != it->body()->end())
+      if (nextPart != body->end())
         rotation = getRotation(it2->x(), it2->y(), nextPart->x(), nextPart->y());
       else
         rotation = getRotation((it2 - 1)->x(), (it2 - 1)->y(), it2->x(), it2->y());
 
       std::string texture = "assets/body.png";
-      if (it2 == it->body()->begin())
+      if (it2 == body->begin())
         texture = "assets/head.png";
-      else if (nextPart == it->body()->end())
+      else if (nextPart == body->end())
         texture = tailFrame.second;
       else {
         int cornerRot =
