@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include <sys/uio.h>
 
 #define SERV_PORT 8080
 #define MAX_CLIENT_CONNECTIONS 10
@@ -71,7 +72,7 @@ void Server::start() {
       bool shouldSend = this->game->getIsDataUpdated();
       if (shouldSend) {
         this->game->setIsDataUpdated(false);
-        this->serializedGameField = serializeGameField();
+        constructResponse();
       }
 
       for (const auto client : connectedClients) {
@@ -145,14 +146,25 @@ void Server::removeClosedConnections() {
   closedConnections.clear();
 }
 
+void Server::constructResponse() {
+  flatbuffers::FlatBufferBuilder builder(1024);
+
+  auto gameData = game->buildGameData(builder);
+  builder.Finish(gameData);
+
+  // size of data in bytes
+  uint32_t netSize = htonl(builder.GetSize());
+
+  // sent size of data first and then data
+  iov[0].iov_base = &netSize;
+  iov[0].iov_len = sizeof(netSize);
+  iov[1].iov_base = builder.GetBufferPointer();
+  iov[1].iov_len = builder.GetSize();
+}
+
 // TCP
 void Server::sendGameData(const int fd) const {
-  t_coordinates head = this->game->getSnakeHead(fd);
-  const std::string headX = serializeValue(std::to_string(head.x));
-  const std::string headY = serializeValue(std::to_string(head.y));
-  const std::string serializedGameData = headX + headY + this->serializedGameField + "END";
-
-  ssize_t bytesWritten = write(fd, serializedGameData.c_str(), serializedGameData.size());
+  ssize_t bytesWritten = writev(fd, iov, 2);
   if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
     std::cout << "Socket buffer is full, could not sent game data: " << fd << std::endl;
   else if (bytesWritten == -1)
@@ -168,6 +180,7 @@ void Server::receiveDataFromClient(const int fd) {
     return acceptNewConnection();
 
   if (fd == this->udpServerFd) {
+    std::cout << "receiving data from client" << '\n';
     sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
     int n = recvfrom(this->udpServerFd, readBuf, 2, 0, (sockaddr*)&clientAddr, &clientAddrLen);
@@ -187,17 +200,4 @@ void Server::handleSocketError(const int fd) {
 
   std::cout << "Socket error: " << fd << std::endl;
   closeConnection(fd);
-}
-
-// TLV format
-std::string Server::serializeGameField() {
-  const std::string field = Server::serializeValue(game->fieldToString());
-  return this->serializedHeight + this->serializedWidth + field;
-}
-
-std::string Server::serializeValue(const std::string& value) {
-  const std::string len = std::to_string(value.size());
-  const std::string lenSize = std::to_string(len.size());
-
-  return lenSize + len + value;
 }

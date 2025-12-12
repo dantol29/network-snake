@@ -60,6 +60,8 @@ private:
   void drawControls();
   void readAssets();
   void setTailFrame();
+  int getRotation(int x, int y, int x2, int y2) const;
+  int cornerPartRotation(int x, int y, int x2, int y2) const;
 
   std::pair<std::string, int>
   chooseWallTexture(int x, int y, const std::vector<std::string>& gameField, int fieldWidth);

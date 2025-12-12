@@ -14,7 +14,7 @@ TimePoint lastMoveTime = Clock::now();
 TimePoint lastEatTime = Clock::now();
 
 Game::Game(const int height, const int width, const std::string& mapPath)
-    : stopFlag(false), snakeCount(0), foodCount(0) {
+    : foodCount(0), snakeCount(0), stopFlag(false) {
 
   try {
     if (mapPath.empty())
@@ -63,7 +63,7 @@ void Game::loadGameMap(const std::string& mapFile) {
     if (has_invalid_chars(line))
       throw "Invalid characters";
 
-    if (line.size() != width)
+    if ((int)line.size() != width)
       throw "Invalid line width";
 
     writableField.push_back(line);
@@ -115,7 +115,7 @@ void Game::moveSnakes() {
   std::lock_guard<std::mutex> lock(this->snakesMutex);
   for (auto it = this->snakes.begin(); it != this->snakes.end();) {
     it->second->moveSnake(&this->writableField);
-    if (it->second->getIsDead()) {
+    if (it->second->getState() == State_Dead) {
       it->second->cleanup(&writableField);
       delete it->second;
       it = snakes.erase(it);
@@ -123,6 +123,8 @@ void Game::moveSnakes() {
     } else
       ++it;
   }
+
+  printField();
 }
 
 void Game::addSnake(const int clientFd) {
@@ -168,15 +170,34 @@ void Game::setIsDataUpdated(bool value) { this->isDataUpdated.store(value); }
 
 /// GETTERS
 
-t_coordinates Game::getSnakeHead(const int fd) {
-  std::lock_guard<std::mutex> lock(snakesMutex);
-
-  t_coordinates head = {0};
+State Game::getSnakeState(const int fd) {
   auto it = this->snakes.find(fd);
   if (it != this->snakes.end() && it->second)
-    head = it->second->getHead();
+    return it->second->getState();
 
-  return head;
+  return State_Dead;
+}
+
+flatbuffers::Offset<GameData> Game::buildGameData(flatbuffers::FlatBufferBuilder& builder) {
+  std::lock_guard<std::mutex> lock(snakesMutex);
+
+  std::vector<flatbuffers::Offset<SnakeObj>> snakesVec;
+  snakesVec.reserve(snakes.size());
+
+  for (auto snake : snakes) {
+    std::vector<Pos> bodyVec;
+    for (auto pos : snake.second->getBody())
+      bodyVec.emplace_back(Pos(pos.x, pos.y));
+
+    auto body = builder.CreateVectorOfStructs(bodyVec);
+    auto state = snake.second->getState();
+    auto id = snake.first;
+    auto snakeObject = CreateSnakeObj(builder, id, state, body);
+    snakesVec.emplace_back(snakeObject);
+  }
+
+  auto snakesOffset = builder.CreateVector(snakesVec);
+  return CreateGameData(builder, snakesOffset);
 }
 
 int Game::getHeight() const { return this->height.load(); }
@@ -194,7 +215,7 @@ std::string Game::fieldToString() {
 
   std::string data;
 
-  for (int i = 0; i < readableField.size(); i++)
+  for (size_t i = 0; i < readableField.size(); i++)
     data += readableField[i];
 
   return data;
@@ -204,8 +225,8 @@ void Game::printField() {
   std::lock_guard<std::mutex> lock(this->readableFieldMutex);
 
   printf("\n\n");
-  for (int i = 0; i < readableField.size(); i++)
-    printf("%3d:%s\n", i, readableField[i].c_str());
+  for (size_t i = 0; i < readableField.size(); i++)
+    printf("%3zu:%s\n", i, readableField[i].c_str());
   printf("\n\n");
 }
 

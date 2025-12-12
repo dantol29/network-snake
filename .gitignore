@@ -16,3 +16,4 @@ raylib
 log.txt
 .DS_Store
 libs/.DS_Store
+flatbuffers/

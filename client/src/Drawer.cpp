@@ -167,51 +167,91 @@ void Drawer::drawControls() {
 }
 
 void Drawer::drawGameField() {
-  if (this->client->getIsDead() || this->client->getStopFlag()) {
+  if (this->client->getStopFlag()) {
     this->stopClient();
     this->eventManager->SetCurrentState(StateType::Menu);
     return;
   }
 
-  std::mutex& gameFieldMutex = this->client->getGameFieldMutex();
-  std::lock_guard<std::mutex> lock(gameFieldMutex);
+  std::mutex& gameDataMutex = this->client->getGameDataMutex();
+  std::lock_guard<std::mutex> lock(gameDataMutex);
 
-  const std::vector<std::string>& gameField = this->client->getGameField();
-  const int fieldHeight = this->client->getHeight();
-  const int fieldWidth = this->client->getWidth();
+  const GameData* gameData = this->client->getGameData();
+  if (!gameData)
+    return;
 
-  setTailFrame();
+  auto snakes = gameData->snakes();
+  int rotation = 0;
 
-  for (int y = 0; y < fieldHeight; ++y) {
-    for (int x = 0; x < fieldWidth; ++x) {
-      int px = x * tileSize + tileSize; // calculate pixel on the screen to draw + offset(for walls)
-      int py = y * tileSize + tileSize;
+  for (auto it = snakes->begin(); it != snakes->end(); ++it) {
+    for (auto it2 = it->body()->begin(); it2 != it->body()->end(); ++it2) {
+      int px = it2->x() * tileSize + tileSize; // pixel on the screen to draw + offset(walls)
+      int py = it2->y() * tileSize + tileSize;
 
-      if (x == 0)
-        this->drawAsset(this->window, px - tileSize, py, tileSize, tileSize, 0, "assets/wall.png");
-      if (x == fieldWidth - 1)
-        this->drawAsset(this->window, px + tileSize, py, tileSize, tileSize, 0, "assets/wall.png");
-      if (y == 0)
-        this->drawAsset(this->window, px, py - tileSize, tileSize, tileSize, 90, "assets/wall.png");
-      if (y == fieldHeight - 1)
-        this->drawAsset(this->window, px, py + tileSize, tileSize, tileSize, 90, "assets/wall.png");
+      auto nextPart = it2 + 1;
+      if (nextPart != it->body()->end())
+        rotation = getRotation(it2->x(), it2->y(), nextPart->x(), nextPart->y());
+      else
+        rotation = getRotation((it2 - 1)->x(), (it2 - 1)->y(), it2->x(), it2->y());
 
-      char tile = gameField[y][x];
-      if (tile == 'F')
-        this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/food.png");
-      else if (tile == 'B' || tile == 'T')
-        this->drawAsset(this->window, px, py, tileSize, tileSize, 0,
-                        tile == 'B' ? "assets/body.png" : tailFrame.second.c_str());
-      else if (tile == 'H')
-        this->drawAsset(this->window, px, py, tileSize, tileSize, 0, "assets/head.png");
-      else if (tile == 'W' || tile == 'V') {
-        auto wall = chooseWallTexture(x, y, gameField, fieldWidth);
-        this->drawAsset(this->window, px, py, tileSize, tileSize, wall.second, wall.first.c_str());
+      std::string texture = "assets/body.png";
+      if (it2 == it->body()->begin())
+        texture = "assets/head.png";
+      else if (nextPart == it->body()->end())
+        texture = tailFrame.second;
+      else {
+        int cornerRot =
+            cornerPartRotation((it2 - 1)->x(), (it2 - 1)->y(), nextPart->x(), nextPart->y());
+        if (cornerRot != -1) {
+          if (cornerRot - rotation != 90)
+            cornerRot += 180;
+
+          rotation = cornerRot;
+          texture = "assets/body_corner.png";
+        }
       }
+
+      this->drawAsset(this->window, px, py, tileSize, tileSize, rotation, texture.c_str());
     }
   }
 
+  // else if (tile == 'W' || tile == 'V') {
+  //       auto wall = chooseWallTexture(x, y, gameField, fieldWidth);
+  //       this->drawAsset(this->window, px, py, tileSize, tileSize, wall.second,
+  //       wall.first.c_str());
+  //     }
+
+  setTailFrame();
   drawControls();
+}
+
+int Drawer::getRotation(int x, int y, int x2, int y2) const {
+  int diff_x = x - x2;
+  int diff_y = y - y2;
+  if (diff_y < 0)
+    return 270; // below
+  if (diff_y > 0)
+    return 90; // above
+  if (diff_x < 0)
+    return 180; // left
+  if (diff_x > 0)
+    return 0; // right
+
+  return 0;
+}
+
+int Drawer::cornerPartRotation(int x, int y, int x2, int y2) const {
+  int diff_x = x - x2;
+  int diff_y = y - y2;
+  if (diff_y > 0 && diff_x > 0)
+    return 90; // lower-right
+  if (diff_y > 0 && diff_x < 0)
+    return 180; // lower-left
+  if (diff_y < 0 && diff_x < 0)
+    return 270; // upper-left
+  if (diff_y < 0 && diff_x > 0)
+    return 360; // upper-right
+  return -1;
 }
 
 std::pair<std::string, int>
@@ -288,7 +328,6 @@ void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
 
   if (!this->clientThread.joinable()) {
     this->eventManager->SetCurrentState(StateType::Game);
-    this->client->setIsDead(false);
     this->client->setStopFlag(false);
     this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
     eventManager->SetCurrentState(StateType::Game);

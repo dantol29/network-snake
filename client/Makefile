@@ -6,6 +6,8 @@ CFLAGS = -O2 -Wall -Wextra -std=c++17 -pthread
 FSANITIZE = -fsanitize=thread
 SOURCES_M := src/main.cpp src/Client.cpp src/Drawer.cpp src/EventManager.cpp
 
+INCLUDES = -I./includes -I../flatbuffers/include
+
 OBJECTS := $(SOURCES_M:.cpp=.o)
 
 # Platform-specific linker flags
@@ -27,7 +29,7 @@ sanitize: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) $(FSANITIZE) -o $(NAME)
 
 %.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 all: $(NAME)
 
