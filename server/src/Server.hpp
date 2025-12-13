@@ -14,8 +14,6 @@ public:
 
   void start();
 
-  static std::string serializeValue(const std::string& value);
-
 private:
   Game* game;
   int tcpServerFd;
@@ -25,6 +23,7 @@ private:
   std::vector<int> closedConnections;
   std::unordered_map<in_addr_t, int> addressToFd;
   char readBuf[10];
+  struct iovec iov[2];
 
   std::string serializedGameField;
   std::string serializedHeight;
@@ -39,7 +38,7 @@ private:
   void sendGameData(const int fd) const;
   void receiveDataFromClient(const int fd);
   void handleSocketError(const int fd);
-  std::string serializeGameField();
+  void constructResponse();
 };
 
 #endif

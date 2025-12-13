@@ -21,6 +21,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "../../snake_generated.h"
+#include <flatbuffers/flatbuffers.h>
+
 #define FLOOR_SYMBOL '.'
 #define SNAKE_SPEED 1000
 #define MAX_PLAYERS 100

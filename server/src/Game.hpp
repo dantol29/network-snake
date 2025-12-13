@@ -22,11 +22,11 @@ public:
   void setIsDataUpdated(bool value);
   std::string fieldToString();
 
-  t_coordinates getSnakeHead(const int fd);
   int getHeight() const;
   int getWidth() const;
   bool getStopFlag() const;
   bool getIsDataUpdated() const;
+  flatbuffers::Offset<GameData> buildGameData(flatbuffers::FlatBufferBuilder& builder);
 
 private:
   int foodCount;
@@ -49,6 +49,7 @@ private:
   void moveSnakes();
   void updateReadableField();
   void printField();
+  State getSnakeState(const int fd);
   void loadGameMap(const std::string& mapFile);
 };
 

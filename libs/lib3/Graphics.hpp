@@ -2,7 +2,9 @@
 #define GRAPHICS_HPP
 
 #include "../IGraphics.hpp"
-#include <SFML/Graphics.hpp>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 class Graphics : public IGraphics {
 public:
@@ -21,12 +23,13 @@ public:
   void drawButton(float x, float y, float width, float height, const char* text) override;
 
 private:
-  sf::RenderWindow gameWindow;
-  sf::Font font;
-  std::unordered_map<std::string, sf::Texture> assets;
+  SDL_Window* gameWindow = nullptr;
+  SDL_Renderer* renderer = nullptr;
+  TTF_Font* font = nullptr;
+  std::unordered_map<std::string, SDL_Texture*> assets;
 
-  t_event onKeyPress(sf::Keyboard::Key key);
-  t_event onMouseUp(const sf::Mouse::Button, const sf::Vector2i position);
+  t_event onKeyPress(const SDL_KeyboardEvent& keyEvent);
+  t_event onMouseUp(const SDL_MouseButtonEvent& buttonEvent);
 };
 
 extern "C" IGraphics* init(unsigned int height, unsigned int width) {
