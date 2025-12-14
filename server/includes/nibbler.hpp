@@ -21,7 +21,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../../snake_generated.h"
+#include "../../packet_generated.h"
 #include <flatbuffers/flatbuffers.h>
 
 #define FLOOR_SYMBOL '.'

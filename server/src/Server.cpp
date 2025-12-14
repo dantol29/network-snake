@@ -69,7 +69,7 @@ void Server::start() {
       bool shouldSend = this->game->getIsDataUpdated();
       if (shouldSend) {
         this->game->setIsDataUpdated(false);
-        constructResponse();
+        constructGameData();
       }
 
       for (const auto client : connectedClients) {
@@ -113,6 +113,8 @@ void Server::acceptNewConnection() {
     this->addressToFd[cliAddr.sin_addr.s_addr] = clientFd;
 
     this->game->addSnake(clientFd);
+
+    sendMapData(clientFd);
   }
 }
 
@@ -143,27 +145,52 @@ void Server::removeClosedConnections() {
   closedConnections.clear();
 }
 
-void Server::constructResponse() {
+void Server::constructGameData() {
   flatbuffers::FlatBufferBuilder builder(1024);
 
-  auto gameData = game->buildGameData(builder);
+  auto gameData = game->serializeGameData(builder);
   builder.Finish(gameData);
 
-  // size of data in bytes
-  uint32_t netSize = htonl(builder.GetSize());
+  gameBuffer.assign(builder.GetBufferPointer(), builder.GetBufferPointer() + builder.GetSize());
+  gameSizeNetwork = htonl(gameBuffer.size());
 
-  // sent size of data first and then data
-  iov[0].iov_base = &netSize;
-  iov[0].iov_len = sizeof(netSize);
-  iov[1].iov_base = builder.GetBufferPointer();
-  iov[1].iov_len = builder.GetSize();
+  iovGame[0].iov_base = &gameSizeNetwork;
+  iovGame[0].iov_len = sizeof(gameSizeNetwork);
+  iovGame[1].iov_base = gameBuffer.data();
+  iovGame[1].iov_len = gameBuffer.size();
+}
+
+void Server::constructMapData(int fd) {
+  flatbuffers::FlatBufferBuilder builder(1024);
+
+  auto mapData = game->serializeMapData(builder, fd);
+  builder.Finish(mapData);
+
+  mapBuffer.assign(builder.GetBufferPointer(), builder.GetBufferPointer() + builder.GetSize());
+  mapSizeNetwork = htonl(mapBuffer.size());
+
+  iovMap[0].iov_base = &mapSizeNetwork;
+  iovMap[0].iov_len = sizeof(mapSizeNetwork);
+  iovMap[1].iov_base = mapBuffer.data();
+  iovMap[1].iov_len = mapBuffer.size();
 }
 
 // TCP
 void Server::sendGameData(const int fd) const {
-  ssize_t bytesWritten = writev(fd, iov, 2);
+  ssize_t bytesWritten = writev(fd, iovGame, 2);
   if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
     std::cout << "Socket buffer is full, could not sent game data: " << fd << std::endl;
+  else if (bytesWritten == -1)
+    perror("write");
+}
+
+// TCP
+void Server::sendMapData(const int fd) {
+  constructMapData(fd);
+
+  ssize_t bytesWritten = writev(fd, iovMap, 2);
+  if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
+    std::cout << "Socket buffer is full, could not sent map data: " << fd << std::endl;
   else if (bytesWritten == -1)
     perror("write");
 }
@@ -177,9 +204,10 @@ void Server::receiveDataFromClient(const int fd) {
     return acceptNewConnection();
 
   if (fd == this->udpServerFd) {
-    std::cout << "receiving data from client" << '\n';
+    char readBuf[10];
     sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
+
     int n = recvfrom(this->udpServerFd, readBuf, 2, 0, (sockaddr*)&clientAddr, &clientAddrLen);
     if (n == 2)
       game->updateSnakeDirection(this->addressToFd[clientAddr.sin_addr.s_addr], (int)readBuf[0]);

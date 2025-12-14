@@ -15,7 +15,9 @@ public:
   void setStopFlag(bool value);
 
   const GameData* getGameData() const;
+  const MapData* getMapData() const;
   std::mutex& getGameDataMutex();
+  std::mutex& getMapDataMutex();
   int getStopFlag() const;
 
 private:
@@ -26,16 +28,19 @@ private:
   pid_t localServerPid;
   int serverClientPipe[2];
   int clientServerPipe[2];
-  std::vector<uint8_t> dataBuffer;
 
   // Accessed by drawer thread
   std::mutex gameDataMutex;
   const GameData* gameData;
+  std::vector<uint8_t> gameDataBuffer;
+  std::mutex mapDataMutex;
+  const MapData* mapData;
+  std::vector<uint8_t> mapDataBuffer;
   std::atomic<bool> stopFlag;
 
   void initConnections(const std::string& serverIP);
-  bool receiveGameData();
-  void setBuffer(const uint8_t* data, size_t size);
+  void receiveGameData();
+  void saveData(const uint8_t* data, size_t size);
   void startLocalServer();
   void stopLocalServer();
   void waitForServer(const std::string& serverIP);

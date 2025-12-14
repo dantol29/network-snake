@@ -3,11 +3,14 @@
 
 #include "../includes/nibbler.hpp"
 
+using xCoord = int;
+using yCoord = int;
+
 class Snake;
 
 class Game {
 public:
-  Game(const int height, const int width, const std::string& mapPath);
+  Game(int height, int width, const std::string& mapPath);
   Game(const Game& obj) = delete;
   Game& operator=(const Game& obj) = delete;
   ~Game();
@@ -15,35 +18,36 @@ public:
   void start();
   void stop();
 
-  void decreaseFood();
-  void addSnake(const int fd);
-  void removeSnake(const int fd);
-  void updateSnakeDirection(const int fd, const int dir);
+  void removeFood(int x, int y);
+  void addSnake(int fd);
+  void removeSnake(int fd);
+  void updateSnakeDirection(int fd, int dir);
   void setIsDataUpdated(bool value);
-  std::string fieldToString();
 
   int getHeight() const;
   int getWidth() const;
   bool getStopFlag() const;
   bool getIsDataUpdated() const;
-  flatbuffers::Offset<GameData> buildGameData(flatbuffers::FlatBufferBuilder& builder);
+  flatbuffers::Offset<Packet> serializeGameData(flatbuffers::FlatBufferBuilder& builder);
+  flatbuffers::Offset<Packet> serializeMapData(flatbuffers::FlatBufferBuilder& builder, int fd);
 
 private:
-  int foodCount;
+  std::vector<std::string> writableField;
 
   // Used by another thread
   std::atomic<int> height;
   std::atomic<int> width;
-  std::atomic<int> snakeCount;
   std::atomic<bool> stopFlag;
   std::atomic<bool> isDataUpdated;
 
   std::mutex snakesMutex;
   std::unordered_map<int, Snake*> snakes;
 
+  std::mutex foodMutex;
+  std::vector<std::pair<xCoord, yCoord>> food;
+
   std::mutex readableFieldMutex;
   std::vector<std::string> readableField;
-  std::vector<std::string> writableField;
 
   void spawnFood();
   void moveSnakes();

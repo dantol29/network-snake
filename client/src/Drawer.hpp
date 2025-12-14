@@ -55,16 +55,17 @@ private:
   void startDynamicLib();
   void closeDynamicLib();
   void loadDynamicLibrary(const std::string& lib);
-  void drawGameField();
-  void drawMenu();
-  void drawControls();
   void readAssets();
   void setTailFrame();
+  void drawGame();
+  void drawMenu();
+  void drawControls();
+  void drawSnakes(const GameData* gameData);
+  void drawFood(const GameData* gameData);
+  void drawMap(const MapData* mapData);
   int getRotation(int x, int y, int x2, int y2) const;
   int cornerPartRotation(int x, int y, int x2, int y2) const;
-
-  std::pair<std::string, int>
-  chooseWallTexture(int x, int y, const std::vector<std::string>& gameField, int fieldWidth);
+  std::pair<std::string, int> getWallTexture(int x, int y, const MapData* mapData);
 
   // EventManager callbacks
   void MoveUp(t_event* details);

@@ -20,7 +20,7 @@
 #include <unistd.h>
 #include <vector>
 
-#include "../../snake_generated.h"
+#include "../../packet_generated.h"
 #include <flatbuffers/flatbuffers.h>
 
 #define TILE_SIZE 0.05f

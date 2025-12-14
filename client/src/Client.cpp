@@ -85,9 +85,17 @@ void Client::start(const std::string& serverIP, bool isSinglePlayer) {
   }
 
   std::cout << "Client has stopped" << std::endl;
+  {
+    std::lock_guard<std::mutex> lock(gameDataMutex);
+    std::lock_guard<std::mutex> lock2(mapDataMutex);
+    gameData = nullptr;
+    mapData = nullptr;
+    mapDataBuffer.clear();
+    gameDataBuffer.clear();
+  }
 }
 
-bool readExact(int fd, uint8_t* buffer, size_t n) {
+void readExact(int fd, uint8_t* buffer, size_t n) {
   size_t totalRead = 0;
   while (totalRead < n) {
     ssize_t bytesRead = read(fd, buffer + totalRead, n - totalRead);
@@ -95,50 +103,53 @@ bool readExact(int fd, uint8_t* buffer, size_t n) {
       if (errno == EAGAIN || errno == EWOULDBLOCK)
         continue; // try again
       perror("read");
-      return false;
+      throw "Error reading from server";
     }
-    if (bytesRead == 0) {
-      std::cerr << "Socket closed by peer\n";
-      return false;
-    }
+    if (bytesRead == 0)
+      throw "Socket closed by server";
+
     totalRead += bytesRead;
   }
-  return true;
 }
 
-// flatbuffer by google
-bool Client::receiveGameData() {
-  // Step 1: read 4-byte length prefix
+// flatbuffer
+void Client::receiveGameData() {
+  // 1: read 4-byte length prefix
   uint32_t netSize;
-  if (!readExact(tcpSocket, reinterpret_cast<uint8_t*>(&netSize), sizeof(netSize)))
-    return false;
+  readExact(tcpSocket, reinterpret_cast<uint8_t*>(&netSize), sizeof(netSize));
 
-  uint32_t size = ntohl(netSize); // convert to host byte order
+  // 2. convert length to host byte order
+  uint32_t size = ntohl(netSize);
 
-  // Step 2: read FlatBuffer data
+  // 3: read data
   std::vector<uint8_t> buffer(size);
-  if (!readExact(tcpSocket, buffer.data(), size))
-    return false;
+  readExact(tcpSocket, buffer.data(), size);
 
-  std::cout << "setting buffer: " << buffer.size() << '\n';
-  setBuffer(buffer.data(), buffer.size());
-  std::cout << "buffer set" << '\n';
-
-  // TODO: find out when snake is dead
-  // if (snakeX == 0 && snakeY == 0) {
-  //   this->isDead.store(true);
-  //   close(this->tcpSocket);
-  //   close(this->udpSocket);
-  //   throw "Snake is dead";
-  // }
-
-  return true;
+  saveData(buffer.data(), buffer.size());
 }
 
-void Client::setBuffer(const uint8_t* data, size_t size) {
-  std::lock_guard<std::mutex> lock(gameDataMutex);
-  dataBuffer.assign(data, data + size);
-  gameData = GetGameData(dataBuffer.data());
+void Client::saveData(const uint8_t* data, size_t size) {
+  const Packet* packet = GetPacket(data);
+  switch (packet->type()) {
+  case MsgType_Game: {
+    std::lock_guard<std::mutex> lock(gameDataMutex);
+
+    gameDataBuffer.assign(data, data + size);
+    const Packet* pckt = GetPacket(gameDataBuffer.data());
+    gameData = pckt->data_as_GameData();
+    break;
+  }
+  case MsgType_Map: {
+    std::lock_guard<std::mutex> lock(mapDataMutex);
+
+    mapDataBuffer.assign(data, data + size);
+    const Packet* pckt = GetPacket(mapDataBuffer.data());
+    mapData = pckt->data_as_MapData();
+    break;
+  }
+  default:
+    std::cerr << "Unknown packet type" << '\n';
+  }
 }
 
 void Client::sendDirection(const enum actions newDirection) const {
@@ -146,20 +157,21 @@ void Client::sendDirection(const enum actions newDirection) const {
   writeBuf[0] = newDirection;
   writeBuf[1] = '\0';
 
-  std::cout << "sending dir" << '\n';
-  int bytesSent = sendto(this->udpSocket, &writeBuf, 2, 0, (struct sockaddr*)&this->serverAddr,
-                         sizeof(this->serverAddr));
+  int bytesSent =
+      sendto(this->udpSocket, &writeBuf, 2, 0, (struct sockaddr*)&this->serverAddr, sizeof(this->serverAddr));
   if (bytesSent != 2) // TODO: retry sending
     std::cout << "Error sending!" << std::endl;
-
-  std::cout << "sent dir" << '\n';
 }
 
 /// GETTERS
 
 const GameData* Client::getGameData() const { return this->gameData; }
 
+const MapData* Client::getMapData() const { return this->mapData; }
+
 std::mutex& Client::getGameDataMutex() { return this->gameDataMutex; }
+
+std::mutex& Client::getMapDataMutex() { return this->mapDataMutex; }
 
 int Client::getStopFlag() const { return this->stopFlag.load(); }
 

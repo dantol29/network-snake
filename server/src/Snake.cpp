@@ -28,7 +28,7 @@ void Snake::moveSnake(std::vector<std::string>* gameField) {
     body.push_front({currentHead.x, currentHead.y});
 
     if ((*gameField)[currentHead.y][currentHead.x] == 'F')
-      this->game->decreaseFood();
+      this->game->removeFood(currentHead.x, currentHead.y);
     else {
       (*gameField)[currentTail.y][currentTail.x] = FLOOR_SYMBOL;
       body.pop_back();
