@@ -13,8 +13,7 @@ using TimePoint = std::chrono::time_point<Clock>;
 TimePoint lastMoveTime = Clock::now();
 TimePoint lastEatTime = Clock::now();
 
-Game::Game(const int height, const int width, const std::string& mapPath)
-    : stopFlag(false), snakeCount(0), foodCount(0) {
+Game::Game(int height, int width, const std::string& mapPath) : stopFlag(false) {
 
   try {
     if (mapPath.empty())
@@ -63,7 +62,7 @@ void Game::loadGameMap(const std::string& mapFile) {
     if (has_invalid_chars(line))
       throw "Invalid characters";
 
-    if (line.size() != width)
+    if ((int)line.size() != width)
       throw "Invalid line width";
 
     writableField.push_back(line);
@@ -94,7 +93,9 @@ void Game::start() {
 }
 
 void Game::spawnFood() {
-  if (!(this->snakeCount.load() * 2 > this->foodCount))
+  std::lock_guard<std::mutex> lock(foodMutex);
+
+  if (food.size() > 2)
     return;
 
   for (int i = 0; i < MAX_FOOD_SPAWN_TRIES; i++) {
@@ -105,7 +106,7 @@ void Game::spawnFood() {
 
     if (this->writableField[y][x] == FLOOR_SYMBOL) {
       this->writableField[y][x] = 'F';
-      ++this->foodCount;
+      this->food.emplace_back(std::make_pair(x, y));
       return;
     }
   }
@@ -115,22 +116,19 @@ void Game::moveSnakes() {
   std::lock_guard<std::mutex> lock(this->snakesMutex);
   for (auto it = this->snakes.begin(); it != this->snakes.end();) {
     it->second->moveSnake(&this->writableField);
-    if (it->second->getIsDead()) {
+    if (it->second->getState() == State_Dead) {
       it->second->cleanup(&writableField);
       delete it->second;
       it = snakes.erase(it);
-      --this->snakeCount;
     } else
       ++it;
   }
 }
 
-void Game::addSnake(const int clientFd) {
+void Game::addSnake(int clientFd) {
   std::lock_guard<std::mutex> lock1(snakesMutex);
   Snake* newSnake = new Snake(this, clientFd);
   this->snakes[clientFd] = newSnake;
-
-  ++this->snakeCount;
 }
 
 void Game::removeSnake(int fd) {
@@ -141,7 +139,6 @@ void Game::removeSnake(int fd) {
     snake->second->cleanup(&this->writableField);
     delete snake->second;
     this->snakes.erase(snake);
-    --this->snakeCount;
   }
 }
 
@@ -151,7 +148,7 @@ void Game::updateReadableField() {
   this->readableField = this->writableField;
 }
 
-void Game::updateSnakeDirection(const int fd, const int dir) {
+void Game::updateSnakeDirection(int fd, int dir) {
   std::lock_guard<std::mutex> lock(this->snakesMutex);
 
   auto it = this->snakes.find(fd);
@@ -159,24 +156,84 @@ void Game::updateSnakeDirection(const int fd, const int dir) {
     this->snakes[fd]->setDirection(dir);
 }
 
-void Game::decreaseFood() {
-  if (this->foodCount > 0)
-    this->foodCount--;
+void Game::removeFood(int x, int y) {
+  std::lock_guard<std::mutex> lock(foodMutex);
+
+  for (auto it = food.begin(); it != food.end(); ++it) {
+    if (it->first == x && it->second == y) {
+      food.erase(it);
+      return;
+    }
+  }
+}
+
+flatbuffers::Offset<Packet> Game::serializeGameData(flatbuffers::FlatBufferBuilder& builder) {
+  std::lock_guard<std::mutex> lock(snakesMutex);
+
+  std::vector<flatbuffers::Offset<SnakeObj>> snakesVec;
+  snakesVec.reserve(snakes.size());
+
+  for (auto snake : snakes) {
+    std::vector<Pos> bodyVec;
+    for (auto pos : snake.second->getBody())
+      bodyVec.emplace_back(Pos(pos.x, pos.y));
+
+    auto body = builder.CreateVectorOfStructs(bodyVec);
+    auto state = snake.second->getState();
+    auto id = snake.first;
+    auto snakeObject = CreateSnakeObj(builder, id, state, body);
+    snakesVec.emplace_back(snakeObject);
+  }
+
+  std::vector<Pos> foodVec;
+  foodVec.reserve(food.size());
+
+  for (auto f : food) {
+    foodVec.emplace_back(Pos(f.first, f.second));
+  }
+
+  auto snakesData = builder.CreateVector(snakesVec);
+  auto foodData = builder.CreateVectorOfStructs(foodVec);
+  auto gameData = CreateGameData(builder, snakesData, foodData);
+  return CreatePacket(builder, MsgType_Game, MsgUnion_GameData, gameData.Union());
+}
+
+flatbuffers::Offset<Packet> Game::serializeMapData(flatbuffers::FlatBufferBuilder& builder, int fd) {
+  std::lock_guard<std::mutex> lock(readableFieldMutex);
+
+  std::vector<flatbuffers::Offset<Row>> rows;
+  rows.reserve(readableField.size());
+
+  for (auto row : readableField) {
+    std::vector<int8_t> tiles;
+    tiles.reserve(row.size());
+
+    for (char tile : row) {
+      if (tile == 'W')
+        tiles.emplace_back(Tile_WallHorizontal);
+      else if (tile == 'V')
+        tiles.emplace_back(Tile_WallVertical);
+      else
+        tiles.emplace_back(Tile_Empty);
+    }
+
+    auto tilesData = builder.CreateVector(tiles);
+    rows.emplace_back(CreateRow(builder, tilesData));
+  }
+
+  auto map = builder.CreateVector(rows);
+  auto mapData = CreateMapData(builder, map, fd);
+  return CreatePacket(builder, MsgType_Map, MsgUnion_MapData, mapData.Union());
 }
 
 void Game::setIsDataUpdated(bool value) { this->isDataUpdated.store(value); }
 
-/// GETTERS
-
-t_coordinates Game::getSnakeHead(const int fd) {
-  std::lock_guard<std::mutex> lock(snakesMutex);
-
-  t_coordinates head = {0};
+State Game::getSnakeState(const int fd) {
   auto it = this->snakes.find(fd);
   if (it != this->snakes.end() && it->second)
-    head = it->second->getHead();
+    return it->second->getState();
 
-  return head;
+  return State_Dead;
 }
 
 int Game::getHeight() const { return this->height.load(); }
@@ -187,25 +244,12 @@ bool Game::getStopFlag() const { return this->stopFlag.load(); }
 
 bool Game::getIsDataUpdated() const { return this->isDataUpdated.load(); }
 
-/// UTILS
-
-std::string Game::fieldToString() {
-  std::lock_guard<std::mutex> lock(this->readableFieldMutex);
-
-  std::string data;
-
-  for (int i = 0; i < readableField.size(); i++)
-    data += readableField[i];
-
-  return data;
-}
-
 void Game::printField() {
   std::lock_guard<std::mutex> lock(this->readableFieldMutex);
 
   printf("\n\n");
-  for (int i = 0; i < readableField.size(); i++)
-    printf("%3d:%s\n", i, readableField[i].c_str());
+  for (size_t i = 0; i < readableField.size(); i++)
+    printf("%3zu:%s\n", i, readableField[i].c_str());
   printf("\n\n");
 }
 

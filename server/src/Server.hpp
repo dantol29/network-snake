@@ -14,8 +14,6 @@ public:
 
   void start();
 
-  static std::string serializeValue(const std::string& value);
-
 private:
   Game* game;
   int tcpServerFd;
@@ -24,11 +22,12 @@ private:
   std::vector<struct pollfd> newConnections;
   std::vector<int> closedConnections;
   std::unordered_map<in_addr_t, int> addressToFd;
-  char readBuf[10];
-
-  std::string serializedGameField;
-  std::string serializedHeight;
-  std::string serializedWidth;
+  struct iovec iovGame[2];
+  struct iovec iovMap[2];
+  std::vector<uint8_t> mapBuffer;
+  uint32_t mapSizeNetwork;
+  std::vector<uint8_t> gameBuffer;
+  uint32_t gameSizeNetwork;
 
   void setupSocket(int socket);
   void initConnections();
@@ -37,9 +36,11 @@ private:
   void closeConnection(const int fd);
   void removeClosedConnections();
   void sendGameData(const int fd) const;
+  void sendMapData(const int fd);
   void receiveDataFromClient(const int fd);
   void handleSocketError(const int fd);
-  std::string serializeGameField();
+  void constructGameData();
+  void constructMapData(int fd);
 };
 
 #endif

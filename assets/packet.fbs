@@ -1,0 +1,42 @@
+enum State : byte { Alive, Idle, Dead }
+
+enum Tile : byte { Empty, WallVertical, WallHorizontal }
+
+table Row {
+  row: [Tile];
+}
+
+table MapData {
+  map: [Row];
+  player_id: int;
+}
+
+struct Pos {
+  x:int;
+  y:int;
+}
+
+table SnakeObj {
+  id: int;
+  state: State;
+  body:[Pos];
+}
+
+table GameData {
+  snakes:[SnakeObj];
+  food:[Pos];
+}
+
+enum MsgType: byte { Map, Game }
+
+union MsgUnion {
+  GameData,
+  MapData
+}
+
+table Packet {
+  type: MsgType;
+  data: MsgUnion;
+}
+
+root_type Packet;

@@ -14,8 +14,7 @@ Snake::Snake(Game* game, int fd) : game(game), fd(fd) {
   this->body.push_back(c);
 
   this->direction = UP;
-  this->isDead = false;
-  this->isActive = false;
+  this->state = State_Idle;
 }
 
 Snake::~Snake() { std::cout << "Snake destructor called" << std::endl; }
@@ -24,12 +23,12 @@ void Snake::moveSnake(std::vector<std::string>* gameField) {
   auto currentHead = body.front();
   auto currentTail = body.back();
 
-  if (this->isActive) {
+  if (this->state == State_Alive) {
     currentHead = moveHead(currentHead.x, currentHead.y, gameField);
     body.push_front({currentHead.x, currentHead.y});
 
     if ((*gameField)[currentHead.y][currentHead.x] == 'F')
-      this->game->decreaseFood();
+      this->game->removeFood(currentHead.x, currentHead.y);
     else {
       (*gameField)[currentTail.y][currentTail.x] = FLOOR_SYMBOL;
       body.pop_back();
@@ -50,36 +49,36 @@ t_coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::strin
     if (currentY > 0)
       currentY -= 1;
     else
-      this->isDead = true;
+      this->state = State_Dead;
     break;
   case DOWN:
     if (currentY < this->game->getHeight() - 1)
       currentY += 1;
     else
-      this->isDead = true;
+      this->state = State_Dead;
     break;
   case LEFT:
     if (currentX > 0)
       currentX -= 1;
     else
-      this->isDead = true;
+      this->state = State_Dead;
     break;
   case RIGHT:
     if (currentX < this->game->getWidth() - 1)
       currentX += 1;
     else
-      this->isDead = true;
+      this->state = State_Dead;
   }
 
   char tile = (*gameField)[currentY][currentX];
   if (tile == 'B' || tile == 'H' || tile == 'W')
-    this->isDead = true;
+    this->state = State_Dead;
 
   return {currentX, currentY};
 }
 
 void Snake::setDirection(const int newDir) {
-  this->isActive = true;
+  this->state = State_Alive;
 
   enum e_direction dir = (enum e_direction)newDir;
   if ((dir == UP || dir == DOWN) && (this->direction == DOWN || this->direction == UP))
@@ -97,4 +96,6 @@ void Snake::cleanup(std::vector<std::string>* gameField) {
 
 t_coordinates Snake::getHead() const { return this->body.front(); }
 
-bool Snake::getIsDead() const { return this->isDead; }
+State Snake::getState() const { return this->state; }
+
+std::list<t_coordinates> Snake::getBody() const { return body; }

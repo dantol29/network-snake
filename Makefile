@@ -2,7 +2,7 @@
 # All libraries require different CMake versions:
 # - lib1 (raylib): CMake ≥ 3.25
 # - lib2 (SFML 3.x): CMake ≥ 3.28
-# - lib4 (SDL3): works with 3.22, but we use 3.29.6 for all
+# - lib3 (SDL3): works with 3.22, but we use 3.29.6 for all
 
 .DEFAULT_GOAL := all
 
@@ -45,7 +45,7 @@ libs: $(CMAKE_BIN)
 	@echo "Building all libraries..."
 	$(MAKE) -C libs/lib1
 	$(MAKE) -C libs/lib2
-	$(MAKE) -C libs/lib4 || true
+	$(MAKE) -C libs/lib3 || true
 
 # Build client
 client: $(CMAKE_BIN) libs
@@ -122,7 +122,7 @@ valgrind: server client
 clean:
 	$(MAKE) -C libs/lib1 clean || true
 	$(MAKE) -C libs/lib2 clean || true
-	$(MAKE) -C libs/lib4 clean || true
+	$(MAKE) -C libs/lib3 clean || true
 	$(MAKE) -C client clean || true
 	$(MAKE) -C server clean || true
 
@@ -130,7 +130,7 @@ clean:
 fclean: clean
 	$(MAKE) -C libs/lib1 fclean || true
 	$(MAKE) -C libs/lib2 fclean || true
-	$(MAKE) -C libs/lib4 fclean || true
+	$(MAKE) -C libs/lib3 fclean || true
 	$(MAKE) -C client fclean || true
 	$(MAKE) -C server fclean || true
 

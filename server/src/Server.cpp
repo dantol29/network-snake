@@ -1,14 +1,12 @@
 #include "Server.hpp"
+#include <sys/uio.h>
 
 #define SERV_PORT 8080
 #define MAX_CLIENT_CONNECTIONS 10
 #define NON_BLOCKING 0
 #define BLOCKING -1
 
-Server::Server(Game* game) : game(game) {
-  this->serializedHeight = Server::serializeValue(std::to_string(game->getHeight()));
-  this->serializedWidth = Server::serializeValue(std::to_string(game->getWidth()));
-}
+Server::Server(Game* game) : game(game) {}
 
 void Server::setupSocket(int socket) {
   int flag = 1; // Disable Nagle's Algorithm
@@ -71,7 +69,7 @@ void Server::start() {
       bool shouldSend = this->game->getIsDataUpdated();
       if (shouldSend) {
         this->game->setIsDataUpdated(false);
-        this->serializedGameField = serializeGameField();
+        constructGameData();
       }
 
       for (const auto client : connectedClients) {
@@ -115,6 +113,8 @@ void Server::acceptNewConnection() {
     this->addressToFd[cliAddr.sin_addr.s_addr] = clientFd;
 
     this->game->addSnake(clientFd);
+
+    sendMapData(clientFd);
   }
 }
 
@@ -145,16 +145,52 @@ void Server::removeClosedConnections() {
   closedConnections.clear();
 }
 
+void Server::constructGameData() {
+  flatbuffers::FlatBufferBuilder builder(1024);
+
+  auto gameData = game->serializeGameData(builder);
+  builder.Finish(gameData);
+
+  gameBuffer.assign(builder.GetBufferPointer(), builder.GetBufferPointer() + builder.GetSize());
+  gameSizeNetwork = htonl(gameBuffer.size());
+
+  iovGame[0].iov_base = &gameSizeNetwork;
+  iovGame[0].iov_len = sizeof(gameSizeNetwork);
+  iovGame[1].iov_base = gameBuffer.data();
+  iovGame[1].iov_len = gameBuffer.size();
+}
+
+void Server::constructMapData(int fd) {
+  flatbuffers::FlatBufferBuilder builder(1024);
+
+  auto mapData = game->serializeMapData(builder, fd);
+  builder.Finish(mapData);
+
+  mapBuffer.assign(builder.GetBufferPointer(), builder.GetBufferPointer() + builder.GetSize());
+  mapSizeNetwork = htonl(mapBuffer.size());
+
+  iovMap[0].iov_base = &mapSizeNetwork;
+  iovMap[0].iov_len = sizeof(mapSizeNetwork);
+  iovMap[1].iov_base = mapBuffer.data();
+  iovMap[1].iov_len = mapBuffer.size();
+}
+
 // TCP
 void Server::sendGameData(const int fd) const {
-  t_coordinates head = this->game->getSnakeHead(fd);
-  const std::string headX = serializeValue(std::to_string(head.x));
-  const std::string headY = serializeValue(std::to_string(head.y));
-  const std::string serializedGameData = headX + headY + this->serializedGameField + "END";
-
-  ssize_t bytesWritten = write(fd, serializedGameData.c_str(), serializedGameData.size());
+  ssize_t bytesWritten = writev(fd, iovGame, 2);
   if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
     std::cout << "Socket buffer is full, could not sent game data: " << fd << std::endl;
+  else if (bytesWritten == -1)
+    perror("write");
+}
+
+// TCP
+void Server::sendMapData(const int fd) {
+  constructMapData(fd);
+
+  ssize_t bytesWritten = writev(fd, iovMap, 2);
+  if (bytesWritten == -1 && (errno == EAGAIN || EWOULDBLOCK))
+    std::cout << "Socket buffer is full, could not sent map data: " << fd << std::endl;
   else if (bytesWritten == -1)
     perror("write");
 }
@@ -168,8 +204,10 @@ void Server::receiveDataFromClient(const int fd) {
     return acceptNewConnection();
 
   if (fd == this->udpServerFd) {
+    char readBuf[10];
     sockaddr_in clientAddr;
     socklen_t clientAddrLen = sizeof(clientAddr);
+
     int n = recvfrom(this->udpServerFd, readBuf, 2, 0, (sockaddr*)&clientAddr, &clientAddrLen);
     if (n == 2)
       game->updateSnakeDirection(this->addressToFd[clientAddr.sin_addr.s_addr], (int)readBuf[0]);
@@ -187,17 +225,4 @@ void Server::handleSocketError(const int fd) {
 
   std::cout << "Socket error: " << fd << std::endl;
   closeConnection(fd);
-}
-
-// TLV format
-std::string Server::serializeGameField() {
-  const std::string field = Server::serializeValue(game->fieldToString());
-  return this->serializedHeight + this->serializedWidth + field;
-}
-
-std::string Server::serializeValue(const std::string& value) {
-  const std::string len = std::to_string(value.size());
-  const std::string lenSize = std::to_string(len.size());
-
-  return lenSize + len + value;
 }
