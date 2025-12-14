@@ -20,10 +20,23 @@ else
     CMAKE_BIN := $(CMAKE_HOME)/bin/cmake
 endif
 
-# Per-lib CMake minimum versions (for reference/future-proofing)
-LIB1_CMAKE_MIN := 3.25
-LIB2_CMAKE_MIN := 3.28
-LIB4_CMAKE_MIN := 3.22
+FLATBUFFERS_DIR := flatbuffers
+FLATC := $(FLATBUFFERS_DIR)/flatc
+FBS_FILES := assets/packet.fbs
+
+$(FLATBUFFERS_DIR):
+	@echo "Cloning FlatBuffers..."
+	git clone --depth 1 https://github.com/google/flatbuffers.git $(FLATBUFFERS_DIR)
+
+$(FLATC): $(FLATBUFFERS_DIR) $(CMAKE_BIN)
+	@echo "Building flatc..."
+	cd $(FLATBUFFERS_DIR) && \
+	$(CMAKE) -G "Unix Makefiles" && \
+	$(MAKE) -j
+
+flatbuffers-gen: $(FLATC)
+	@echo "Generating FlatBuffers headers..."
+	$(FLATC) --cpp $(FBS_FILES)
 
 # Bootstrap CMake if not already present
 $(CMAKE_BIN):
@@ -41,28 +54,23 @@ $(CMAKE_BIN):
 export CMAKE := $(CMAKE_BIN)
 
 # Build all libraries
-libs: $(CMAKE_BIN)
+libs: $(CMAKE_BIN) flatbuffers-gen
 	@echo "Building all libraries..."
 	$(MAKE) -C libs/lib1
 	$(MAKE) -C libs/lib2
 	$(MAKE) -C libs/lib3 || true
 
 # Build client
-client: $(CMAKE_BIN) libs
+client: $(CMAKE_BIN) libs flatbuffers-gen
 	$(MAKE) -C client
 
 # Build server
-server: $(CMAKE_BIN)
+server: $(CMAKE_BIN) flatbuffers-gen
 	$(MAKE) -C server
 
 # Build everything (default target)
 all: libs client server
 	@echo "Build complete!"
-
-# Run client (assumes server is running separately)
-run: client
-	@echo "Starting client..."
-	cd client && ./nibbler_client
 
 # Run server (requires height and width arguments)
 # Usage: make run-server HEIGHT=20 WIDTH=30
@@ -92,31 +100,6 @@ run-game: server client
 	cd client && ./nibbler_client || true; \
 	kill $$SERVER_PID 2>/dev/null || true
 
-# Run with valgrind to check for memory leaks
-# Usage: make valgrind HEIGHT=20 WIDTH=30
-valgrind: server client
-	@if ! command -v valgrind >/dev/null 2>&1; then \
-		echo "Error: valgrind is not installed. Install with: sudo apt install valgrind"; \
-		exit 1; \
-	fi
-	@if [ -z "$(HEIGHT)" ] || [ -z "$(WIDTH)" ]; then \
-		HEIGHT=20; WIDTH=30; \
-		echo "Using defaults: HEIGHT=$$HEIGHT WIDTH=$$WIDTH"; \
-	else \
-		HEIGHT=$(HEIGHT); WIDTH=$(WIDTH); \
-	fi; \
-	mkdir -p logs; \
-	echo "Starting server with valgrind (size $$HEIGHTx$$WIDTH)..."; \
-	cd server && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-		--log-file=../logs/valgrind-server.log ./nibbler_server $$HEIGHT $$WIDTH & \
-	SERVER_PID=$$!; \
-	trap "kill $$SERVER_PID 2>/dev/null" EXIT INT TERM; \
-	sleep 2; \
-	echo "Starting client with valgrind..."; \
-	cd client && valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes \
-		--log-file=../logs/valgrind-client.log ./nibbler_client || true; \
-	kill $$SERVER_PID 2>/dev/null || true; \
-	echo "Valgrind logs saved to logs/valgrind-server.log and logs/valgrind-client.log"
 
 # Clean all build artifacts
 clean:
@@ -133,6 +116,8 @@ fclean: clean
 	$(MAKE) -C libs/lib3 fclean || true
 	$(MAKE) -C client fclean || true
 	$(MAKE) -C server fclean || true
+	rm -rf $(FLATBUFFERS_DIR)
+
 
 # Rebuild everything
 re: fclean all

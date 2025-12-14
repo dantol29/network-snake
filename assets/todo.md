@@ -1,6 +1,6 @@
 ## Bugs
 
-- [] Server must send a message that the game is over
+- [x] Server must send a message that the game is over
 - [] Data races in Client
 - [] Memory leaks in Client
 - [] Sometimes server does not start right after it was closed(socket not closed?)
@@ -12,5 +12,5 @@
 - [x] Text in the corner with keys
 - [] A way to distinguish snakes in a multiplayer(different colors)
 - [] Count-down in a multi-player when another player joins(difficult)
-- [] Graphics like in nibbler
+- [x] Graphics like in nibbler
 - [] Leaderboard with points for multiplayer(easy, but more data to transmit)
