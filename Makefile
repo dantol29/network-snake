@@ -6,19 +6,23 @@
 
 .DEFAULT_GOAL := all
 
+UNAME_S := $(shell uname -s)
 CMAKE_VERSION := 3.29.6
-UNAME_S := $(shell uname)
 
-# Platform-specific CMake paths
-ifeq ($(UNAME_S),Darwin)
-    CMAKE_HOME := $(HOME)/cmake-$(CMAKE_VERSION)-macos-universal
-    CMAKE_ARCHIVE := cmake-$(CMAKE_VERSION)-macos-universal.tar.gz
-    CMAKE_BIN := $(CMAKE_HOME)/CMake.app/Contents/bin/cmake
-else
-    CMAKE_HOME := $(HOME)/cmake-$(CMAKE_VERSION)-linux-x86_64
-    CMAKE_ARCHIVE := cmake-$(CMAKE_VERSION)-linux-x86_64.tar.gz
-    CMAKE_BIN := $(CMAKE_HOME)/bin/cmake
+ifeq ($(UNAME_S),Linux)
+	CMAKE_PLATFORM := linux-x86_64
+	CMAKE_BIN_SUBDIR := bin
 endif
+
+ifeq ($(UNAME_S),Darwin)
+	CMAKE_PLATFORM := macos-universal
+	CMAKE_BIN_SUBDIR := CMake.app/Contents/bin
+endif
+
+CMAKE_HOME := $(HOME)/cmake-$(CMAKE_VERSION)-$(CMAKE_PLATFORM)
+CMAKE_BIN := $(CMAKE_HOME)/$(CMAKE_BIN_SUBDIR)/cmake
+CMAKE_ARCHIVE := cmake-$(CMAKE_VERSION)-$(CMAKE_PLATFORM).tar.gz
+CMAKE_URL := https://github.com/Kitware/CMake/releases/download/v$(CMAKE_VERSION)/$(CMAKE_ARCHIVE)
 
 FLATBUFFERS_DIR := flatbuffers
 FLATC := $(FLATBUFFERS_DIR)/flatc
@@ -41,14 +45,14 @@ flatbuffers-gen: $(FLATC)
 # Bootstrap CMake if not already present
 $(CMAKE_BIN):
 	@echo "Bootstrapping CMake $(CMAKE_VERSION) for $(UNAME_S)..."
-	@mkdir -p $(HOME)
 	@if [ ! -d "$(CMAKE_HOME)" ]; then \
-		echo "Downloading CMake $(CMAKE_VERSION)..."; \
-		wget -q https://github.com/Kitware/CMake/releases/download/v$(CMAKE_VERSION)/$(CMAKE_ARCHIVE) && \
-		tar -xzf $(CMAKE_ARCHIVE) -C $(HOME) && \
+		echo "Downloading $(CMAKE_URL)"; \
+		curl -fL -o $(CMAKE_ARCHIVE) $(CMAKE_URL); \
+		tar -xzf $(CMAKE_ARCHIVE) -C $(HOME); \
 		rm -f $(CMAKE_ARCHIVE); \
 	fi
-	@echo "CMake $(CMAKE_VERSION) ready at $(CMAKE_BIN)"
+	@echo "CMake ready at $(CMAKE_BIN)"
+
 
 # Export CMAKE for child Makefiles (will be used by lib Makefiles via CMAKE ?= cmake)
 export CMAKE := $(CMAKE_BIN)
