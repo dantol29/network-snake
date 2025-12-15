@@ -8,7 +8,7 @@ class Game;
 
 class Snake {
 public:
-  Snake(Game* game, int fd);
+  Snake(Game* game);
   ~Snake();
 
   void moveSnake(std::vector<std::string>* gameField);
@@ -23,7 +23,6 @@ private:
   Game* game;
   std::list<t_coordinates> body;
   enum e_direction direction;
-  const int fd;
   State state;
 
   t_coordinates moveHead(int currentX, int currentY, std::vector<std::string>* gameField);

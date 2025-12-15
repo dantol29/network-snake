@@ -1,7 +1,7 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(Game* game, int fd) : game(game), fd(fd) {
+Snake::Snake(Game* game) : game(game) {
   t_coordinates c;
   c.x = this->game->getWidth() / 2;
   c.y = this->game->getHeight() / 2;
@@ -25,6 +25,9 @@ void Snake::moveSnake(std::vector<std::string>* gameField) {
 
   if (this->state == State_Alive) {
     currentHead = moveHead(currentHead.x, currentHead.y, gameField);
+    if (this->state == State_Dead)
+      return;
+
     body.push_front({currentHead.x, currentHead.y});
 
     if ((*gameField)[currentHead.y][currentHead.x] == 'F')
@@ -71,7 +74,7 @@ t_coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::strin
   }
 
   char tile = (*gameField)[currentY][currentX];
-  if (tile == 'B' || tile == 'H' || tile == 'W')
+  if (tile == 'B' || tile == 'H' || tile == 'W' || tile == 'V')
     this->state = State_Dead;
 
   return {currentX, currentY};

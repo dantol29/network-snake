@@ -25,8 +25,8 @@
 #include <flatbuffers/flatbuffers.h>
 
 #define FLOOR_SYMBOL '.'
-#define SNAKE_SPEED 1000
-#define MAX_PLAYERS 100
+#define SNAKE_SPEED 300
+#define MAX_PLAYERS 10
 
 typedef struct s_coordinates {
   int x;

@@ -127,7 +127,7 @@ void Game::moveSnakes() {
 
 void Game::addSnake(int clientFd) {
   std::lock_guard<std::mutex> lock1(snakesMutex);
-  Snake* newSnake = new Snake(this, clientFd);
+  Snake* newSnake = new Snake(this);
   this->snakes[clientFd] = newSnake;
 }
 
