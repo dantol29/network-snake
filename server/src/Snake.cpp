@@ -1,20 +1,18 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(Game* game) : game(game) {
+Snake::Snake(Game* game) : game(game), direction(UP), state(State_Idle), score(0) {
   t_coordinates c;
-  c.x = this->game->getWidth() / 2;
-  c.y = this->game->getHeight() / 2;
-  this->body.push_front(c);
-  c.y = this->game->getHeight() / 2 + 1;
-  this->body.push_back(c);
-  c.y = this->game->getHeight() / 2 + 2;
-  this->body.push_back(c);
-  c.y = this->game->getHeight() / 2 + 3;
-  this->body.push_back(c);
 
-  this->direction = UP;
-  this->state = State_Idle;
+  c.x = game->getWidth() / 2;
+  c.y = game->getHeight() / 2;
+  body.push_front(c);
+  c.y = game->getHeight() / 2 + 1;
+  body.push_back(c);
+  c.y = game->getHeight() / 2 + 2;
+  body.push_back(c);
+  c.y = game->getHeight() / 2 + 3;
+  body.push_back(c);
 }
 
 Snake::~Snake() { std::cout << "Snake destructor called" << std::endl; }
@@ -23,82 +21,86 @@ void Snake::moveSnake(std::vector<std::string>* gameField) {
   auto currentHead = body.front();
   auto currentTail = body.back();
 
-  if (this->state == State_Alive) {
+  if (state == State_Alive) {
     currentHead = moveHead(currentHead.x, currentHead.y, gameField);
-    if (this->state == State_Dead)
+    if (state == State_Dead)
       return;
 
     body.push_front({currentHead.x, currentHead.y});
 
-    if ((*gameField)[currentHead.y][currentHead.x] == 'F')
-      this->game->removeFood(currentHead.x, currentHead.y);
-    else {
-      (*gameField)[currentTail.y][currentTail.x] = FLOOR_SYMBOL;
+    if ((*gameField)[currentHead.y][currentHead.x] == FOOD_TILE) {
+      game->removeFood(currentHead.x, currentHead.y);
+      score += 1;
+    } else {
+      (*gameField)[currentTail.y][currentTail.x] = FLOOR_TILE;
       body.pop_back();
       currentTail = body.back();
     }
   }
 
   for (const auto& segment : body)
-    (*gameField)[segment.y][segment.x] = 'B';
+    (*gameField)[segment.y][segment.x] = BODY_TILE;
 
-  (*gameField)[currentHead.y][currentHead.x] = 'H';
-  (*gameField)[currentTail.y][currentTail.x] = 'T';
+  (*gameField)[currentHead.y][currentHead.x] = HEAD_TILE;
+  (*gameField)[currentTail.y][currentTail.x] = TAIL_TILE;
 }
 
 t_coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::string>* gameField) {
-  switch (this->direction) {
+  switch (direction) {
   case UP:
     if (currentY > 0)
       currentY -= 1;
     else
-      this->state = State_Dead;
+      state = State_Dead;
     break;
   case DOWN:
-    if (currentY < this->game->getHeight() - 1)
+    if (currentY < game->getHeight() - 1)
       currentY += 1;
     else
-      this->state = State_Dead;
+      state = State_Dead;
     break;
   case LEFT:
     if (currentX > 0)
       currentX -= 1;
     else
-      this->state = State_Dead;
+      state = State_Dead;
     break;
   case RIGHT:
-    if (currentX < this->game->getWidth() - 1)
+    if (currentX < game->getWidth() - 1)
       currentX += 1;
     else
-      this->state = State_Dead;
+      state = State_Dead;
   }
 
   char tile = (*gameField)[currentY][currentX];
-  if (tile == 'B' || tile == 'H' || tile == 'W' || tile == 'V')
-    this->state = State_Dead;
+  if (tile == BODY_TILE || tile == HEAD_TILE || tile == WALL_HORIZ_TILE || tile == WALL_VERTI_TILE)
+    state = State_Dead;
 
   return {currentX, currentY};
 }
 
 void Snake::setDirection(const int newDir) {
-  this->state = State_Alive;
+  if (state == State_Idle)
+    state = State_Alive;
 
   enum e_direction dir = (enum e_direction)newDir;
-  if ((dir == UP || dir == DOWN) && (this->direction == DOWN || this->direction == UP))
+  if ((dir == UP || dir == DOWN) && (direction == DOWN || direction == UP))
     return;
-  if ((dir == RIGHT || dir == LEFT) && (this->direction == RIGHT || this->direction == LEFT))
+  if ((dir == RIGHT || dir == LEFT) && (direction == RIGHT || direction == LEFT))
     return;
 
-  this->direction = dir;
+  direction = dir;
 }
 
 void Snake::cleanup(std::vector<std::string>* gameField) {
   for (const auto& segment : body)
-    (*gameField)[segment.y][segment.x] = FLOOR_SYMBOL;
+    (*gameField)[segment.y][segment.x] = FLOOR_TILE;
 }
 
-t_coordinates Snake::getHead() const { return this->body.front(); }
+int Snake::getScore() const { return score; }
 
-State Snake::getState() const { return this->state; }
+t_coordinates Snake::getHead() const { return body.front(); }
+
+State Snake::getState() const { return state; }
 
 std::list<t_coordinates> Snake::getBody() const { return body; }

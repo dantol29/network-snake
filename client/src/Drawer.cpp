@@ -160,10 +160,20 @@ void Drawer::drawMenu() {
                    this->singlePlayerButton.label.c_str());
 }
 
-void Drawer::drawControls() {
-  this->drawText(this->window, 800, 670, 20, "CONTROLS");
-  this->drawText(this->window, 800, 700, 20, "M - ZOOM OUT");
-  this->drawText(this->window, 800, 725, 20, "N - ZOOM IN");
+void Drawer::drawUI(const GameData* gameData, int playerId) {
+  this->drawText(this->window, 910, 10, 20, "SCORES");
+
+  int height = 40;
+  for (auto it = gameData->snakes()->begin(); it != gameData->snakes()->end(); ++it) {
+    std::string playerName = it->id() == playerId ? "ME" : std::to_string(it->id());
+    std::string displayText = playerName + ": " + std::to_string(it->score());
+    this->drawText(this->window, 910, height, 20, displayText.c_str());
+
+    height += 25;
+  }
+
+  this->drawText(this->window, 800, 775, 20, "M - ZOOM OUT");
+  this->drawText(this->window, 800, 800, 20, "N - ZOOM IN");
 }
 
 void Drawer::drawGame() {
@@ -186,14 +196,16 @@ void Drawer::drawGame() {
     if (!mapData)
       return;
 
+    int playerId = mapData->player_id();
+
     drawMap(mapData);
     drawFood(gameData);
     drawSnakes(gameData);
-    drawControls();
+    drawUI(gameData, playerId);
     setTailFrame();
 
     for (auto it = gameData->snakes()->begin(); it != gameData->snakes()->end(); ++it) {
-      if (it->id() == mapData->player_id()) {
+      if (it->id() == playerId) {
         isPlayerAlive = true;
         break;
       }

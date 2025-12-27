@@ -24,7 +24,14 @@
 #include "../../packet_generated.h"
 #include <flatbuffers/flatbuffers.h>
 
-#define FLOOR_SYMBOL '.'
+#define FLOOR_TILE '.'
+#define BODY_TILE 'B'
+#define HEAD_TILE 'H'
+#define TAIL_TILE 'T'
+#define FOOD_TILE 'F'
+#define WALL_HORIZ_TILE 'W'
+#define WALL_VERTI_TILE 'V'
+
 #define SNAKE_SPEED 300
 #define MAX_PLAYERS 10
 

@@ -18,6 +18,7 @@ struct Pos {
 
 table SnakeObj {
   id: int;
+  score: int;
   state: State;
   body:[Pos];
 }

@@ -15,6 +15,7 @@ public:
   void cleanup(std::vector<std::string>* gameField);
   void setDirection(const int newDir);
 
+  int getScore() const;
   State getState() const;
   t_coordinates getHead() const;
   std::list<t_coordinates> getBody() const;
@@ -24,6 +25,7 @@ private:
   std::list<t_coordinates> body;
   enum e_direction direction;
   State state;
+  int score;
 
   t_coordinates moveHead(int currentX, int currentY, std::vector<std::string>* gameField);
 };

@@ -59,7 +59,7 @@ private:
   void setTailFrame();
   void drawGame();
   void drawMenu();
-  void drawControls();
+  void drawUI(const GameData* gameData, int playerId);
   void drawSnakes(const GameData* gameData);
   void drawFood(const GameData* gameData);
   void drawMap(const MapData* mapData);

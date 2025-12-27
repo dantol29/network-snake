@@ -13,7 +13,7 @@ using TimePoint = std::chrono::time_point<Clock>;
 TimePoint lastMoveTime = Clock::now();
 TimePoint lastEatTime = Clock::now();
 
-Game::Game(int height, int width, const std::string& mapPath) : stopFlag(false) {
+Game::Game(int h, int w, const std::string& mapPath) : stopFlag(false) {
 
   try {
     if (mapPath.empty())
@@ -21,17 +21,16 @@ Game::Game(int height, int width, const std::string& mapPath) : stopFlag(false) 
 
     loadGameMap(mapPath);
   } catch (const char* err) {
-    std::cerr << err << std::endl;
-    std::cout << "Fallback to an empty map" << std::endl;
+    std::cerr << err << ": fallback to an empty map" << std::endl;
 
-    this->writableField.clear();
-    for (int i = 0; i < height; i++)
-      this->writableField.push_back(std::string(width, FLOOR_SYMBOL));
+    writableField.clear();
+    for (int i = 0; i < h; i++)
+      writableField.push_back(std::string(w, FLOOR_TILE));
   }
 
   updateReadableField();
-  this->height.store(writableField.size());
-  this->width.store(writableField[0].size());
+  height.store(writableField.size());
+  width.store(writableField[0].size());
 
   std::cout << "height: " << writableField.size() << ", width: " << writableField[0].size() << '\n';
   printField();
@@ -42,11 +41,11 @@ Game::Game(int height, int width, const std::string& mapPath) : stopFlag(false) 
 Game::~Game() {
   std::cout << "Game destr called" << std::endl;
 
-  for (auto it = this->snakes.begin(); it != this->snakes.end(); it++)
+  for (auto it = snakes.begin(); it != snakes.end(); it++)
     delete it->second;
 }
 
-void Game::stop() { this->stopFlag.store(true); }
+void Game::stop() { stopFlag.store(true); }
 
 void Game::loadGameMap(const std::string& mapFile) {
   std::ifstream file(mapFile);
@@ -55,6 +54,7 @@ void Game::loadGameMap(const std::string& mapFile) {
 
   int width = 0;
   std::string line;
+
   while (getline(file, line)) {
     if (!width)
       width = line.size();
@@ -80,11 +80,11 @@ void Game::start() {
   while (!stopFlag.load()) {
     auto now = Clock::now();
     if (now >= nextMoveTime) {
-      this->moveSnakes();
-      this->spawnFood();
+      moveSnakes();
+      spawnFood();
 
-      this->updateReadableField();
-      this->setIsDataUpdated(true);
+      updateReadableField();
+      setIsDataUpdated(true);
       nextMoveTime = now + std::chrono::milliseconds(SNAKE_SPEED);
     }
 
@@ -101,21 +101,23 @@ void Game::spawnFood() {
   for (int i = 0; i < MAX_FOOD_SPAWN_TRIES; i++) {
     int r1 = rand();
     int r2 = rand();
-    int x = r1 % (this->width - 1);
-    int y = r2 % (this->height - 1);
+    int x = r1 % (width - 1);
+    int y = r2 % (height - 1);
 
-    if (this->writableField[y][x] == FLOOR_SYMBOL) {
-      this->writableField[y][x] = 'F';
-      this->food.emplace_back(std::make_pair(x, y));
+    if (writableField[y][x] == FLOOR_TILE) {
+      writableField[y][x] = FOOD_TILE;
+      food.emplace_back(std::make_pair(x, y));
       return;
     }
   }
 }
 
 void Game::moveSnakes() {
-  std::lock_guard<std::mutex> lock(this->snakesMutex);
-  for (auto it = this->snakes.begin(); it != this->snakes.end();) {
-    it->second->moveSnake(&this->writableField);
+  std::lock_guard<std::mutex> lock(snakesMutex);
+
+  for (auto it = snakes.begin(); it != snakes.end();) {
+    it->second->moveSnake(&writableField);
+
     if (it->second->getState() == State_Dead) {
       it->second->cleanup(&writableField);
       delete it->second;
@@ -127,33 +129,34 @@ void Game::moveSnakes() {
 
 void Game::addSnake(int clientFd) {
   std::lock_guard<std::mutex> lock1(snakesMutex);
+
   Snake* newSnake = new Snake(this);
-  this->snakes[clientFd] = newSnake;
+  snakes[clientFd] = newSnake;
 }
 
 void Game::removeSnake(int fd) {
-  std::lock_guard<std::mutex> lock(this->snakesMutex);
+  std::lock_guard<std::mutex> lock(snakesMutex);
 
-  auto snake = this->snakes.find(fd);
-  if (snake != this->snakes.end() && snake->second) {
-    snake->second->cleanup(&this->writableField);
+  auto snake = snakes.find(fd);
+  if (snake != snakes.end() && snake->second) {
+    snake->second->cleanup(&writableField);
     delete snake->second;
-    this->snakes.erase(snake);
+    snakes.erase(snake);
   }
 }
 
 void Game::updateReadableField() {
-  std::lock_guard<std::mutex> lock(this->readableFieldMutex);
+  std::lock_guard<std::mutex> lock(readableFieldMutex);
 
-  this->readableField = this->writableField;
+  readableField = writableField;
 }
 
 void Game::updateSnakeDirection(int fd, int dir) {
-  std::lock_guard<std::mutex> lock(this->snakesMutex);
+  std::lock_guard<std::mutex> lock(snakesMutex);
 
-  auto it = this->snakes.find(fd);
-  if (it != this->snakes.end() && it->second)
-    this->snakes[fd]->setDirection(dir);
+  auto it = snakes.find(fd);
+  if (it != snakes.end() && it->second)
+    snakes[fd]->setDirection(dir);
 }
 
 void Game::removeFood(int x, int y) {
@@ -178,10 +181,11 @@ flatbuffers::Offset<Packet> Game::serializeGameData(flatbuffers::FlatBufferBuild
     for (auto pos : snake.second->getBody())
       bodyVec.emplace_back(Pos(pos.x, pos.y));
 
-    auto body = builder.CreateVectorOfStructs(bodyVec);
+    int id = snake.first;
+    int score = snake.second->getScore();
     auto state = snake.second->getState();
-    auto id = snake.first;
-    auto snakeObject = CreateSnakeObj(builder, id, state, body);
+    auto body = builder.CreateVectorOfStructs(bodyVec);
+    auto snakeObject = CreateSnakeObj(builder, id, score, state, body);
     snakesVec.emplace_back(snakeObject);
   }
 
@@ -209,9 +213,9 @@ flatbuffers::Offset<Packet> Game::serializeMapData(flatbuffers::FlatBufferBuilde
     tiles.reserve(row.size());
 
     for (char tile : row) {
-      if (tile == 'W')
+      if (tile == WALL_HORIZ_TILE)
         tiles.emplace_back(Tile_WallHorizontal);
-      else if (tile == 'V')
+      else if (tile == WALL_VERTI_TILE)
         tiles.emplace_back(Tile_WallVertical);
       else
         tiles.emplace_back(Tile_Empty);
@@ -226,36 +230,36 @@ flatbuffers::Offset<Packet> Game::serializeMapData(flatbuffers::FlatBufferBuilde
   return CreatePacket(builder, MsgType_Map, MsgUnion_MapData, mapData.Union());
 }
 
-void Game::setIsDataUpdated(bool value) { this->isDataUpdated.store(value); }
+void Game::setIsDataUpdated(bool value) { isDataUpdated.store(value); }
 
 State Game::getSnakeState(const int fd) {
-  auto it = this->snakes.find(fd);
-  if (it != this->snakes.end() && it->second)
+  auto it = snakes.find(fd);
+  if (it != snakes.end() && it->second)
     return it->second->getState();
 
   return State_Dead;
 }
 
-int Game::getHeight() const { return this->height.load(); }
+int Game::getHeight() const { return height.load(); }
 
-int Game::getWidth() const { return this->width.load(); }
+int Game::getWidth() const { return width.load(); }
 
-bool Game::getStopFlag() const { return this->stopFlag.load(); }
+bool Game::getStopFlag() const { return stopFlag.load(); }
 
-bool Game::getIsDataUpdated() const { return this->isDataUpdated.load(); }
+bool Game::getIsDataUpdated() const { return isDataUpdated.load(); }
 
 void Game::printField() {
-  std::lock_guard<std::mutex> lock(this->readableFieldMutex);
+  std::lock_guard<std::mutex> lock(readableFieldMutex);
 
-  printf("\n\n");
+  std::cout << "\n\n";
   for (size_t i = 0; i < readableField.size(); i++)
     printf("%3zu:%s\n", i, readableField[i].c_str());
-  printf("\n\n");
+  std::cout << "\n\n";
 }
 
 bool has_invalid_chars(const std::string& line) {
   for (char c : line) {
-    if (c != FLOOR_SYMBOL && c != 'W' && c != 'V' && c != 'F' && c != 'H' && c != 'B' && c != 'T')
+    if (c != FLOOR_TILE && c != WALL_HORIZ_TILE && c != WALL_VERTI_TILE)
       return true;
   }
   return false;
