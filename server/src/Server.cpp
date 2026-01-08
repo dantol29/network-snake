@@ -114,6 +114,8 @@ void Server::acceptNewConnection() {
 
     this->game->addSnake(clientFd);
 
+    std::cout << "Connected: " << clientFd << std::endl;
+
     sendMapData(clientFd);
   }
 }
@@ -209,13 +211,23 @@ void Server::receiveDataFromClient(const int fd) {
     socklen_t clientAddrLen = sizeof(clientAddr);
 
     int n = recvfrom(this->udpServerFd, readBuf, 2, 0, (sockaddr*)&clientAddr, &clientAddrLen);
-    if (n == 2)
-      game->updateSnakeDirection(this->addressToFd[clientAddr.sin_addr.s_addr], (int)readBuf[0]);
-    else
+    if (n != 2) {
       std::cout << "Failed to receive data from client" << std::endl;
+      return;
+    }
+
+    uint32_t ip = clientAddr.sin_addr.s_addr;
+
+    auto it = this->addressToFd.find(ip);
+    if (it == this->addressToFd.end())
+      return;
+
+    std::cout << "Received: " << it->second << std::endl;
+    game->updateSnakeDirection(this->addressToFd[it->second], (int)readBuf[0]);
     return;
   }
 
+  std::cout << "Closing connection" << std::endl;
   closeConnection(fd);
 }
 
