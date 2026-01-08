@@ -15,7 +15,7 @@ Snake::Snake(Game* game) : game(game), direction(UP), state(State_Idle), score(0
   body.push_back(c);
 }
 
-Snake::~Snake() { std::cout << "Snake destructor called" << std::endl; }
+Snake::~Snake() { std::cout << "Snake destructor" << std::endl; }
 
 void Snake::moveSnake(std::vector<std::string>* gameField) {
   auto currentHead = body.front();

@@ -4,17 +4,13 @@
 #include <fstream>
 
 #define MAX_FOOD_SPAWN_TRIES 50
+#define MAX_FOOD_COUNT 3
 
 bool has_invalid_chars(const std::string& line);
 
 using Clock = std::chrono::steady_clock;
-using TimePoint = std::chrono::time_point<Clock>;
-
-TimePoint lastMoveTime = Clock::now();
-TimePoint lastEatTime = Clock::now();
 
 Game::Game(int h, int w, const std::string& mapPath) : stopFlag(false) {
-
   try {
     if (mapPath.empty())
       throw "Map is not defined";
@@ -39,7 +35,7 @@ Game::Game(int h, int w, const std::string& mapPath) : stopFlag(false) {
 }
 
 Game::~Game() {
-  std::cout << "Game destr called" << std::endl;
+  std::cout << "Game destructor" << std::endl;
 
   for (auto it = snakes.begin(); it != snakes.end(); it++)
     delete it->second;
@@ -59,17 +55,23 @@ void Game::loadGameMap(const std::string& mapFile) {
     if (!width)
       width = line.size();
 
-    if (has_invalid_chars(line))
+    if (hasInvalidChars(line)) {
+      file.close();
       throw "Invalid characters";
+    }
 
-    if ((int)line.size() != width)
+    if ((int)line.size() != width) {
+      file.close();
       throw "Invalid line width";
+    }
 
     writableField.push_back(line);
   }
 
-  if (!file.eof())
+  if (!file.eof()) {
+    file.close();
     throw "Error reading assets file";
+  }
 
   file.close();
 }
@@ -95,7 +97,7 @@ void Game::start() {
 void Game::spawnFood() {
   std::lock_guard<std::mutex> lock(foodMutex);
 
-  if (food.size() > 2)
+  if (food.size() >= MAX_FOOD_COUNT)
     return;
 
   for (int i = 0; i < MAX_FOOD_SPAWN_TRIES; i++) {
@@ -257,7 +259,7 @@ void Game::printField() {
   std::cout << "\n\n";
 }
 
-bool has_invalid_chars(const std::string& line) {
+bool hasInvalidChars(const std::string& line) {
   for (char c : line) {
     if (c != FLOOR_TILE && c != WALL_HORIZ_TILE && c != WALL_VERTI_TILE)
       return true;
