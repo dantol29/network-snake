@@ -15,6 +15,10 @@ Client::Client()
       stopFlag(false) {}
 
 Client::~Client() {
+  closeSockets();
+}
+
+void Client::closeSockets() {
   close(this->tcpSocket);
   close(this->udpSocket);
   if (this->serverClientPipe[0] != -1)
@@ -93,6 +97,8 @@ void Client::start(const std::string& serverIP, bool isSinglePlayer) {
     mapDataBuffer.clear();
     gameDataBuffer.clear();
   }
+
+  closeSockets();
 }
 
 void readExact(int fd, uint8_t* buffer, size_t n) {

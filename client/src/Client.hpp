@@ -44,6 +44,7 @@ private:
   void startLocalServer();
   void stopLocalServer();
   void waitForServer(const std::string& serverIP);
+  void closeSockets();
 };
 
 #endif
