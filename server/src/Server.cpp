@@ -18,6 +18,9 @@ Server::~Server() {
   for (const auto client : connectedClients) {
     close(client.fd);
   }
+
+  close(this->tcpServerFd);
+  close(this->udpServerFd);
 }
 
 void Server::initConnections() {
@@ -223,7 +226,7 @@ void Server::receiveDataFromClient(const int fd) {
       return;
 
     std::cout << "Received: " << it->second << std::endl;
-    game->updateSnakeDirection(this->addressToFd[it->second], (int)readBuf[0]);
+    game->updateSnakeDirection(it->second, (int)readBuf[0]);
     return;
   }
 

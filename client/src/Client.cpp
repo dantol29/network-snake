@@ -15,12 +15,9 @@ Client::Client()
       stopFlag(false) {}
 
 Client::~Client() {
-  closeSockets();
-}
-
-void Client::closeSockets() {
-  close(this->tcpSocket);
-  close(this->udpSocket);
+  if (this->localServerPid > 0) 
+    this->stopLocalServer();
+  
   if (this->serverClientPipe[0] != -1)
     close(this->serverClientPipe[0]);
   if (this->serverClientPipe[1] != -1)
@@ -29,6 +26,13 @@ void Client::closeSockets() {
     close(this->clientServerPipe[0]);
   if (this->clientServerPipe[1] != -1)
     close(this->clientServerPipe[1]);
+
+  closeSockets();
+}
+
+void Client::closeSockets() {
+  close(this->tcpSocket);
+  close(this->udpSocket);
 }
 
 void Client::initConnections(const std::string& serverIP) {
@@ -58,7 +62,7 @@ void Client::start(const std::string& serverIP, bool isSinglePlayer) {
   try {
     this->stopFlag.store(false);
 
-    if (isSinglePlayer) {
+    if (isSinglePlayer && !this->localServerPid) {
       this->startLocalServer();
       this->waitForServer(serverIP);
     }
@@ -83,10 +87,6 @@ void Client::start(const std::string& serverIP, bool isSinglePlayer) {
   }
 
   this->stopFlag.store(true);
-
-  if (isSinglePlayer) {
-    this->stopLocalServer();
-  }
 
   std::cout << "Client has stopped" << std::endl;
   {
@@ -182,21 +182,14 @@ std::mutex& Client::getMapDataMutex() { return this->mapDataMutex; }
 int Client::getStopFlag() const { return this->stopFlag.load(); }
 
 void Client::startLocalServer() {
-  if (pipe(this->serverClientPipe) == -1) {
+  if (pipe(this->serverClientPipe) == -1)
     throw "Failed to create server-client pipe";
-  }
-  if (pipe(this->clientServerPipe) == -1) {
-    close(this->serverClientPipe[0]);
-    close(this->serverClientPipe[1]);
+
+  if (pipe(this->clientServerPipe) == -1)
     throw "Failed to create client-server pipe";
-  }
 
   pid_t pid = fork();
   if (pid < 0) {
-    close(this->serverClientPipe[0]);
-    close(this->serverClientPipe[1]);
-    close(this->clientServerPipe[0]);
-    close(this->clientServerPipe[1]);
     throw "Failed to fork local server process";
   } else if (pid == 0) {
     close(this->serverClientPipe[0]);
@@ -227,10 +220,7 @@ void Client::startLocalServer() {
     int status;
     pid_t waited = waitpid(pid, &status, WNOHANG);
     if (waited == pid && WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-      // TODO: Read error from serverClientPipe[0] and show user-friendly error
-      // in GUI
-      close(this->serverClientPipe[0]);
-      close(this->clientServerPipe[1]);
+      // TODO: Read error from serverClientPipe[0]
       throw "Local server failed to start";
     }
 
