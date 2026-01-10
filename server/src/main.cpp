@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
   if (height < 10 || width < 10 || height > 100 || width > 100)
     onerror("Invalid size");
 
-  std::string mapPath = argc == 4 ? argv[3] : nullptr;
+  std::string mapPath = argc == 4 ? argv[3] : "";
 
   Game* game = new Game(height, width, mapPath);
   Server* server = new Server(game);

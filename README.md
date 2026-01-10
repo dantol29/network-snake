@@ -2,7 +2,7 @@ fo# A multiplayer snake game built in C++ with real-time networking capabilities
 
 ## How to play (compatible with macOS and Linux)?
 
-`./start.sh`
+`make`
 
 ## Client-server architecture
 Server
@@ -13,7 +13,7 @@ Client
 
 ## Features
 
-- Runtime Dynamic Graphics Library Switching (`GLFW`, `SFML`, ...)
+- Runtime Dynamic Graphics Library Switching (`RAYLIB`, `SFML`and `SDL3`)
 - Dual-Protocol Network Stack (`TCP` for client auth and game state, `UDP` for low-latency position updates)
 - Non-blocking network operations with `poll`
 - Multi-Threaded Game Loop (Separated server and game logic)
