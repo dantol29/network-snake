@@ -225,7 +225,6 @@ void Server::receiveDataFromClient(const int fd) {
     if (it == this->addressToFd.end())
       return;
 
-    std::cout << "Received: " << it->second << std::endl;
     game->updateSnakeDirection(it->second, (int)readBuf[0]);
     return;
   }

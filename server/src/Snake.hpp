@@ -24,6 +24,7 @@ private:
   Game* game;
   std::list<t_coordinates> body;
   enum e_direction direction;
+  bool isDirectionSet;
   State state;
   int score;
 

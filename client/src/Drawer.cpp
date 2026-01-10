@@ -6,7 +6,7 @@
 #define SCREEN_HEIGHT 1000
 
 Drawer::Drawer(Client* client)
-    : client(client), switchLibPath("../libs/lib2/lib2"),
+    : client(client), switchLibPath("../libs/lib3/lib3"),
       multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
       singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
   tileSize = SCREEN_HEIGHT / 40;

@@ -1,7 +1,7 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(Game* game) : game(game), direction(UP), state(State_Idle), score(0) {
+Snake::Snake(Game* game) : game(game), direction(UP), isDirectionSet(false), state(State_Idle), score(0) {
   t_coordinates c;
 
   c.x = game->getWidth() / 2;
@@ -43,6 +43,8 @@ void Snake::moveSnake(std::vector<std::string>* gameField) {
 
   (*gameField)[currentHead.y][currentHead.x] = HEAD_TILE;
   (*gameField)[currentTail.y][currentTail.x] = TAIL_TILE;
+
+  isDirectionSet = false;
 }
 
 t_coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::string>* gameField) {
@@ -83,6 +85,9 @@ void Snake::setDirection(const int newDir) {
   if (state == State_Idle)
     state = State_Alive;
 
+  if (isDirectionSet)
+	return;
+
   enum e_direction dir = (enum e_direction)newDir;
   if ((dir == UP || dir == DOWN) && (direction == DOWN || direction == UP))
     return;
@@ -90,6 +95,8 @@ void Snake::setDirection(const int newDir) {
     return;
 
   direction = dir;
+  isDirectionSet = true;
+  std::cout << "Received " << std::endl;
 }
 
 void Snake::cleanup(std::vector<std::string>* gameField) {
