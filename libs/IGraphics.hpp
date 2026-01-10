@@ -2,9 +2,11 @@
 #define IGRAPHICS_HPP
 
 #include <algorithm>
-#include <map>
+#include <unordered_map>
+#include <string>
+#include <cstdint>
 
-enum type {
+enum event_type {
   CLOSED,
   RESIZED,
   FOCUS_LOST,
@@ -23,7 +25,7 @@ enum type {
 };
 
 typedef struct s_event {
-  type type;
+  event_type type;
   union {
     int keyCode;
     struct {

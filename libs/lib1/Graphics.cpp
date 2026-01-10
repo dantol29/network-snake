@@ -3,9 +3,9 @@
 #include <iostream>
 
 Graphics::Graphics(unsigned int height, unsigned int width) : IGraphics(height, width) {
+  SetTraceLogLevel(LOG_WARNING);
   InitWindow((int)width, (int)height, "raylib");
   SetTargetFPS(60);
-  SetTraceLogLevel(LOG_NONE);
 
   this->windowWidth = (float)GetScreenWidth();
   this->windowHeight = (float)GetScreenHeight();
@@ -18,8 +18,8 @@ Graphics::~Graphics() {
   for (auto asset : assets)
     UnloadTexture(asset.second);
 
-  if (!WindowShouldClose())
-    CloseWindow();
+  CloseWindow();
+  std::cout << "Destructor RAYLIB 2" << std::endl;
 }
 
 void Graphics::loadAssets(const char** paths) {

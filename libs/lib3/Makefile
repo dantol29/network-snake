@@ -6,7 +6,7 @@ ifeq ($(UNAME_S),Darwin)
     LIB_EXT  = .dylib
 else
     NAME     = lib3.so
-    SOFLAGS  = -shared -Wl,-rpath,'$$ORIGIN'
+	SOFLAGS  = -shared -Wl,-rpath,'$$ORIGIN:$(abspath $(SDL_LIBDIR))'
     LIB_EXT  = .so
 endif
 

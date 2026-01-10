@@ -37,10 +37,13 @@ Drawer::Drawer(Client* client)
 
 Drawer::~Drawer() {
   delete eventManager;
+  this->stopClient();
   this->closeDynamicLib();
 
   for (int i = 0; assets[i]; ++i)
     free(assets[i]);
+
+  std::cout << "Drawer destructor" << std::endl;
 }
 
 void Drawer::loadDynamicLibrary(const std::string& lib) {
@@ -76,6 +79,7 @@ void Drawer::closeDynamicLib() {
     this->window = nullptr;
   }
   if (this->dynamicLibrary) {
+	std::cout << "Closing dynamic lib" << std::endl;
     dlclose(this->dynamicLibrary);
     this->dynamicLibrary = nullptr;
   }
@@ -99,8 +103,10 @@ void Drawer::start() {
         this->beginFrame(this->window);
 
         t_event event = this->checkEvents(this->window);
-        if (event.type == CLOSED)
-          gameRunning = false;
+        if (event.type == CLOSED) {
+			gameRunning = false;
+			break;
+		}
         else if (event.type != EMPTY) {
           eventManager->HandleEvent(event);
           eventManager->Update();
@@ -119,9 +125,10 @@ void Drawer::start() {
         break;
     }
   } catch (const char* msg) {
-    std::cerr << msg << std::endl;
+    std::cerr << msg << ": " << std::endl;
   }
 
+  std::cout << "Exiting drawer" << std::endl;
   stopClient();
 }
 
@@ -389,24 +396,27 @@ void Drawer::setTailFrame() {
 }
 
 void Drawer::stopClient() {
+  if (!this->clientThread.joinable()) {
+	std::cout << "Client is not running" << std::endl;
+	return;
+  }
+    
   this->client->setStopFlag(true);
-
-  if (this->clientThread.joinable())
-    this->clientThread.join();
-
+  this->clientThread.join();
   eventManager->SetCurrentState(StateType::Menu);
 }
 
 void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
-  const std::string mode = isSinglePlayer ? "Single-player" : "Multiplayer";
-  std::cout << mode << " mode selected" << '\n';
-
-  if (!this->clientThread.joinable()) {
-    this->eventManager->SetCurrentState(StateType::Game);
-    this->client->setStopFlag(false);
-    this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
-    eventManager->SetCurrentState(StateType::Game);
+  if (this->clientThread.joinable()) {
+	std::cout << "Client already running" << std::endl;
+	return;
   }
+  
+  const std::string mode = isSinglePlayer ? "Single-player" : "Multiplayer";
+  
+  this->client->setStopFlag(false);
+  this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
+  this->eventManager->SetCurrentState(StateType::Game);
 }
 
 void Drawer::MoveUp(t_event* details) {

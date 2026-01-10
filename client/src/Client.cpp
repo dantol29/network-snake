@@ -11,7 +11,7 @@
 #define SERVER_PORT 8080
 
 Client::Client()
-    : localServerPid(0), serverClientPipe{-1, -1}, clientServerPipe{-1, -1}, gameData(nullptr),
+    : tcpSocket(-1), udpSocket(-1), localServerPid(0), serverClientPipe{-1, -1}, clientServerPipe{-1, -1}, gameData(nullptr),
       stopFlag(false) {}
 
 Client::~Client() {
@@ -28,11 +28,17 @@ Client::~Client() {
     close(this->clientServerPipe[1]);
 
   closeSockets();
+  std::cout << "Client destructor" << std::endl;
 }
 
 void Client::closeSockets() {
-  close(this->tcpSocket);
-  close(this->udpSocket);
+  if (this->tcpSocket != -1)
+  	close(this->tcpSocket);
+  if (this->udpSocket != -1)
+  	close(this->udpSocket);
+
+  this->tcpSocket = -1;
+  this->udpSocket = -1;
 }
 
 void Client::initConnections(const std::string& serverIP) {
@@ -77,12 +83,10 @@ void Client::start(const std::string& serverIP, bool isSinglePlayer) {
         throw "Stop flag is set";
     }
   } catch (const char* msg) {
-    // TODO: Show errors in game UI instead of just logging to stderr - display
-    // user-friendly messages on screen and return to menu
+    // TODO: Show errors in game UI
     std::cerr << msg << std::endl;
   } catch (const std::string& msg) {
-    // TODO: Show errors in game UI instead of just logging to stderr - display
-    // user-friendly messages on screen and return to menu
+    // TODO: Show errors in game UI
     std::cerr << msg << std::endl;
   }
 
@@ -169,6 +173,8 @@ void Client::sendDirection(const enum actions newDirection) const {
     std::cout << "Error sending!" << std::endl;
 }
 
+void Client::setStopFlag(bool value) { this->stopFlag.store(value); }
+
 /// GETTERS
 
 const GameData* Client::getGameData() const { return this->gameData; }
@@ -250,8 +256,6 @@ void Client::stopLocalServer() {
     this->localServerPid = 0;
   }
 }
-
-void Client::setStopFlag(bool value) { this->stopFlag.store(value); }
 
 void Client::waitForServer(const std::string& serverIP) {
   const int maxRetries = 20;

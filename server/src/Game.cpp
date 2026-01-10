@@ -6,7 +6,7 @@
 #define MAX_FOOD_SPAWN_TRIES 50
 #define MAX_FOOD_COUNT 3
 
-bool has_invalid_chars(const std::string& line);
+bool hasInvalidChars(const std::string& line);
 
 using Clock = std::chrono::steady_clock;
 
