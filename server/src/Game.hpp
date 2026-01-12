@@ -13,6 +13,8 @@ public:
   Game(int height, int width, const std::string& mapPath);
   Game(const Game& obj) = delete;
   Game& operator=(const Game& obj) = delete;
+  Game(Game&& obj) = delete;
+  Game& operator=(Game&& obj) = delete;
   ~Game();
 
   void start();

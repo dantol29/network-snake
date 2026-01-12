@@ -9,6 +9,10 @@ class Game;
 class Snake {
 public:
   Snake(Game* game);
+  Snake(const Snake& obj) = delete;
+  Snake& operator=(const Snake& obj) = delete;
+  Snake(Snake&& obj) = delete;
+  Snake& operator=(Snake&& obj) = delete;
   ~Snake();
 
   void moveSnake(std::vector<std::string>* gameField);
