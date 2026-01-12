@@ -7,14 +7,30 @@ void onerror(const char* msg) {
   exit(EXIT_FAILURE);
 }
 
+bool isValidNumber(const char* str) {
+  if (!str || *str == '\0')
+    return false;
+  for (int i = 0; str[i]; i++) {
+    if (str[i] < '0' || str[i] > '9')
+      return false;
+  }
+  return true;
+}
+
 int main(int argc, char** argv) {
   if (argc < 3)
-    onerror("Usage: ./nibbler_server height width");
+    onerror("Usage: ./nibbler_server height width [map]\n");
+
+  if (!isValidNumber(argv[1]) || !isValidNumber(argv[2]))
+    onerror("Error: Height and width must be positive numbers\n");
 
   int height = atoi(argv[1]);
   int width = atoi(argv[2]);
-  if (height < 10 || width < 10 || height > 100 || width > 100)
-    onerror("Invalid size");
+  
+  if (height < 10 || width < 10)
+    onerror("Error: Height and width must be at least 10\n");
+  if (height > 100 || width > 100)
+    onerror("Error: Height and width must not exceed 100\n");
 
   std::string mapPath = argc == 4 ? argv[3] : "";
 
