@@ -1,18 +1,23 @@
 #include "Drawer.hpp"
-#include "EventManager.hpp"
 #include <fstream>
 
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 1000
+#define DEFAULT_LIB "../libs/lib3/lib3"
+#define TAIL_ANIM_SPEED 200
 
 Drawer::Drawer(Client* client)
-    : client(client), switchLibPath("../libs/lib3/lib3"),
+    : client(client), switchLibPath(DEFAULT_LIB),
       multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
       singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
   tileSize = SCREEN_HEIGHT / 40;
-  tailFrame = std::make_pair(1, "assets/tail.png");
   readAssets();
 
+  animationManager = new AnimationManager();
+
+  const std::vector<std::string> sprites = {"assets/tail.png", "assets/tail2.png", "assets/tail3.png"};
+  animationManager->addAnimation("tail", sprites, TAIL_ANIM_SPEED);
+  
   eventManager = new EventManager();
   eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
   eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
@@ -36,7 +41,11 @@ Drawer::Drawer(Client* client)
 }
 
 Drawer::~Drawer() {
-  delete eventManager;
+  if (eventManager)
+  	delete eventManager;
+  if (animationManager)
+	delete animationManager;
+
   this->stopClient();
   this->closeDynamicLib();
 
@@ -202,14 +211,15 @@ void Drawer::drawGame() {
     const MapData* mapData = client->getMapData();
     if (!mapData)
       return;
-
-    int playerId = mapData->player_id();
-
-    drawMap(mapData);
+  
+	animationManager->onFrame();
+	  
+	int playerId = mapData->player_id();
+    
+	drawMap(mapData);
     drawFood(gameData);
     drawSnakes(gameData);
     drawUI(gameData, playerId);
-    setTailFrame();
 
     for (auto it = gameData->snakes()->begin(); it != gameData->snakes()->end(); ++it) {
       if (it->id() == playerId) {
@@ -239,8 +249,11 @@ void Drawer::drawSnakes(const GameData* gameData) {
       std::string texture = "assets/body.png";
       if (part == body->begin())
         texture = "assets/head.png";
-      else if (nextPart == body->end())
-        texture = tailFrame.second;
+      else if (nextPart == body->end()) {
+		auto anim = animationManager->getAnimationSprite("tail");
+		if (anim)
+			texture = *anim;
+	  }
       else {
         int cr = cornerPartRotation((part - 1)->x(), (part - 1)->y(), nextPart->x(), nextPart->y());
         if (cr) {
@@ -374,26 +387,6 @@ std::pair<std::string, int> Drawer::getWallTexture(int x, int y, const MapData* 
                                                            : std::make_pair("assets/wall.png", 0);
 }
 
-// TODO: refactor using AnimationManager :)
-void Drawer::setTailFrame() {
-  static auto lastReadTime = std::chrono::steady_clock::now();
-
-  auto currentTime = std::chrono::steady_clock::now();
-  auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - lastReadTime).count();
-
-  if (elapsed > 200) {
-    if (tailFrame.first == 1) {
-      tailFrame = std::make_pair(2, "assets/tail2.png");
-    } else if (tailFrame.first == 2) {
-      tailFrame = std::make_pair(3, "assets/tail.png");
-    } else if (tailFrame.first == 3) {
-      tailFrame = std::make_pair(4, "assets/tail3.png");
-    } else if (tailFrame.first == 4) {
-      tailFrame = std::make_pair(1, "assets/tail.png");
-    }
-    lastReadTime = currentTime;
-  }
-}
 
 void Drawer::stopClient() {
   if (!this->clientThread.joinable()) {

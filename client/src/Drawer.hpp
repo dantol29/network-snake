@@ -4,6 +4,7 @@
 #include "../includes/nibbler.hpp"
 #include "Client.hpp"
 #include "EventManager.hpp"
+#include "AnimationManager.hpp"
 
 struct Button {
   float x;
@@ -28,6 +29,8 @@ public:
 private:
   Client* client;
   EventManager* eventManager;
+  AnimationManager* animationManager;
+
   std::vector<char*> assets;
   void* dynamicLibrary = nullptr;
   void* window = nullptr;
@@ -37,7 +40,6 @@ private:
   std::thread clientThread;
   const Button multiplayerButton;
   const Button singlePlayerButton;
-  std::pair<int, std::string> tailFrame;
 
   initFunc init;
   checkEventsFunc checkEvents;
@@ -56,7 +58,6 @@ private:
   void closeDynamicLib();
   void loadDynamicLibrary(const std::string& lib);
   void readAssets();
-  void setTailFrame();
   void drawGame();
   void drawMenu();
   void drawUI(const GameData* gameData, int playerId);
