@@ -50,11 +50,10 @@ $(CMAKE_BIN):
 		ln -sf $$(which cmake) $(CMAKE_BIN); \
 	else \
 		echo "CMake not found or too old, downloading $(CMAKE_VERSION)..."; \
-		if [ ! -d "$(CMAKE_HOME)" ]; then \
-			curl -fL -o $(CMAKE_ARCHIVE) $(CMAKE_URL); \
-			tar -xzf $(CMAKE_ARCHIVE) -C $(HOME); \
-			rm -f $(CMAKE_ARCHIVE); \
-		fi; \
+		rm -rf $(CMAKE_HOME); \
+		curl -fL -o $(CMAKE_ARCHIVE) $(CMAKE_URL); \
+		tar -xzf $(CMAKE_ARCHIVE) -C $(HOME); \
+		rm -f $(CMAKE_ARCHIVE); \
 		echo "CMake ready at $(CMAKE_BIN)"; \
 	fi
 
