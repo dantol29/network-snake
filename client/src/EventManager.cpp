@@ -2,6 +2,12 @@
 #include <fstream>
 #include <sstream>
 
+EventState::EventState(const std::string& name) : name_(name), matchedEvents_(0) {}
+
+void EventState::AddEvent(EventType type, EventCode code) {
+  events_.emplace_back(type, code);
+}
+
 EventManager::EventManager() : has_focus_(true), current_state_(StateType::Global) {
   LoadTargetEventBindings();
 }

@@ -1,6 +1,6 @@
 NAME = nibbler_server
 CC = c++
-CFLAGS = -g -Wall -Wextra -std=c++17
+CFLAGS = -g -Wall -Wextra -Werror -std=c++17
 FSANITIZE = -fsanitize=address
 
 INCLUDES = -I./includes -I../flatbuffers/include

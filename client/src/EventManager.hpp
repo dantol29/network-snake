@@ -36,9 +36,9 @@ using CallbackContainer = std::unordered_map<std::string, std::function<void(t_e
 using Callbacks = std::unordered_map<StateType, CallbackContainer>;
 
 struct EventState {
-  EventState(const std::string& name) : name_(name), matchedEvents_(0) {}
+  EventState(const std::string& name);
 
-  void AddEvent(EventType type, EventCode code) { events_.emplace_back(type, code); }
+  void AddEvent(EventType type, EventCode code);
 
   Events events_;
   std::string name_;
