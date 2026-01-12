@@ -44,12 +44,12 @@ flatbuffers-gen: $(FLATC)
 
 # Bootstrap CMake if not already present
 $(CMAKE_BIN):
-	@if which cmake > /dev/null 2>&1; then \
-		echo "CMake found, using system cmake"; \
+	@if which cmake > /dev/null 2>&1 && cmake --version | grep -qE 'version (3\.(2[8-9]|[3-9][0-9])|[4-9]\.)'; then \
+		echo "CMake found (≥3.28), using system cmake"; \
 		mkdir -p $(dir $(CMAKE_BIN)); \
 		ln -sf $$(which cmake) $(CMAKE_BIN); \
 	else \
-		echo "CMake not found, downloading $(CMAKE_VERSION)..."; \
+		echo "CMake not found or too old, downloading $(CMAKE_VERSION)..."; \
 		if [ ! -d "$(CMAKE_HOME)" ]; then \
 			curl -fL -o $(CMAKE_ARCHIVE) $(CMAKE_URL); \
 			tar -xzf $(CMAKE_ARCHIVE) -C $(HOME); \
