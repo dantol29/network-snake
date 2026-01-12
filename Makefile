@@ -46,6 +46,7 @@ flatbuffers-gen: $(FLATC)
 $(CMAKE_BIN):
 	@if which cmake > /dev/null 2>&1; then \
 		echo "CMake found, using system cmake"; \
+		mkdir -p $(dir $(CMAKE_BIN)); \
 		ln -sf $$(which cmake) $(CMAKE_BIN); \
 	else \
 		echo "CMake not found, downloading $(CMAKE_VERSION)..."; \
