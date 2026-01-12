@@ -18,6 +18,8 @@ public:
 	AnimationManager();
 	AnimationManager(const AnimationManager& m) = delete;
 	AnimationManager& operator=(const AnimationManager& m) = delete;
+	AnimationManager(AnimationManager&& m) = delete;
+	AnimationManager& operator=(AnimationManager&& m) = delete;
 	~AnimationManager();
 
 

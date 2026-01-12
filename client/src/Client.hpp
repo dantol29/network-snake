@@ -8,6 +8,8 @@ public:
   Client();
   Client(const Client& obj) = delete;
   Client& operator=(const Client& obj) = delete;
+  Client(Client&& obj) = delete;
+  Client& operator=(Client&& obj) = delete;
   ~Client();
 
   void start(const std::string& serverIP, bool isSinglePlayer = false);

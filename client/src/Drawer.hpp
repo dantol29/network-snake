@@ -22,6 +22,8 @@ public:
   Drawer(Client* client);
   Drawer(const Drawer& obj) = delete;
   Drawer& operator=(const Drawer& obj) = delete;
+  Drawer(Drawer&& obj) = delete;
+  Drawer& operator=(Drawer&& obj) = delete;
   ~Drawer();
 
   void start();
