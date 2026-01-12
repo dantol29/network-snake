@@ -44,14 +44,18 @@ flatbuffers-gen: $(FLATC)
 
 # Bootstrap CMake if not already present
 $(CMAKE_BIN):
-	@echo "Bootstrapping CMake $(CMAKE_VERSION) for $(UNAME_S)..."
-	@if [ ! -d "$(CMAKE_HOME)" ]; then \
-		echo "Downloading $(CMAKE_URL)"; \
-		curl -fL -o $(CMAKE_ARCHIVE) $(CMAKE_URL); \
-		tar -xzf $(CMAKE_ARCHIVE) -C $(HOME); \
-		rm -f $(CMAKE_ARCHIVE); \
+	@if which cmake > /dev/null 2>&1; then \
+		echo "CMake found, using system cmake"; \
+		ln -sf $$(which cmake) $(CMAKE_BIN); \
+	else \
+		echo "CMake not found, downloading $(CMAKE_VERSION)..."; \
+		if [ ! -d "$(CMAKE_HOME)" ]; then \
+			curl -fL -o $(CMAKE_ARCHIVE) $(CMAKE_URL); \
+			tar -xzf $(CMAKE_ARCHIVE) -C $(HOME); \
+			rm -f $(CMAKE_ARCHIVE); \
+		fi; \
+		echo "CMake ready at $(CMAKE_BIN)"; \
 	fi
-	@echo "CMake ready at $(CMAKE_BIN)"
 
 
 # Export CMAKE for child Makefiles (will be used by lib Makefiles via CMAKE ?= cmake)
