@@ -58,8 +58,11 @@ Drawer::~Drawer() {
 void Drawer::loadDynamicLibrary(const std::string& lib) {
   std::string libPath = lib + LIB_EXTENSION;
   this->dynamicLibrary = dlopen(libPath.c_str(), RTLD_LAZY);
-  if (!this->dynamicLibrary)
+  if (!this->dynamicLibrary) {
+    std::cerr << "Error: Failed to load dynamic library: " << libPath << std::endl;
+    std::cerr << "Reason: " << dlerror() << std::endl;
     throw "Failed to load dynlib";
+  }
 
   dlerror(); // clean errors
 
@@ -74,12 +77,17 @@ void Drawer::loadDynamicLibrary(const std::string& lib) {
   this->checkEvents = (checkEventsFunc)dlsym(this->dynamicLibrary, "checkEvents");
 
   char* error = dlerror(); // check dlsym calls
-  if (error != NULL)
+  if (error != NULL) {
+    std::cerr << "Error: Failed to find required functions in library" << std::endl;
+    std::cerr << "Reason: " << error << std::endl;
     throw "Failed to find functions in dynlib";
+  }
 
   if (!this->init || !this->cleanup || !this->drawAsset || !this->drawButton || !this->drawText ||
-      !this->loadAssets || !this->endFrame || !this->beginFrame || !this->checkEvents)
+      !this->loadAssets || !this->endFrame || !this->beginFrame || !this->checkEvents) {
+    std::cerr << "Error: Library is missing required functions" << std::endl;
     throw "Failed to init dynlib functions";
+  }
 }
 
 void Drawer::closeDynamicLib() {
