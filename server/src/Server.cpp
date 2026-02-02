@@ -1,12 +1,11 @@
 #include "Server.hpp"
 #include <sys/uio.h>
 
-#define SERV_PORT 8080
-#define MAX_CLIENT_CONNECTIONS 10
-#define NON_BLOCKING 0
-#define BLOCKING -1
+constexpr int SERV_PORT = 8080;
+constexpr int MAX_CLIENT_CONNECTIONS = 10;
+constexpr int BLOCKING = -1;
 
-Server::Server(Game* game) : game(game) {}
+Server::Server(std::shared_ptr<Game>& game) : game(game) {}
 
 void Server::setupSocket(int socket) {
   int flag = 1; // Disable Nagle's Algorithm

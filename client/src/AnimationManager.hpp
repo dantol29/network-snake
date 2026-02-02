@@ -5,6 +5,7 @@
 #include <chrono>
 #include <optional>
 #include <iostream>
+#include <initializer_list>
 
 struct Animation {
 	std::vector<std::string> sprites;
@@ -25,7 +26,7 @@ public:
 
 	void onFrame();
 	std::optional<std::string> getAnimationSprite(const std::string &name);
-	void addAnimation(const std::string &name, const std::vector<std::string> &sprites, size_t delay);
+	void addAnimation(const std::string &name, std::initializer_list<std::string> sprites, size_t delay);
 private:
 	void animate(Animation &anim);
 	std::unordered_map<std::string, Animation> animations;

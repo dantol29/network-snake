@@ -6,18 +6,19 @@
 #include <thread>
 #include <unistd.h>
 
-#define BLOCKING -1
-#define POLL_TIMEOUT_MS 10
-#define SERVER_PORT 8080
+constexpr int BLOCKING = -1;
+constexpr int SERVER_PORT = 8080;
+
+void closeSocket(int fd) { close(fd); }
 
 Client::Client()
-    : tcpSocket(-1), udpSocket(-1), localServerPid(0), serverClientPipe{-1, -1}, clientServerPipe{-1, -1}, gameData(nullptr),
+    : localServerPid(0), serverClientPipe{-1, -1}, clientServerPipe{-1, -1}, gameData(nullptr),
       stopFlag(false) {}
 
 Client::~Client() {
-  if (this->localServerPid > 0) 
+  if (this->localServerPid > 0)
     this->stopLocalServer();
-  
+
   if (this->serverClientPipe[0] != -1)
     close(this->serverClientPipe[0]);
   if (this->serverClientPipe[1] != -1)
@@ -33,9 +34,9 @@ Client::~Client() {
 
 void Client::closeSockets() {
   if (this->tcpSocket != -1)
-  	close(this->tcpSocket);
+    close(this->tcpSocket);
   if (this->udpSocket != -1)
-  	close(this->udpSocket);
+    close(this->udpSocket);
 
   this->tcpSocket = -1;
   this->udpSocket = -1;
@@ -164,7 +165,7 @@ void Client::saveData(const uint8_t* data, size_t size) {
 
 void Client::sendDirection(const enum actions newDirection) const {
   char writeBuf[2];
-  writeBuf[0] = newDirection;
+  writeBuf[0] = static_cast<int>(newDirection);
   writeBuf[1] = '\0';
 
   int bytesSent =
@@ -215,7 +216,7 @@ void Client::startLocalServer() {
 
     chdir("../server");
     if (execl("./nibbler_server", "nibbler_server", std::to_string(DEFAULT_GAME_HEIGHT).c_str(),
-        std::to_string(DEFAULT_GAME_WIDTH).c_str(), (char*)nullptr) == -1) {
+              std::to_string(DEFAULT_GAME_WIDTH).c_str(), (char*)nullptr) == -1) {
       std::cerr << "Failed to execute local server: " << strerror(errno) << std::endl;
       exit(EXIT_FAILURE);
     }

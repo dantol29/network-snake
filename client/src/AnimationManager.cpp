@@ -4,7 +4,7 @@ AnimationManager::AnimationManager() {}
 
 AnimationManager::~AnimationManager() {}
 
-void AnimationManager::addAnimation(const std::string &name, const std::vector<std::string> &sprites, size_t delay) {
+void AnimationManager::addAnimation(const std::string &name, std::initializer_list<std::string> sprites, size_t delay) {
 	auto animation = animations.find(name);
 	if (animation != animations.end())
 		return;

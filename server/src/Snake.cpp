@@ -1,7 +1,8 @@
 #include "Snake.hpp"
 #include "Game.hpp"
 
-Snake::Snake(Game* game) : game(game), direction(UP), isDirectionSet(false), state(State_Idle), score(0) {
+Snake::Snake(Game* game)
+    : game(game), direction(e_direction::UP), isDirectionSet(false), state(State_Idle), score(0) {
   t_coordinates c;
 
   c.x = game->getWidth() / 2;
@@ -49,25 +50,25 @@ void Snake::moveSnake(std::vector<std::string>* gameField) {
 
 t_coordinates Snake::moveHead(int currentX, int currentY, std::vector<std::string>* gameField) {
   switch (direction) {
-  case UP:
+  case e_direction::UP:
     if (currentY > 0)
       currentY -= 1;
     else
       state = State_Dead;
     break;
-  case DOWN:
+  case e_direction::DOWN:
     if (currentY < game->getHeight() - 1)
       currentY += 1;
     else
       state = State_Dead;
     break;
-  case LEFT:
+  case e_direction::LEFT:
     if (currentX > 0)
       currentX -= 1;
     else
       state = State_Dead;
     break;
-  case RIGHT:
+  case e_direction::RIGHT:
     if (currentX < game->getWidth() - 1)
       currentX += 1;
     else
@@ -86,12 +87,14 @@ void Snake::setDirection(const int newDir) {
     state = State_Alive;
 
   if (isDirectionSet)
-	return;
+    return;
 
   enum e_direction dir = (enum e_direction)newDir;
-  if ((dir == UP || dir == DOWN) && (direction == DOWN || direction == UP))
+  if ((dir == e_direction::UP || dir == e_direction::DOWN) &&
+      (direction == e_direction::DOWN || direction == e_direction::UP))
     return;
-  if ((dir == RIGHT || dir == LEFT) && (direction == RIGHT || direction == LEFT))
+  if ((dir == e_direction::RIGHT || dir == e_direction::LEFT) &&
+      (direction == e_direction::RIGHT || direction == e_direction::LEFT))
     return;
 
   direction = dir;

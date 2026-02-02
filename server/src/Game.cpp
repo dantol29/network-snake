@@ -3,10 +3,8 @@
 #include <chrono>
 #include <fstream>
 
-#define MAX_FOOD_SPAWN_TRIES 50
-#define MAX_FOOD_COUNT 3
-
-bool hasInvalidChars(const std::string& line);
+constexpr int MAX_FOOD_SPAWN_TRIES = 50;
+constexpr int MAX_FOOD_COUNT = 3;
 
 using Clock = std::chrono::steady_clock;
 

@@ -1,24 +1,22 @@
 #include "Drawer.hpp"
 #include <fstream>
 
-#define SCREEN_WIDTH 1000
-#define SCREEN_HEIGHT 1000
-#define DEFAULT_LIB "../libs/lib3/lib3"
-#define TAIL_ANIM_SPEED 200
+constexpr int SCREEN_WIDTH = 1000;
+constexpr int SCREEN_HEIGHT = 1000;
+constexpr int TAIL_ANIM_SPEED = 200;
+constexpr const char* DEFAULT_LIB = "../libs/lib3/lib3";
 
-Drawer::Drawer(Client* client)
-    : client(client), switchLibPath(DEFAULT_LIB),
-      multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
+Drawer::Drawer(std::shared_ptr<Client>& client)
+    : client(client), eventManager(new EventManager()), animationManager(new AnimationManager()),
+      switchLibPath(DEFAULT_LIB), multiplayerButton{400, 300, 200, 60, "Multiplayer", Button::MULTIPLAYER},
       singlePlayerButton{400, 400, 200, 60, "Single-player", Button::SINGLE_PLAYER} {
+
   tileSize = SCREEN_HEIGHT / 40;
   readAssets();
 
-  animationManager = new AnimationManager();
+  animationManager->addAnimation("tail", {"assets/tail.png", "assets/tail2.png", "assets/tail3.png"},
+                                 TAIL_ANIM_SPEED);
 
-  const std::vector<std::string> sprites = {"assets/tail.png", "assets/tail2.png", "assets/tail3.png"};
-  animationManager->addAnimation("tail", sprites, TAIL_ANIM_SPEED);
-  
-  eventManager = new EventManager();
   eventManager->AddCallback(StateType::Game, "Key_Up", &Drawer::MoveUp, this);
   eventManager->AddCallback(StateType::Game, "Key_Down", &Drawer::MoveDown, this);
   eventManager->AddCallback(StateType::Game, "Key_Left", &Drawer::MoveLeft, this);
@@ -41,11 +39,6 @@ Drawer::Drawer(Client* client)
 }
 
 Drawer::~Drawer() {
-  if (eventManager)
-  	delete eventManager;
-  if (animationManager)
-	delete animationManager;
-
   this->stopClient();
   this->closeDynamicLib();
 
@@ -88,7 +81,7 @@ void Drawer::closeDynamicLib() {
     this->window = nullptr;
   }
   if (this->dynamicLibrary) {
-	std::cout << "Closing dynamic lib" << std::endl;
+    std::cout << "Closing dynamic lib" << std::endl;
     dlclose(this->dynamicLibrary);
     this->dynamicLibrary = nullptr;
   }
@@ -113,10 +106,9 @@ void Drawer::start() {
 
         t_event event = this->checkEvents(this->window);
         if (event.type == CLOSED) {
-			gameRunning = false;
-			break;
-		}
-        else if (event.type != EMPTY) {
+          gameRunning = false;
+          break;
+        } else if (event.type != EMPTY) {
           eventManager->HandleEvent(event);
           eventManager->Update();
         }
@@ -211,12 +203,12 @@ void Drawer::drawGame() {
     const MapData* mapData = client->getMapData();
     if (!mapData)
       return;
-  
-	animationManager->onFrame();
-	  
-	int playerId = mapData->player_id();
-    
-	drawMap(mapData);
+
+    animationManager->onFrame();
+
+    int playerId = mapData->player_id();
+
+    drawMap(mapData);
     drawFood(gameData);
     drawSnakes(gameData);
     drawUI(gameData, playerId);
@@ -250,11 +242,10 @@ void Drawer::drawSnakes(const GameData* gameData) {
       if (part == body->begin())
         texture = "assets/head.png";
       else if (nextPart == body->end()) {
-		auto anim = animationManager->getAnimationSprite("tail");
-		if (anim)
-			texture = *anim;
-	  }
-      else {
+        auto anim = animationManager->getAnimationSprite("tail");
+        if (anim)
+          texture = *anim;
+      } else {
         int cr = cornerPartRotation((part - 1)->x(), (part - 1)->y(), nextPart->x(), nextPart->y());
         if (cr) {
           texture = "assets/body_corner.png";
@@ -387,13 +378,12 @@ std::pair<std::string, int> Drawer::getWallTexture(int x, int y, const MapData* 
                                                            : std::make_pair("assets/wall.png", 0);
 }
 
-
 void Drawer::stopClient() {
   if (!this->clientThread.joinable()) {
-	std::cout << "Client is not running" << std::endl;
-	return;
+    std::cout << "Client is not running" << std::endl;
+    return;
   }
-    
+
   this->client->setStopFlag(true);
   this->clientThread.join();
   eventManager->SetCurrentState(StateType::Menu);
@@ -401,12 +391,12 @@ void Drawer::stopClient() {
 
 void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
   if (this->clientThread.joinable()) {
-	std::cout << "Client already running" << std::endl;
-	return;
+    std::cout << "Client already running" << std::endl;
+    return;
   }
-  
+
   const std::string mode = isSinglePlayer ? "Single-player" : "Multiplayer";
-  
+
   this->client->setStopFlag(false);
   this->clientThread = std::thread(&Client::start, this->client, serverIP, isSinglePlayer);
   this->eventManager->SetCurrentState(StateType::Game);
@@ -414,22 +404,22 @@ void Drawer::startClient(const std::string& serverIP, bool isSinglePlayer) {
 
 void Drawer::MoveUp(t_event* details) {
   (void)details; // Unused, but required by callback signature
-  this->client->sendDirection(UP);
+  this->client->sendDirection(actions::UP);
 }
 
 void Drawer::MoveDown(t_event* details) {
   (void)details;
-  this->client->sendDirection(DOWN);
+  this->client->sendDirection(actions::DOWN);
 }
 
 void Drawer::MoveLeft(t_event* details) {
   (void)details;
-  this->client->sendDirection(LEFT);
+  this->client->sendDirection(actions::LEFT);
 }
 
 void Drawer::MoveRight(t_event* details) {
   (void)details;
-  this->client->sendDirection(RIGHT);
+  this->client->sendDirection(actions::RIGHT);
 }
 
 void Drawer::ZoomIn(t_event* details) {

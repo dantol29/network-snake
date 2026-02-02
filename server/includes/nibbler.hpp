@@ -24,22 +24,21 @@
 #include "../../packet_generated.h"
 #include <flatbuffers/flatbuffers.h>
 
-#define FLOOR_TILE '.'
-#define BODY_TILE 'B'
-#define HEAD_TILE 'H'
-#define TAIL_TILE 'T'
-#define FOOD_TILE 'F'
-#define WALL_HORIZ_TILE 'W'
-#define WALL_VERTI_TILE 'V'
-
-#define SNAKE_SPEED 300
-#define MAX_PLAYERS 10
+constexpr char FLOOR_TILE = '.';
+constexpr char BODY_TILE = 'B';
+constexpr char HEAD_TILE = 'H';
+constexpr char TAIL_TILE = 'T';
+constexpr char FOOD_TILE = 'F';
+constexpr char WALL_HORIZ_TILE = 'W';
+constexpr char WALL_VERTI_TILE = 'V';
+constexpr int SNAKE_SPEED = 300;
+constexpr int MAX_PLAYERS = 10;
 
 typedef struct s_coordinates {
   int x;
   int y;
 } t_coordinates;
 
-enum e_direction { UP, DOWN, LEFT, RIGHT };
+enum class e_direction { UP, DOWN, LEFT, RIGHT };
 
 #endif

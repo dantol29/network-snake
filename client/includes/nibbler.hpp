@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <dlfcn.h>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -23,15 +24,14 @@
 #include "../../packet_generated.h"
 #include <flatbuffers/flatbuffers.h>
 
-#define TILE_SIZE 0.05f
-#define SCALE 20.0f
-#define FLOOR_SYMBOL '.'
-#define LOCAL_SERVER_IP "127.0.0.1"
-// #define REMOTE_SERVER_IP "127.0.0.1"
-#define REMOTE_SERVER_IP "159.65.186.248"
-
-#define DEFAULT_GAME_HEIGHT 20
-#define DEFAULT_GAME_WIDTH 30
+constexpr float TILE_SIZE = 0.05f;
+constexpr float SCALE = 20.0f;
+constexpr char FLOOR_SYMBOL = '.';
+constexpr const char* LOCAL_SERVER_IP = "127.0.0.1";
+// constexpr const char * REMOTE_SERVER_IP = "127.0.0.1"
+constexpr const char* REMOTE_SERVER_IP = "159.65.186.248";
+constexpr int DEFAULT_GAME_HEIGHT = 20;
+constexpr int DEFAULT_GAME_WIDTH = 30;
 
 #ifdef __APPLE__
 #define LIB_EXTENSION ".dylib"
@@ -41,7 +41,7 @@
 
 enum class StateType { Global, Menu, Game, GameOver, Paused };
 
-enum actions { UP, DOWN, LEFT, RIGHT, M, N, KEY_1, KEY_2, KEY_3 };
+enum class actions { UP, DOWN, LEFT, RIGHT, M, N, KEY_1, KEY_2, KEY_3 };
 
 struct Vec2i {
   int x;
@@ -90,9 +90,8 @@ typedef void (*cleanupFunc)(void* window);
 typedef t_event (*checkEventsFunc)(void* window);
 typedef void (*loadAssetsFunc)(void* window, const char** paths);
 typedef void (*drawTextFunc)(void* window, float x, float y, int size, const char* text);
-typedef void (*drawAssetFunc)(void* window, float x, float y, float width, float height,
-                              int degrees, const char* assetPath);
-typedef void (*drawButtonFunc)(void* window, float x, float y, float width, float height,
-                               const char* text);
+typedef void (*drawAssetFunc)(void* window, float x, float y, float width, float height, int degrees,
+                              const char* assetPath);
+typedef void (*drawButtonFunc)(void* window, float x, float y, float width, float height, const char* text);
 
 #endif

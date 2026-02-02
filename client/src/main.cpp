@@ -2,11 +2,8 @@
 #include "Drawer.hpp"
 
 int main() {
-  Client* client = new Client();
-  Drawer* drawer = new Drawer(client);
+  auto client = std::make_shared<Client>();
+  auto drawer = std::make_unique<Drawer>(client);
 
   drawer->start();
-
-  delete drawer;
-  delete client;
 }

@@ -7,7 +7,7 @@ class Game;
 
 class Server {
 public:
-  Server(Game* game);
+  Server(std::shared_ptr<Game>& game);
   Server(const Server& obj) = delete;
   Server& operator=(const Server& obj) = delete;
   Server(Server&& obj) = delete;
@@ -17,7 +17,7 @@ public:
   void start();
 
 private:
-  Game* game;
+  std::shared_ptr<Game> game;
   int tcpServerFd;
   int udpServerFd;
   std::vector<struct pollfd> connectedClients;

@@ -59,4 +59,6 @@ private:
   void loadGameMap(const std::string& mapFile);
 };
 
+bool hasInvalidChars(const std::string& line);
+
 #endif

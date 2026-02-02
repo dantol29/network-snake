@@ -18,8 +18,8 @@ int main(int argc, char** argv) {
 
   std::string mapPath = argc == 4 ? argv[3] : "";
 
-  Game* game = new Game(height, width, mapPath);
-  Server* server = new Server(game);
+  auto game = std::make_shared<Game>(height, width, mapPath);
+  auto server = std::make_unique<Server>(game);
 
   std::thread gameThread(&Game::start, game);
 
@@ -27,7 +27,4 @@ int main(int argc, char** argv) {
 
   if (gameThread.joinable())
     gameThread.join();
-
-  delete game;
-  delete server;
 }

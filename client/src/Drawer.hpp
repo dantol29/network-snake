@@ -2,9 +2,9 @@
 #define DRAWER_HPP
 
 #include "../includes/nibbler.hpp"
+#include "AnimationManager.hpp"
 #include "Client.hpp"
 #include "EventManager.hpp"
-#include "AnimationManager.hpp"
 
 struct Button {
   float x;
@@ -19,7 +19,7 @@ class Client;
 
 class Drawer {
 public:
-  Drawer(Client* client);
+  Drawer(std::shared_ptr<Client>& client);
   Drawer(const Drawer& obj) = delete;
   Drawer& operator=(const Drawer& obj) = delete;
   Drawer(Drawer&& obj) = delete;
@@ -29,9 +29,9 @@ public:
   void start();
 
 private:
-  Client* client;
-  EventManager* eventManager;
-  AnimationManager* animationManager;
+  std::shared_ptr<Client> client;
+  std::unique_ptr<EventManager> eventManager;
+  std::unique_ptr<AnimationManager> animationManager;
 
   std::vector<char*> assets;
   void* dynamicLibrary = nullptr;
